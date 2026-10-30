@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from BaseClasses import ItemClassification, Region
 
 from .items import TMNTItem
-from .locations import AREAS, BOSS_LOCATIONS, ENTRANCE_LOCATIONS, TMNTLocation, location_table
+from .locations import AREAS, BOSS_LOCATIONS, ENTRANCE_LOCATIONS, START_LOCATIONS, TMNTLocation, location_table
 
 if TYPE_CHECKING:
     from . import TMNTWorld
@@ -30,6 +30,7 @@ def add_event(region: Region, location_name: str, item_name: str) -> None:
 def create_regions(world: "TMNTWorld") -> None:
     player, multiworld = world.player, world.multiworld
     menu = Region("Menu", player, multiworld)
+    menu.locations += [TMNTLocation(player, name, location_table[name], menu) for name in START_LOCATIONS]
     multiworld.regions.append(menu)
 
     for area in AREAS:
