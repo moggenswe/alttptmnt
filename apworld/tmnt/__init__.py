@@ -3,6 +3,7 @@ from worlds.AutoWorld import World
 from .items import AREA_PASSES, FILLER, GAME_NAME, TOOLS, TURTLES, TMNTItem, item_table
 from .locations import location_table
 from .regions import create_regions
+from .rules import set_rules
 
 
 class TMNTWorld(World):
@@ -32,6 +33,9 @@ class TMNTWorld(World):
         open_slots = len(self.multiworld.get_unfilled_locations(self.player)) - len(pool)
         pool += [self.create_item(FILLER) for _ in range(open_slots)]
         self.multiworld.itempool += pool
+
+    def set_rules(self) -> None:
+        set_rules(self)
 
     def get_filler_item_name(self) -> str:
         return FILLER
