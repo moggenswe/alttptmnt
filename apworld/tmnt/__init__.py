@@ -1,18 +1,34 @@
+import os
 from typing import Any
 
+import settings
 from worlds.AutoWorld import World
 
+from . import client  # noqa: F401  registers TMNTClient with the BizHawk client
 from .items import AREA_PASSES, FILLER, GAME_NAME, TOOLS, TURTLES, TMNTItem, item_table
 from .locations import location_table
 from .options import TMNTOptions
 from .regions import create_regions
+from .rom import BASE_ROM_MD5, TMNTProcedurePatch, write_patch
 from .rules import AREA_TOOL_REQUIREMENTS, set_rules
+
+
+class TMNTSettings(settings.Group):
+    class RomFile(settings.UserFilePath):
+        """File name of the Teenage Mutant Ninja Turtles (NES, USA) ROM"""
+        description = "Teenage Mutant Ninja Turtles (USA) NES ROM File"
+        copy_to = "Teenage Mutant Ninja Turtles (USA).nes"
+        md5s = [BASE_ROM_MD5]
+
+    rom_file: RomFile = RomFile(RomFile.copy_to)
 
 
 class TMNTWorld(World):
     """Teenage Mutant Ninja Turtles (NES), where every Area is a dungeon behind a sewer pass."""
 
     game = GAME_NAME
+    settings_key = "tmnt_options"
+    settings: TMNTSettings
     item_name_to_id = {name: item_id for name, (item_id, _) in item_table.items()}
     location_name_to_id = location_table
 
@@ -51,6 +67,12 @@ class TMNTWorld(World):
 
     def get_filler_item_name(self) -> str:
         return FILLER
+
+    def generate_output(self, output_directory: str) -> None:
+        patch = TMNTProcedurePatch(player=self.player, player_name=self.multiworld.player_name[self.player])
+        write_patch(self, patch)
+        patch.write(os.path.join(output_directory,
+                                 f"{self.multiworld.get_out_file_name_base(self.player)}{patch.patch_file_ending}"))
 
     def fill_slot_data(self) -> dict[str, Any]:
         return {"start_turtle": self.start_turtle,
