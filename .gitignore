@@ -1,0 +1,9 @@
+*.nes
+*.sfc
+*.State
+*.aptmnt
+Archipelago/
+output/
+.venv/
+.superpowers/
+__pycache__/
