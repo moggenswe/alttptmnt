@@ -66,7 +66,7 @@ p.lead { font-size: 18px; color: var(--muted); margin-top: 0; }
   position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line);
   background: var(--panel); margin-bottom: 28px;
 }
-.hero img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.hero img { display: block; width: 100%; height: auto; max-height: 520px; object-fit: cover; object-position: 50% 62%; }
 .hero .caption {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 22px;
   background: linear-gradient(transparent, rgba(8, 11, 18, 0.92));
