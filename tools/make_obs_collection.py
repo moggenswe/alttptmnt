@@ -5,9 +5,9 @@ Scene Collection -> Import).
                                                           [--tmnt Turtles]
 
 Scenes (1920x1080):
-  Hyrule            the ALttP BizHawk window and the go mode panel with both games' items, as a column
-  Kloak (övergång)  a sewer-green backdrop, a caption, the go mode panel and both PopTrackers
-  New York          the TMNT BizHawk window and the same panel column
+  Hyrule            the ALttP BizHawk window, the ALttP PopTracker and the go mode panel
+  Kloak (övergång)  a sewer-green backdrop, a caption, the go mode panel and both trackers
+  New York          the TMNT BizHawk window, the TMNT PopTracker and the go mode panel
 and the pizza-wipe stinger (tools/make_stinger.py) as the default transition. The window captures match the
 fixed titles tools/start_stream.ps1 gives the windows. Paths are absolute for this checkout; rerun the script
 after moving the repo.
@@ -67,24 +67,22 @@ def build(server: str, alttp: str, tmnt: str) -> dict:
     tmnt_tracker = window("TMNT-tracker (PopTracker)",
                           "PopTracker - Teenage Mutant Ninja Turtles-Item Tracker via AP", "SDL_app", "poptracker.exe")
     panel_url = (OBS_DIR / "go-mode.html").as_uri() + f"?server={server}&alttp={alttp}&tmnt={tmnt}"
-    browser = {"is_local_file": False, "fps_custom": False, "shutdown": False, "restart_when_active": False}
-    panel = source("browser_source", "Go mode panel", {**browser, "url": panel_url, "width": 1000, "height": 260})
-    panel_column = source("browser_source", "Go mode panel (column)",
-                          {**browser, "url": panel_url + "&layout=column", "width": 520, "height": 440})
+    panel = source("browser_source", "Go mode-panel", {"is_local_file": False, "url": panel_url, "width": 900,
+                                                       "height": 240, "fps_custom": False, "shutdown": False,
+                                                       "restart_when_active": False})
     sewer = source("color_source_v3", "Kloak-bakgrund", {"color": 0xFF1F2A1B, "width": WIDTH, "height": HEIGHT})
     caption = source("text_gdiplus_v3", "Kloak-text", {
         "text": "Into the sewers...", "font": {"face": "Segoe UI", "size": 96, "style": "Bold", "flags": 1},
         "color": 0xFF4AD8FF, "align": "center", "outline": True, "outline_size": 6, "outline_color": 0xFF101418})
 
     game_box = (0, 0, 1240, 1080)  # 256x224 games at 2x keep their shape inside this
-    # Both games' items in one column next to the game, so viewers always see the whole go mode picture.
     hyrule = scene("Hyrule", [item(alttp_game, 1, *game_box, BIZHAWK_CROP),
-                              item(panel_column, 2, 1250, 20, 660, 1040)])
+                              item(alttp_tracker, 2, 1250, 0, 670, 800), item(panel, 3, 1250, 830, 670, 250)])
     new_york = scene("New York", [item(tmnt_game, 1, *game_box, BIZHAWK_CROP),
-                                  item(panel_column, 2, 1250, 20, 660, 1040)])
+                                  item(tmnt_tracker, 2, 1250, 0, 670, 800), item(panel, 3, 1250, 830, 670, 250)])
     sewer_scene = scene("Kloak (övergång)", [item(sewer, 1, 0, 0, WIDTH, HEIGHT),
                                              item(caption, 2, 160, 120, 1600, 200),
-                                             item(panel, 3, 160, 330, 1600, 420),
+                                             item(panel, 3, 360, 380, 1200, 330),
                                              item(alttp_tracker, 4, 40, 740, 560, 320),
                                              item(tmnt_tracker, 5, 1320, 740, 560, 320)])
 
@@ -95,8 +93,7 @@ def build(server: str, alttp: str, tmnt: str) -> dict:
     scenes = [hyrule, sewer_scene, new_york]
     return {"name": NAME, "current_scene": "Hyrule", "current_program_scene": "Hyrule",
             "scene_order": [{"name": s["name"]} for s in scenes],
-            "sources": [alttp_game, tmnt_game, alttp_tracker, tmnt_tracker, panel, panel_column, sewer, caption,
-                        *scenes],
+            "sources": [alttp_game, tmnt_game, alttp_tracker, tmnt_tracker, panel, sewer, caption, *scenes],
             "groups": [], "transitions": [stinger], "current_transition": "Pizza-wipe", "transition_duration": 300,
             "quick_transitions": [], "saved_projectors": [], "modules": {}, "preview_locked": False,
             "scaling_enabled": False, "scaling_level": 0, "scaling_off_x": 0.0, "scaling_off_y": 0.0}

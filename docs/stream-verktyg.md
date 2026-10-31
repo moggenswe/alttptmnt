@@ -25,11 +25,11 @@ Lägg till `tools/obs/go-mode.html` som en Browser-källa med lokal fil. Lägg t
 file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&alttp=Link&tmnt=Turtles
 ```
 
-- **Panelen visar båda spelens föremål:**
-  - **Hyrule:** 18 viktiga föremål på väg till Ganon. Svärd, båge och handskar visar nivå (svärd 1–4, båge och handskar 1–2). Dessutom dungeon-bossar x/10 och DONE när Ganon är besegrad.
+- **Panelen:**
+  - **Hyrule:** dungeon-bossar x/10 och DONE när Ganon är besegrad.
   - **New York:** sköldpaddor x/4, verktyg, pass, bossar x/3, GO MODE, och DONE när Shredder är besegrad.
-  - Livetest 2026-10-31: två Progressive Sword, Hookshot och Moon Pearl skickades till Link och tändes, med svärdet på nivå 2.
-- Ikonerna är egen pixelgrafik från `tools/sprites.py`, inga spelspritar. Det man har lyser, och det som saknas är grått och dämpat.
+  - **ALttP:s föremål** visas med de vanliga ikonerna i ALttP-packen till PopTracker, som communityn och ESA känner igen. Panelen har inga egna Zelda-ikoner. De provades och togs bort 2026-10-31 på Oscars beslut.
+- TMNT-ikonerna och hjärtana är egen pixelgrafik från `tools/sprites.py`, inga spelspritar. Det man har lyser, och det som saknas är grått och dämpat.
 - **All text som syns på streamen är engelsk:** panelen, BizHawk-menyn (SELECT AREA, Locked, Connect the AP client), meddelandena ("Got X from Y", "Found X") och OBS-texten "Into the sewers...". Dokumentationen är fortfarande svensk.
 - Den ansluter som en skrivskyddad Tracker-klient och påverkar inte spelet.
 - Med `&demo=1` visas påhittade värden utan server, och `&layout=column` lägger korten under varandra.
@@ -57,9 +57,9 @@ Skriptet patchar ROM:arna om de saknas och kopierar dem till de fasta namnen `al
 
 - `tools/obs/tmnt-alttp-scenes.json` byggs av `tools/make_obs_collection.py` och importeras i OBS under Scene Collection → Import. Kör om skriptet om repot flyttas, eftersom sökvägarna är absoluta.
 - **Scener:**
-  - **Hyrule:** ALttP-fönstret och panelen med båda spelens föremål som en kolumn till höger.
-  - **Kloak (övergång):** kloakgrön bakgrund, texten "Into the sewers...", panelen stort i mitten och båda PopTracker-fönstren under.
-  - **New York:** TMNT-fönstret och samma panelkolumn.
+  - **Hyrule:** ALttP-fönstret, ALttP-trackern (PopTracker med de vanliga ikonerna) och go mode-panelen.
+  - **Kloak (övergång):** kloakgrön bakgrund, texten "Into the sewers...", panelen i mitten och båda PopTracker-fönstren.
+  - **New York:** TMNT-fönstret, TMNT-trackern och panelen.
 - **Övergång:** "Pizza-wipe", en stinger med `tools/obs/pizza_wipe.webm` (byggd av `tools/make_stinger.py`) och övergångspunkt 500 ms. Ett band av tomatsås med rullande pizzor sveper över och täcker hela bilden i mitten.
 - **Provat 2026-10-31 i OBS 32.0.4:**
   - Samlingen laddades utan fel.
@@ -78,7 +78,7 @@ Skriptet patchar ROM:arna om de saknas och kopierar dem till de fasta namnen `al
 
 ## Grafik
 
-All grafik är ritad för projektet i `tools/sprites.py`, som 16x16 pixelkonst: sköldpaddshuvuden, verktyg, pass, boss, hjärta och pizza. Det finns ingen fritt licensierad TMNT-fan art: figurerna tillhör Nickelodeon, så fan art kan inte licensieras fritt, och sökningen hittade bara TMNT-spritar utan licens. Det enda med CC0 var generiska ninjor och sköldpaddor. Panelen, PopTracker-packen och pizza-wipen använder alla samma bilder.
+TMNT-grafiken, hjärtat och pizzan är ritade för projektet i `tools/sprites.py`, som 16x16 pixelkonst. ALttP visas som vanligt med ALttP-packens ikoner i PopTracker. Det är ESA:s och communityns standard, och ansvaret för Nintendos grafik ligger där. Det finns ingen fritt licensierad TMNT-fan art: figurerna tillhör Nickelodeon, så fan art kan inte licensieras fritt, och sökningen hittade bara TMNT-spritar utan licens. Det enda med CC0 var generiska ninjor och sköldpaddor. Panelen, PopTracker-packen och pizza-wipen använder alla samma bilder.
 
 ## Installation (gjord och provad 2026-10-31 på Oscars dator)
 

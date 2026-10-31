@@ -53,17 +53,12 @@
   .icon { width: 36px; height: 36px; image-rendering: pixelated; transition: opacity 0.4s, filter 0.4s; }
   .icon.small { width: 28px; height: 28px; }
   .icon.off { opacity: 0.22; filter: grayscale(1); }
-  .icons.grid { display: grid; grid-template-columns: repeat(9, 36px); gap: 4px; }
-  .slot { position: relative; width: 36px; height: 36px; }
-  .slot .level { position: absolute; right: -2px; bottom: -4px; font-size: 14px; color: var(--go);
-    text-shadow: 0 0 3px #000, 0 0 3px #000; }
 </style>
 </head>
 <body>
 <div class="panel" id="panel">
   <div class="card hyrule"><div class="title">Hyrule · Ganon</div>
     <div class="state" id="alttp-state">Connecting…</div>
-    <div class="icons grid" id="alttp-items"></div>
     <div class="icons" id="alttp-hearts"></div>
     <div class="rows"><span>Bosses <b id="alttp-bosses">–</b></span></div></div>
   <div class="card newyork"><div class="title">New York · Shredder</div>
@@ -88,25 +83,6 @@ const ALTTP_BOSSES = ["Eastern Palace", "Desert Palace", "Tower of Hera", "Palac
 const TMNT_BOSSES = [1, 2, 3, 4, 5].map(n => `Area ${n} - Boss`);
 const TURTLES = ["Leonardo", "Michelangelo", "Donatello", "Raphael"];
 const CLEARS_FOR_TECHNODROME = 3;  // apworld/tmnt/rules.py
-// The A Link to the Past items that matter on the way to Ganon: [label, sprite, {AP item name: level}].
-// Progressive items show their level (sword 1-4, bow 1-2, gloves 1-2); a "Progressive ..." item adds one.
-const ALTTP_ITEMS = [
-  ["Sword", "alttp_sword", { "Fighter Sword": 1, "Master Sword": 2, "Tempered Sword": 3, "Golden Sword": 4 },
-   "Progressive Sword"],
-  ["Bow", "alttp_bow", { "Bow": 1, "Silver Bow": 2 }, "Progressive Bow"],
-  ["Hookshot", "alttp_hookshot"], ["Hammer", "alttp_hammer"], ["Fire Rod", "alttp_firerod"],
-  ["Ice Rod", "alttp_icerod"], ["Lamp", "alttp_lamp"], ["Magic Mirror", "alttp_mirror"], ["Moon Pearl", "alttp_pearl"],
-  ["Flippers", "alttp_flippers"], ["Pegasus Boots", "alttp_boots"],
-  ["Gloves", "alttp_glove", { "Power Glove": 1, "Titans Mitts": 2 }, "Progressive Glove"],
-  ["Book of Mudora", "alttp_book"], ["Cane of Somaria", "alttp_somaria"], ["Flute", "alttp_flute"],
-  ["Bombos", "alttp_bombos"], ["Ether", "alttp_ether"], ["Quake", "alttp_quake"],
-];
-
-function level(items, [label, , fixed, progressive]) {
-  if (!fixed) return items.has(label) ? 1 : 0;
-  const best = Math.max(0, ...Object.entries(fixed).filter(([name]) => items.has(name)).map(([, lv]) => lv));
-  return Math.max(best, items.get(progressive) || 0);
-}
 
 const $ = id => document.getElementById(id);
 
@@ -128,13 +104,6 @@ $("tmnt-gear-icons").appendChild(gap());
 [1, 2, 3, 4, 5].forEach(n => $("tmnt-gear-icons").appendChild(
   iconsFor[`Sewer Pass: Area ${n}`] = icon("pass", `Sewer Pass: Area ${n}`, true)));
 ALTTP_BOSSES.forEach(boss => $("alttp-hearts").appendChild(iconsFor[boss] = icon("heart", boss, true)));
-const levelFor = {};  // ALttP item label -> its level badge
-for (const [label, sprite, fixed] of ALTTP_ITEMS) {
-  const slot = Object.assign(document.createElement("span"), { className: "slot" });
-  slot.appendChild(iconsFor[label] = icon(sprite, label));
-  if (fixed) slot.appendChild(levelFor[label] = Object.assign(document.createElement("b"), { className: "level" }));
-  $("alttp-items").appendChild(slot);
-}
 
 function light(names, has) {
   for (const name of names) iconsFor[name].classList.toggle("off", !has(name));
@@ -158,11 +127,6 @@ function renderTmnt(s) {
 function renderAlttp(s) {
   if (s.error) { $("alttp-state").className = "state off"; $("alttp-state").textContent = s.error; return; }
   light(ALTTP_BOSSES, name => s.checked.has(name));
-  for (const entry of ALTTP_ITEMS) {
-    const lv = level(s.items, entry);
-    iconsFor[entry[0]].classList.toggle("off", lv === 0);
-    if (levelFor[entry[0]]) levelFor[entry[0]].textContent = lv > 1 ? lv : "";
-  }
   const bosses = ALTTP_BOSSES.filter(l => s.checked.has(l)).length;
   $("alttp-bosses").textContent = `${bosses}/10`;
   const state = s.goal ? ["done", "DONE ✔"] : ["", "Not yet"];
@@ -173,7 +137,7 @@ function renderAlttp(s) {
 // One read-only Tracker connection per slot. Reconnects every 5 s if the server goes away.
 function track(slot, game, render) {
   if (!slot) { render({ error: "No slot given" }); return; }
-  const s = { items: new Map(), checked: new Set(), goal: false };  // items: name -> how many received
+  const s = { items: new Set(), checked: new Set(), goal: false };
   let itemNames = {}, locationNames = {}, team = 0, slotId = 0;
 
   const connect = () => {
@@ -200,11 +164,8 @@ function track(slot, game, render) {
           send({ cmd: "Get", keys: [key] });
           send({ cmd: "SetNotify", keys: [key] });
         } else if (msg.cmd === "ReceivedItems") {
-          if (msg.index === 0) s.items = new Map();
-          for (const item of msg.items) {
-            const name = itemNames[item.item];
-            s.items.set(name, (s.items.get(name) || 0) + 1);
-          }
+          if (msg.index === 0) s.items = new Set();
+          for (const item of msg.items) s.items.add(itemNames[item.item]);
         } else if (msg.cmd === "RoomUpdate" && msg.checked_locations) {
           for (const id of msg.checked_locations) s.checked.add(locationNames[id]);
         } else if (msg.cmd === "Retrieved" || msg.cmd === "SetReply") {
@@ -222,13 +183,9 @@ function track(slot, game, render) {
 }
 
 if (params.get("demo")) {
-  const owned = names => new Map(names.map(name => [name, 1]));
-  renderAlttp({ items: new Map([...owned(["Hookshot", "Lamp", "Moon Pearl", "Flippers", "Pegasus Boots",
-                                          "Magic Mirror", "Fire Rod", "Bombos", "Book of Mudora"]),
-                                ["Progressive Sword", 2], ["Progressive Glove", 1], ["Progressive Bow", 1]]),
-                checked: new Set(ALTTP_BOSSES.slice(0, 6)), goal: false });
-  renderTmnt({ items: owned([...TURTLES, "Rope Pack", "Zora's Scuba Kit", "Sewer Pass: Area 1",
-                             "Sewer Pass: Area 2", "Sewer Pass: Area 4"]),
+  renderAlttp({ items: new Set(), checked: new Set(ALTTP_BOSSES.slice(0, 6)), goal: false });
+  renderTmnt({ items: new Set([...TURTLES, "Rope Pack", "Zora's Scuba Kit", "Sewer Pass: Area 1",
+                               "Sewer Pass: Area 2", "Sewer Pass: Area 4"]),
                checked: new Set(TMNT_BOSSES.slice(0, 3)), goal: false });
 } else {
   track(params.get("alttp"), ALTTP, renderAlttp);
