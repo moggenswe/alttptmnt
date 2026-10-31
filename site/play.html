@@ -18,7 +18,7 @@
 
 <div class="wrap"><main class="with-toc">
   <aside class="toc"><b>On this page</b>
-    <a href="#seed">Generate a seed</a><a href="#start">Start a session</a><a href="#tmnt">The TMNT side</a>
+    <a href="#seed">Generate a seed</a><a href="#start">Start a session</a><a href="#swap">Switching games</a><a href="#tmnt">The TMNT side</a>
     <a href="#menu">Area menu and HUD</a><a href="#events">What happens when…</a><a href="#alttp">The ALttP side</a>
     <a href="#host">Host commands</a>
   </aside>
@@ -57,14 +57,37 @@ powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\mar
     <ol>
       <li><b>MultiServer</b> on <code>localhost:38281</code>, in its own console window (host commands go there).</li>
       <li><b>SNI</b>.</li>
-      <li><b>BizHawk with ALttP</b> and SNI's Lua connector (window "alttp-stream [SNES] - BizHawk").</li>
-      <li><b>BizHawk with TMNT</b> and <code>lua\tmnt_stream.luases</code>: Archipelago's connector plus the area menu
-        (window "tmnt-stream [NES] - BizHawk").</li>
+      <li><b>Game swap</b> (<code>tools\game_swap.py</code>) in its own console window; see
+        <a href="#swap">Switching games</a>.</li>
+      <li><b>BizHawk with ALttP</b> and <code>lua\alttp_stream.luases</code>: SNI's Lua connector plus the swap script
+        (window "alttp-stream [SNES] - BizHawk").</li>
+      <li><b>BizHawk with TMNT</b> and <code>lua\tmnt_stream.luases</code>: Archipelago's connector, the area menu and
+        the swap script (window "tmnt-stream [NES] - BizHawk").</li>
       <li><b>SNI Client</b> and <b>BizHawk Client</b>, already connected.</li>
       <li><b>Two PopTracker windows</b>: ALttP (slot Link) and TMNT (slot Turtles).</li>
     </ol>
     <p>It stops if port 38281 is already in use. Parameters: <code>-Port</code>, <code>-AlttpSlot</code>,
-    <code>-TmntSlot</code>, <code>-EmuHawk</code>, <code>-PopTracker</code>, <code>-NoTracker</code>.</p>
+    <code>-TmntSlot</code>, <code>-EmuHawk</code>, <code>-PopTracker</code>, <code>-NoTracker</code>,
+    <code>-SwapHotkey</code> (default <code>ctrl+shift+space</code>, <code>none</code> for no key) and
+    <code>-NoObsSwitch</code> (the swap leaves OBS alone).</p>
+
+    <h2 id="swap">Switching games</h2>
+    <p>Both games run all the time, each in its own BizHawk window; the controller drives the window in front. To
+    switch:</p>
+    <table>
+      <tr><th>Press</th><th>What happens</th></tr>
+      <tr><td><b>Select+Start</b> on the controller</td><td>The game you leave pauses (Start), the other game's window
+        comes to the front and OBS switches to its scene with the pizza-wipe. Press <b>Start</b> there to play on.</td></tr>
+      <tr><td><b>Ctrl+Shift+Space</b> on the keyboard</td><td>The same, without pausing: pause first.</td></tr>
+      <tr><td>Alt+Tab or a click on a game window</td><td>Also fine: OBS follows whichever game window is in front.</td></tr>
+    </table>
+    <p>What the pause looks like: TMNT shows its information screen. A Link to the Past opens the item menu, or, when
+    Select reached the game first, the "Continue / Save and Quit" box with Continue picked; Start goes back to the game
+    from either.</p>
+    <p>Items keep arriving in the game behind: BizHawk runs in the background ("Run in background" is on, "Accept
+    background input" off, as BizHawk ships). OBS is only switched while it shows Hyrule or New York, so a host's own
+    scene (a break, an interview) stays up. The swap's console window says when each game's script is ready, and logs
+    every swap.</p>
 
     <h2 id="tmnt">The TMNT side</h2>
     <h3>Items (12 locations, 12 items)</h3>

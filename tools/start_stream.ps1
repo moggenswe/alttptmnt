@@ -2,14 +2,18 @@
 Starts everything for an ALttP + TMNT stream seed on this machine, in this order:
   1. MultiServer in its own console window (type /send, /hint etc. there)
   2. SNI (from Archipelago\SNI)
-  3. BizHawk with the patched ALttP ROM and SNI's Lua connector
-  4. BizHawk with the patched TMNT ROM, the AP connector and the area select (lua\tmnt_stream.luases)
-  5. SNI Client and BizHawk Client, connected to the server
-  6. PopTracker twice: the ALttP pack for the ALttP slot, our TMNT pack (tools/make_poptracker_pack.py) for TMNT
+  3. the game swap (tools\game_swap.py) in its own console window: Select+Start or Ctrl+Shift+Space swaps games,
+     and OBS follows the game in front
+  4. BizHawk with the patched ALttP ROM, SNI's Lua connector and the swap script (lua\alttp_stream.luases)
+  5. BizHawk with the patched TMNT ROM, the AP connector, the area select and the swap script
+     (lua\tmnt_stream.luases)
+  6. SNI Client and BizHawk Client, connected to the server
+  7. PopTracker twice: the ALttP pack for the ALttP slot, our TMNT pack (tools/make_poptracker_pack.py) for TMNT
 and prints the URL for the go mode panel to paste into OBS.
 
   powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\full\AP_<seed>.zip
   powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed <zip> -NoTracker
+  powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed <zip> -NoObsSwitch   (the host switches scenes)
 
 The patched ROMs are made next to the seed's patch files if they are not there yet. Slot names come from
 players\*.yaml (Link, Turtles). Tested 2026-10-31; see docs\stream-verktyg.md.
@@ -21,7 +25,9 @@ param(
   [string]$TmntSlot = "Turtles",
   [string]$EmuHawk,     # default: apps\BizHawk-2.11.1 from install.ps1, else Downloads\BizHawk-2.11.1-win-x64
   [string]$PopTracker,  # default: apps\PopTracker-0.36.0 from install.ps1, else Downloads\PopTracker-0.36.0
-  [switch]$NoTracker
+  [switch]$NoTracker,
+  [string]$SwapHotkey = "ctrl+shift+space",  # 'none' for no keyboard swap
+  [switch]$NoObsSwitch  # the swap only changes windows; OBS scenes are left to the host
 )
 $ErrorActionPreference = "Stop"
 $Repo = Split-Path -Parent $PSScriptRoot
@@ -82,28 +88,35 @@ $tmntRom = Join-Path $SeedDir "tmnt-stream.nes"
 if (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue) {
   throw "Port $Port is already in use (an old MultiServer?). Close it or pass -Port."
 }
-Write-Host "1/6 MultiServer on $Server"
+Write-Host "1/7 MultiServer on $Server"
 Start-Process $Python -WorkingDirectory $AP -ArgumentList @("MultiServer.py", "`"$SeedPath`"", "--host", "127.0.0.1", "--port", $Port)
 Start-Sleep 6
 
-Write-Host "2/6 SNI"
+Write-Host "2/7 SNI"
 if (-not (Get-Process sni -ErrorAction SilentlyContinue)) {
   Start-Process (Join-Path $AP "SNI\sni.exe") -WorkingDirectory (Join-Path $AP "SNI")
 }
 
-Write-Host "3/6 BizHawk: A Link to the Past"
-Start-Process $EmuHawk -ArgumentList @("--lua=`"$(Join-Path $AP 'SNI\lua\Connector.lua')`"", "`"$alttpRom`"")
+# Before BizHawk: it makes output\swap, where the swap scripts in BizHawk write.
+Write-Host "3/7 Game swap (Select+Start or $SwapHotkey)"
+$swapArgs = @("-u", "`"$(Join-Path $Repo 'tools\game_swap.py')`"", "--hotkey", $SwapHotkey)
+if ($NoObsSwitch) { $swapArgs += "--no-obs" }
+Start-Process $Python -WorkingDirectory $Repo -ArgumentList $swapArgs
+Start-Sleep 2
 
-Write-Host "4/6 BizHawk: TMNT"
+Write-Host "4/7 BizHawk: A Link to the Past"
+Start-Process $EmuHawk -ArgumentList @("--lua=`"$(Join-Path $Repo 'lua\alttp_stream.luases')`"", "`"$alttpRom`"")
+
+Write-Host "5/7 BizHawk: TMNT"
 Start-Process $EmuHawk -ArgumentList @("--lua=`"$(Join-Path $Repo 'lua\tmnt_stream.luases')`"", "`"$tmntRom`"")
 Start-Sleep 8
 
-Write-Host "5/6 SNI Client and BizHawk Client"
+Write-Host "6/7 SNI Client and BizHawk Client"
 Start-Process $Python -WorkingDirectory $AP -ArgumentList @("SNIClient.py", "--connect", $Server)
 Start-Process $Python -WorkingDirectory $AP -ArgumentList @("BizHawkClient.py", "--connect", $Server)
 
 if (-not $NoTracker) {
-  Write-Host "6/6 PopTracker for $AlttpSlot and $TmntSlot (one window each)"
+  Write-Host "7/7 PopTracker for $AlttpSlot and $TmntSlot (one window each)"
   Need $PopTracker "PopTracker 0.36.0"
   Start-Process $PopTracker -ArgumentList @("--load-pack", "ap_alltp", "--pack-variant", "`"Map Tracker - AP`"",
                                             "--ap-host", $Server, "--ap-slot", $AlttpSlot)
@@ -117,3 +130,6 @@ Write-Host ""
 Write-Host "Go mode panel for OBS (Browser source, local file + this URL):"
 Write-Host "  $panel`?server=ws://$Server&alttp=$AlttpSlot&tmnt=$TmntSlot"
 Write-Host "Universal Tracker for TMNT: Archipelago Launcher -> Universal Tracker, connect to $Server as $TmntSlot"
+if (-not $NoObsSwitch) {
+  Write-Host "OBS follows the game in front once its WebSocket server is on (Tools -> WebSocket Server Settings)."
+}

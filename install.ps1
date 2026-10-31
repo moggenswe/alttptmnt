@@ -382,6 +382,10 @@ $testCode = $LASTEXITCODE
 Pop-Location
 $testOutput | Select-String -Pattern "^(Ran|OK|FAILED)" | ForEach-Object { Info $_.Line }
 if ($testCode) { Fail "The TMNT tests failed." }
+$testOutput = cmd /c "`"$Python`" -W ignore -m unittest discover -s `"$(Join-Path $Repo 'tools')`" -p test_*.py 2>&1"
+$testCode = $LASTEXITCODE
+$testOutput | Select-String -Pattern "^(Ran|OK|FAILED)" | ForEach-Object { Info "game swap: $($_.Line)" }
+if ($testCode) { Fail "The game swap tests failed." }
 & $Python (Join-Path $Repo "tools\gen_many.py") --count 3 --players (Join-Path $Repo "players") --ap $AP
 if ($LASTEXITCODE) { Fail "Generating test seeds failed." }
 

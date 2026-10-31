@@ -45,6 +45,14 @@
     titles, so the captures work for every seed. Check the crop of BizHawk's menu and status bar
     (top 21 px, bottom 22 px) once on the stream PC.</p>
 
+    <h3 id="follow">OBS follows the game</h3>
+    <p><code>tools\game_swap.py</code> (started by the start script) switches OBS to Hyrule or New York whenever that
+    game's window comes to the front, after a Select+Start swap, Ctrl+Shift+Space, Alt+Tab or a click
+    (<a href="play.html#swap">Play</a>). It talks to OBS's WebSocket server, which is off until you turn it on once:
+    <b>Tools → WebSocket Server Settings → Enable WebSocket server</b>. The port and password are read from OBS's settings
+    on the same PC, so there is nothing to copy. It only switches while OBS shows Hyrule or New York; Kloak and any
+    scene of the host's own are left alone. To switch scenes by hand only, start with <code>-NoObsSwitch</code>.</p>
+
     <h2 id="panel">Go mode panel</h2>
     <figure><img src="img/panel.png" alt="Go mode panel"><figcaption>Demo data: six Hyrule dungeon bosses down, TMNT in go mode.</figcaption></figure>
     <p>A browser source (<code>tools\obs\go-mode.html</code>) that connects to the server as a read-only tracker for both
@@ -84,6 +92,8 @@
       <li>Close BizHawk's "Click the blue silhouette below for onboarding" line once; it shows in the capture.</li>
       <li>Check that both trackers and the panel say they are connected (no "No server").</li>
       <li>Switch Hyrule → Kloak → New York once to see the pizza-wipe.</li>
+      <li>Press Select+Start in each game: the other game comes to the front and OBS follows. The game swap window says
+        "connected to OBS".</li>
       <li>Keep the server console window handy for <code>/hint</code> and <code>/send</code>.</li>
     </ol>
 

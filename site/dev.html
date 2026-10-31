@@ -30,6 +30,9 @@
     <li><b>Area menu</b> (<code>lua/tmnt_area_select.lua</code>): loads one savestate per Area, counts loads in the
       mailbox so the client syncs, watches for boss wins, continues and new games, and draws the HUD.</li>
     <li><b>A Link to the Past</b>: Archipelago's own world through SNI, unchanged.</li>
+    <li><b>Game swap</b> (<code>lua/game_swap.lua</code> in both BizHawk, <code>tools/game_swap.py</code>): Select+Start
+      writes a token to <code>output\swap\&lt;system&gt;-request.txt</code>; the helper answers in <code>-ack.txt</code>,
+      brings the other window to the front and, through obs-websocket 5, switches OBS to that game's scene.</li>
   </ul>
   <table>
     <tr><th>Mailbox byte</th><th>Written by</th><th>Meaning</th></tr>
@@ -46,8 +49,8 @@
   <table>
     <tr><th>Path</th><th>What</th></tr>
     <tr><td><code>apworld/tmnt/</code></td><td>The Archipelago world and client, with tests in <code>test/</code></td></tr>
-    <tr><td><code>lua/</code></td><td>Area menu, stream session file, savestate maker, BizHawk tests and research scripts</td></tr>
-    <tr><td><code>tools/</code></td><td>start script, end-to-end runner, OBS collection, sprites, stinger, PopTracker pack, seed checks</td></tr>
+    <tr><td><code>lua/</code></td><td>Area menu, swap script, stream session files, savestate maker, BizHawk tests and research scripts</td></tr>
+    <tr><td><code>tools/</code></td><td>start script, game swap, end-to-end runner, OBS collection, sprites, stinger, PopTracker pack, seed checks</td></tr>
     <tr><td><code>tools/obs/</code></td><td>Go mode panel, sprites, pizza-wipe, scene collection</td></tr>
     <tr><td><code>poptracker/tmnt-ap/</code></td><td>The TMNT PopTracker pack (generated)</td></tr>
     <tr><td><code>players/</code></td><td>Player files for the marathon seed</td></tr>
@@ -64,12 +67,19 @@ cd ..
 :: many seeds
 .venv\Scripts\python.exe tools\gen_many.py --count 100 --players players\ --ap Archipelago\
 
+:: game swap helper (stand-in OBS, no BizHawk needed)
+.venv\Scripts\python.exe -m unittest discover -s tools -p test_*.py
+
 :: area menu in BizHawk, writes savestates\area_select_test\result.txt
 apps\BizHawk-2.11.1\EmuHawk.exe --lua=%CD%\lua\tmnt_area_select_test.lua "roms\Teenage Mutant Ninja Turtles (USA).nes"
 
+:: swap script in BizHawk (any NES or SNES game), writes savestates\game_swap_test\&lt;system&gt;-result.txt
+apps\BizHawk-2.11.1\EmuHawk.exe --lua=%CD%\lua\game_swap_test.lua "roms\Teenage Mutant Ninja Turtles (USA).nes"
+
 :: the whole chain: server, BizHawk, menu and client, scripted
 .venv\Scripts\python.exe tools\e2e_run.py --seed-zip output\e2e\AP_&lt;seed&gt;.zip --rom output\e2e\&lt;patched&gt;.nes</code></pre>
-  <p>Last run (2026-10-31): 135 unit tests, area menu 40/40, end-to-end run passing, 150 seeds generated without errors.</p>
+  <p>Last run (2026-10-31): 135 unit tests, area menu 40/40, end-to-end run passing, 150 seeds generated without errors;
+  game swap 11 unit tests, 8/8 in BizHawk for NES and SNES, and a whole-chain run with both stream sessions passing.</p>
 
   <h2>Rebuild generated files</h2>
 <pre><code>.venv\Scripts\python.exe tools\sprites.py                     :: tools\obs\sprites\*.png

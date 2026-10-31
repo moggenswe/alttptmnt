@@ -49,7 +49,19 @@ file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&
 powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\<mapp>\AP_<seed>.zip
 ```
 
-Skriptet patchar ROM:arna om de saknas och kopierar dem till de fasta namnen `alttp-stream.sfc` och `tmnt-stream.nes`. Då får BizHawk-fönstren samma titel oavsett seed, och OBS-samlingen hittar dem. Om porten redan används avbryts skriptet. Sedan startar det MultiServer i ett eget konsolfönster, där `/send` och `/hint` skrivs, följt av SNI, BizHawk med ALttP och SNI:s Lua-connector, BizHawk med TMNT och `lua/tmnt_stream.luases`, SNI Client, BizHawk Client och två PopTracker-fönster: ALttP-packen för Link och vår TMNT-pack för Turtles. Till sist skriver det ut panelens adress för OBS. Det provades 2026-10-31 med ett nytt seed: Link och Turtles anslöt som spelare och PopTracker som tracker. Med `-NoTracker` hoppar skriptet över PopTracker.
+Skriptet patchar ROM:arna om de saknas och kopierar dem till de fasta namnen `alttp-stream.sfc` och `tmnt-stream.nes`. Då får BizHawk-fönstren samma titel oavsett seed, och OBS-samlingen hittar dem. Om porten redan används avbryts skriptet. Sedan startar det MultiServer i ett eget konsolfönster, där `/send` och `/hint` skrivs, följt av SNI, spelbytet (`tools/game_swap.py`, eget konsolfönster), BizHawk med ALttP och `lua/alttp_stream.luases` (SNI:s Lua-connector och bytesskriptet), BizHawk med TMNT och `lua/tmnt_stream.luases` (connectorn, områdesmenyn och bytesskriptet), SNI Client, BizHawk Client och två PopTracker-fönster: ALttP-packen för Link och vår TMNT-pack för Turtles. Till sist skriver det ut panelens adress för OBS. Det provades 2026-10-31 med ett nytt seed: Link och Turtles anslöt som spelare och PopTracker som tracker. Med `-NoTracker` hoppar skriptet över PopTracker.
+
+## Byta spel
+
+- **Select+Start** på handkontrollen pausar spelet man lämnar (Start), tar fram det andra spelets BizHawk-fönster och byter OBS-scen med pizza-wipen. **Ctrl+Shift+Space** gör samma sak från tangentbordet, men utan paus. Alt+Tab och klick fungerar också, eftersom OBS följer det spelfönster som ligger överst.
+- **Så fungerar det:** `lua/game_swap.lua` körs i båda BizHawk. Vid Select+Start skriver det en token i `output/swap/<system>-request.txt`. `tools/game_swap.py` svarar i `-ack.txt` och tar fram det andra fönstret. Utan svar inom två sekunder visar BizHawk "Game swap: start tools\game_swap.py". Skriptet skriver dessutom `-ready.txt` var tionde sekund, så att hjälpprogrammet kan logga när kontrollbytet är igång i respektive spel.
+- **Pausen:** i TMNT visas informationsskärmen. I ALttP öppnas föremålsmenyn, eller rutan "Continue / Save and Quit" med Continue förvalt om Select hann före. Start tar en tillbaka från båda. Provat 2026-10-31 med skriptade tryck i BizHawk.
+- **OBS:** scenbytet sker via OBS WebSocket-server (Tools → WebSocket Server Settings → Enable). Port och lösenord läses ur OBS:s egna inställningar på samma dator. Scenen byts bara när OBS visar Hyrule eller New York, så värdens egna scener lämnas i fred. Med `-NoObsSwitch` byts bara fönster.
+- **Provat 2026-10-31:**
+  - Enhetstester mot en låtsas-OBS med lösenord.
+  - Lua-test i BizHawk för NES och SNES.
+  - Helhetskörning med båda stream-sessionerna, SNI, hjälpprogrammet och låtsas-OBS: Select+Start i båda riktningarna, snabbtangenten, OBS som följer med, en värdscen som lämnas orörd och stängda spel som märks. Allt gick igenom.
+  - Riktig OBS är inte provad, eftersom WebSocket-servern är avslagen här.
 
 **På streamdatorn:** BizHawk 2.11 visar en egen rad i fönstret, "Click the blue silhouette below for onboarding". Den syns i fönsterfångsten, så klicka bort den en gång innan streamen.
 
@@ -86,7 +98,7 @@ TMNT-grafiken, hjärtat och pizzan är ritade för projektet i `tools/sprites.py
 |---|---|---|---|
 | ALttP-ROM | JP 1.0, md5 `03a63945398191337e896e5771f77173` | `Archipelago\Zelda no Densetsu - Kamigami no Triforce (Japan).sfc`, utan header | `roms\Zelda no Densetsu.smc` med de 512 header-bytena borttagna |
 | SNI | v0.0.103 | `Archipelago\SNI\` (SNIClient startar den själv därifrån) | https://github.com/alttpo/sni/releases |
-| Universal Tracker | Tracker_v0.3.8 | `Archipelago\custom_worlds	racker.apworld` | https://github.com/FarisTheAncient/Archipelago/releases |
+| Universal Tracker | Tracker_v0.3.8 | `Archipelago\custom_worlds\tracker.apworld` | https://github.com/FarisTheAncient/Archipelago/releases |
 | PopTracker | v0.36.0 | `Downloads\PopTracker-0.36.0\` | https://github.com/black-sliver/PopTracker/releases |
 | ALttP-pack | v0.5.1 (stabil; v0.5.2-beta10 finns) | `Downloads\PopTracker-0.36.0\packs\` | https://github.com/StripesOO7/alttp-ap-poptracker-pack/releases |
 | OBS Studio | 32.0.4 | redan installerat | |

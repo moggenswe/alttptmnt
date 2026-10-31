@@ -52,6 +52,15 @@
       <td>Only the sprite colours lag; pause and unpause, or walk into the next room.</td></tr>
     <tr><td>The run ended on the title screen after a game over</td>
       <td>The seed is older than the unlimited-continues patch. Generate a new seed.</td></tr>
+    <tr><td>"Game swap: start tools\game_swap.py" after Select+Start</td>
+      <td>The game swap window is closed. Start it again:
+        <code>.venv\Scripts\python.exe tools\game_swap.py</code>.</td></tr>
+    <tr><td>Select+Start pauses but the other game does not come up</td>
+      <td>Look in the game swap window. "no ... window": that BizHawk is closed or has no game loaded. "Windows did not
+        let ... come to the front": click the window once; it happens when another program holds the focus.</td></tr>
+    <tr><td>"controller swap stopped" in the game swap window</td>
+      <td>That game's BizHawk closed or its Lua scripts stopped. Restart it with its session file
+        (<code>lua\alttp_stream.luases</code> or <code>lua\tmnt_stream.luases</code>).</td></tr>
   </table>
 
   <h2>On stream</h2>
@@ -65,6 +74,10 @@
     <tr><td>The panel says "No server"</td><td>The server is not running, or the URL's <code>server=</code> is wrong.
       It reconnects by itself every 5 seconds.</td></tr>
     <tr><td>The panel says "Game not in this seed"</td><td>The slot name in the URL does not match the seed.</td></tr>
+    <tr><td>OBS does not follow the game</td>
+      <td>The game swap window says why. "OBS not reachable": turn on Tools → WebSocket Server Settings → Enable
+        WebSocket server. "left as it is": OBS shows a scene other than Hyrule or New York, which the swap never
+        changes.</td></tr>
     <tr><td>"Click the blue silhouette below for onboarding" on screen</td>
       <td>BizHawk 2.11's own hint; click it away once.</td></tr>
   </table>
