@@ -53,11 +53,20 @@ def pass_bitmask(inv: Inventory, cleared_areas: set[int]) -> int:
 
 
 def full_sync_writes(inv: Inventory, active: str | None) -> list[Write]:
-    """Full HP for owned turtles, captured for the rest, except the turtle on screen: writing 0 HP to her
-    plays the death animation. She stays playable until the player switches away."""
-    writes = [(address, [ram.FULL_HP_VALUE if turtle in inv.turtles else ram.CAPTURED_HP_VALUE])
-              for turtle, address in ram.TURTLE_HP.items()
-              if turtle in inv.turtles or turtle != active]
+    """Full HP for owned turtles, captured for the rest.
+
+    If the turtle on screen is not owned, the first write makes an owned turtle active, and then she is
+    captured like the others. Writing $0067 and her HP in the same frame neither kills her nor glitches the
+    game; the sprite only takes the new turtle's colours at the next pause or room change (BizHawk,
+    lua/tmnt_turtle_swap_test.lua, 2026-10-31). Without an owned turtle to switch to she is left alone.
+    """
+    switch_to = None
+    if active is not None and active not in inv.turtles and inv.turtles:
+        switch_to = next(turtle for turtle in ram.TURTLE_BY_ID if turtle in inv.turtles)
+    writes = [(ram.ACTIVE_TURTLE, [ram.TURTLE_BY_ID.index(switch_to)])] if switch_to else []
+    writes += [(address, [ram.FULL_HP_VALUE if turtle in inv.turtles else ram.CAPTURED_HP_VALUE])
+               for turtle, address in ram.TURTLE_HP.items()
+               if turtle in inv.turtles or turtle != active or switch_to]
     writes.append((ram.MISSILE_COUNT, [ram.MISSILE_REFILL if inv.missiles else 0]))
     writes.append((ram.ROPE_COUNT, [ram.ROPE_REFILL if inv.ropes else 0]))
     return writes

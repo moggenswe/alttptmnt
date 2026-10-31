@@ -93,12 +93,13 @@ class TestResync(ClientTestCase):
 
 
 class TestActiveTurtle(ClientTestCase):
-    def test_active_turtle_not_owned_is_not_killed(self):
+    def test_active_turtle_not_owned_is_switched_out_and_captured(self):
         self.give("Raphael", "Sewer Pass: Area 1")
         self.ram.bytes[ram.ACTIVE_TURTLE] = 0  # Leo on screen, as in every area savestate
         self.ram.bytes[ram.TURTLE_HP["Leonardo"]] = ram.FULL_HP_VALUE
         self.tick()
-        self.assertEqual(self.hp("Leonardo"), ram.FULL_HP_VALUE)
+        self.assertEqual(self.ram.bytes[ram.ACTIVE_TURTLE], ram.TURTLE_BY_ID.index("Raphael"))
+        self.assertEqual(self.hp("Leonardo"), ram.CAPTURED_HP_VALUE)
         self.assertEqual(self.hp("Michelangelo"), ram.CAPTURED_HP_VALUE)
 
 

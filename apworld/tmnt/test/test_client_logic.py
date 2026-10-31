@@ -44,10 +44,21 @@ class TestWrites(unittest.TestCase):
         self.assertEqual(writes[ram.TURTLE_HP["Raphael"]], [ram.FULL_HP_VALUE])
         self.assertEqual(writes[ram.MISSILE_COUNT], [0])
 
-    def test_full_sync_never_captures_the_active_turtle(self):
-        # Writing 0 HP to the turtle on screen plays her death animation (seen in BizHawk), and the
-        # area savestates all start with Leo active.
-        writes = dict(full_sync_writes(inv("Raphael"), active="Leonardo"))
+    def test_full_sync_switches_away_from_an_unowned_active_turtle(self):
+        # The area savestates all start with Leo active. The switch must come first: the client writes
+        # the list in one go, and $0067 + HP in the same frame is safe (lua/tmnt_turtle_swap_test.lua).
+        writes = full_sync_writes(inv("Raphael", "Donatello"), active="Leonardo")
+        self.assertEqual(writes[0], (ram.ACTIVE_TURTLE, [ram.TURTLE_BY_ID.index("Raphael")]))
+        self.assertEqual(dict(writes)[ram.TURTLE_HP["Leonardo"]], [ram.CAPTURED_HP_VALUE])
+
+    def test_full_sync_keeps_an_owned_active_turtle(self):
+        writes = dict(full_sync_writes(inv("Raphael", "Leonardo"), active="Leonardo"))
+        self.assertNotIn(ram.ACTIVE_TURTLE, writes)
+        self.assertEqual(writes[ram.TURTLE_HP["Leonardo"]], [ram.FULL_HP_VALUE])
+
+    def test_full_sync_without_turtles_leaves_the_active_one(self):
+        writes = dict(full_sync_writes(inv(), active="Leonardo"))
+        self.assertNotIn(ram.ACTIVE_TURTLE, writes)
         self.assertNotIn(ram.TURTLE_HP["Leonardo"], writes)
         self.assertEqual(writes[ram.TURTLE_HP["Michelangelo"]], [ram.CAPTURED_HP_VALUE])
 
