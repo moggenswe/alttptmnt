@@ -25,7 +25,7 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 | Antal continues | `$0046` | börjar på 3 | Dok |
 | Bossvinst Area 1–5 | | inte dokumenterad; troligen när `$0048` räknas upp | Okänd |
 | Shredder besegrad | `$001B` = 5 | eftertexterna börjar | Dok |
-| 4 lediga bytes (brevlåda) | `$07F0–$07F3` | sidan `07xx` saknar anteckningar; ska aldrig ändras under spel | Gissning |
+| 4 lediga bytes (brevlåda) | ~~`$07F0–$07F3`~~ | **Används av spelet**: alla fyra blev `44` under spel i Area 1. Ny plats letas med "Track unused". | Underkänd |
 | Ledigt ROM-utrymme för AP-taggen (PRG-offset) | `0x1BE00` | 582 byte `0xFF` på `$1BD92–$1BFD7` (bank 6); taggen tar 70 byte | Skannat ur ROM-filen |
 
 ## R1 – går det att låsa en sköldpadda genom att sätta HP till fångad-värdet?
@@ -36,7 +36,7 @@ Frigivning: **JA**. Efter `80` på `$0078` gick Raph att välja igen direkt. Kli
 
 ## R2 – minns spelet upplockade pickups?
 
-Resultat:
+Resultat: **NEJ** (2026-10-31). En pizza i första byggnaden i Area 1 låg där igen efter ut- och ingång. `PICKUPS_PERSISTENT = False`, och Task 9 utgår.
 
 ## MISSILE_REFILL / ROPE_REFILL
 

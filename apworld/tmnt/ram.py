@@ -26,7 +26,7 @@ BOSS_DEFEATED_SIGNAL: dict[int, tuple[int, int]] = {area: (0x00A0, area) for are
 SHREDDER_DEFEATED: tuple[int, int] = (GAME_PHASE, 5)  # doc: phase 5 = ending credits
 
 # Mailbox shared with lua/tmnt_area_select.lua (keep the Lua constants in sync).
-MAILBOX_BASE = 0x07F0            # guess: page 07xx has no documented use
+MAILBOX_BASE = 0x07F0            # WRONG: the game wrote 0x44 here in Area 1; to be moved (probe: Track unused)
 MAILBOX_PASSES = MAILBOX_BASE + 0
 MAILBOX_LOAD_COUNTER = MAILBOX_BASE + 1
 MAILBOX_ACK = MAILBOX_BASE + 2
@@ -35,7 +35,7 @@ MAGIC_VALUE = 0xA7
 
 MISSILE_REFILL = 10              # guess: set after playing Area 3
 ROPE_REFILL = 5                  # guess: set after playing Area 3
-PICKUPS_PERSISTENT = False       # unchecked (risk R2)
+PICKUPS_PERSISTENT = False       # confirmed: a pizza respawns after leaving the room (risk R2: no)
 
 # Domain "PRG ROM": free bytes for the AP tag written by rom.py. VERIFIED from the ROM file:
 # PRG $1BD92-$1BFD7 is 582 bytes of 0xFF (bank 6); the old guess 0x1FF00 was live code.

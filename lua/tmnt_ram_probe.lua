@@ -11,7 +11,9 @@
 --   Changed   keep candidates whose value changed in either direction since the last step.
 --   Undo      go back one step.
 --   Print     list all candidates in the Lua console's Output.
--- Snapshot / Diff: Snapshot remembers all RAM; Diff prints every byte changed since then.
+-- Snapshot / Diff: Snapshot remembers all RAM; Diff prints bytes changed since then (first 60).
+-- Track unused / Print unused: drops every byte that changes on any frame; what is left after a long
+-- play session is a mailbox candidate. Print lists runs of 4+ never-changed bytes.
 --
 -- The WATCH addresses and the first 15 candidates are drawn on the game screen.
 -- Edit WATCH as addresses are found; the values feed apworld/tmnt/ram.py.
@@ -34,6 +36,7 @@ local WATCH = {
 }
 
 local RAM_SIZE = 0x800
+local DIFF_PRINT_LIMIT = 60  -- BizHawk's Lua console stops printing ("Flood warning") above ~100 lines
 
 local candidates = nil
 local history = {}
@@ -119,14 +122,69 @@ local function print_diff()
   for address = 0, RAM_SIZE - 1 do
     local old, new = snapshot[address], read(address)
     if old ~= new then
-      console.log(string.format("$%04X: %02X -> %02X (%+d)", address, old, new, new - old))
+      if lines < DIFF_PRINT_LIMIT then
+        console.log(string.format("$%04X: %02X -> %02X (%+d)", address, old, new, new - old))
+      end
       lines = lines + 1
     end
   end
-  set_status(string.format("Diff: %d byte(s) changed", lines))
+  set_status(string.format("Diff: %d byte(s) changed (printed %d)", lines, math.min(lines, DIFF_PRINT_LIMIT)))
 end
 
-local form = forms.newform(260, 262, "TMNT RAM probe")
+-- Unused-byte tracking: every frame, any address whose value differs from its value at the start is
+-- dropped. What survives a long play session is a candidate for the client's mailbox.
+local untouched_start, untouched, tracked_frames = nil, nil, 0
+
+local function read_all()
+  if memory.read_bytes_as_array ~= nil then
+    local bytes = memory.read_bytes_as_array(0, RAM_SIZE, "RAM")
+    local out = {}
+    for address = 0, RAM_SIZE - 1 do out[address] = bytes[address + 1] end
+    return out
+  end
+  local out = {}
+  for address = 0, RAM_SIZE - 1 do out[address] = read(address) end
+  return out
+end
+
+local function track_unused()
+  untouched_start, untouched, tracked_frames = read_all(), {}, 0
+  for address = 0, RAM_SIZE - 1 do untouched[address] = true end
+  set_status("Tracking unused bytes: now play (rooms, fights, pause, death)")
+end
+
+local function update_unused()
+  if untouched == nil then return end
+  local now = read_all()
+  for address in pairs(untouched) do
+    if now[address] ~= untouched_start[address] then untouched[address] = nil end
+  end
+  tracked_frames = tracked_frames + 1
+end
+
+local function print_unused()
+  if untouched == nil then
+    set_status("Press Track unused first")
+    return
+  end
+  local runs, start = 0, nil
+  for address = 0, RAM_SIZE do
+    local free = address < RAM_SIZE and untouched[address]
+    if free and start == nil then start = address end
+    if not free and start ~= nil then
+      if address - start >= 4 and runs < DIFF_PRINT_LIMIT then
+        console.log(string.format("$%04X-$%04X (%d bytes, value %02X)", start, address - 1, address - start,
+                                  untouched_start[start]))
+        runs = runs + 1
+      end
+      start = nil
+    end
+  end
+  set_status(string.format("%d untouched bytes after %d frames; %d runs of 4+ printed",
+                           count(untouched), tracked_frames, runs))
+end
+
+local form = forms.newform(260, 326, "TMNT RAM probe")
 local buttons = {
   { "New",       new_search },
   { "Decreased", function() narrow("Decreased", function(old, new) return new < old end) end },
@@ -137,14 +195,17 @@ local buttons = {
   { "Print",     print_candidates },
   { "Snapshot",  take_snapshot },
   { "Diff",      print_diff },
+  { "Track unused", track_unused },
+  { "Print unused", print_unused },
 }
 for i, button in ipairs(buttons) do
   local column, row = (i - 1) % 2, math.floor((i - 1) / 2)
   forms.button(form, button[1], button[2], 10 + column * 120, 10 + row * 32, 110, 28)
 end
-status_label = forms.label(form, "Press New to start", 10, 177, 230, 40)
+status_label = forms.label(form, "Press New to start", 10, 241, 230, 40)
 
 while true do
+  update_unused()
   for i, entry in ipairs(WATCH) do
     local value = read(entry[2])
     gui.text(2, 10 + 12 * i, string.format("%-9s $%04X = %02X (%d)", entry[1], entry[2], value, value))
