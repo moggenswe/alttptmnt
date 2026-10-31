@@ -34,6 +34,9 @@ MAILBOX_LOAD_COUNTER = MAILBOX_BASE + 1
 MAILBOX_ACK = MAILBOX_BASE + 2
 MAILBOX_MAGIC = MAILBOX_BASE + 3
 MAGIC_VALUE = 0xA7
+# Read only by the Lua HUD (lua/tmnt_area_select.lua): what the player owns and which bosses are beaten.
+MAILBOX_INVENTORY = MAILBOX_BASE + 4  # bit 0-3 turtles by ID (TURTLE_BY_ID), 4 Missile Pack, 5 Rope Pack, 6 Scuba Kit
+MAILBOX_CLEARED = MAILBOX_BASE + 5    # bit N-1 = Area N's boss beaten (N = 1..5)
 
 MISSILE_REFILL = 15              # the TAS uses all 10 missiles it finds in Area 3; 15 gives room for misses
 ROPE_REFILL = 5                  # guess: the TAS skips ropes (damage boost), so play Area 3 to set this

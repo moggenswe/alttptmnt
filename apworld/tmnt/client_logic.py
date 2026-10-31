@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from . import ram
 from .items import AREA_PASSES, TURTLES
-from .rules import CLEARS_FOR_TECHNODROME
+from .rules import AREA_TOOL_REQUIREMENTS, CLEARS_FOR_TECHNODROME
 
 Write = tuple[int, list[int]]
 
@@ -35,14 +35,12 @@ def area6_unlocked(inv: Inventory, cleared_areas: set[int]) -> bool:
     return len(inv.turtles) == len(TURTLES) and len(cleared_areas) >= CLEARS_FOR_TECHNODROME
 
 
+def has_tool(inv: Inventory, tool: str) -> bool:
+    return {"Missile Pack": inv.missiles, "Rope Pack": inv.ropes, "Zora's Scuba Kit": inv.scuba}[tool]
+
+
 def _area_playable(inv: Inventory, area: int) -> bool:
-    if area not in inv.passes:
-        return False
-    if area == 2:
-        return inv.scuba
-    if area == 3:
-        return inv.missiles and inv.ropes
-    return True
+    return area in inv.passes and all(has_tool(inv, tool) for tool in AREA_TOOL_REQUIREMENTS.get(area, ()))
 
 
 def pass_bitmask(inv: Inventory, cleared_areas: set[int]) -> int:
@@ -52,7 +50,27 @@ def pass_bitmask(inv: Inventory, cleared_areas: set[int]) -> int:
     return mask
 
 
-def full_sync_writes(inv: Inventory, active: str | None) -> list[Write]:
+def received_message(item: str, sender: str | None) -> str:
+    """BizHawk on-screen text for a received item; sender is None for the player's own TMNT checks."""
+    return f"Hittade {item}" if sender is None else f"Fick {item} från {sender}"
+
+
+def inventory_byte(inv: Inventory) -> int:
+    """MAILBOX_INVENTORY for the Lua HUD: bit 0-3 turtles by ID, 4 Missile Pack, 5 Rope Pack, 6 Scuba Kit."""
+    turtles = sum(1 << turtle_id for turtle_id, turtle in enumerate(ram.TURTLE_BY_ID) if turtle in inv.turtles)
+    return turtles | inv.missiles << 4 | inv.ropes << 5 | inv.scuba << 6
+
+
+def cleared_byte(cleared_areas: set[int]) -> int:
+    """MAILBOX_CLEARED for the Lua HUD: bit N-1 = Area N's boss beaten."""
+    return sum(1 << (area - 1) for area in cleared_areas if 1 <= area <= 5)
+
+
+def _packs(inv: Inventory) -> tuple[tuple[bool, int, int], ...]:
+    return ((inv.missiles, ram.MISSILE_COUNT, ram.MISSILE_REFILL), (inv.ropes, ram.ROPE_COUNT, ram.ROPE_REFILL))
+
+
+def full_sync_writes(inv: Inventory, active: str | None, ram_now: dict[int, int] | None = None) -> list[Write]:
     """Full HP for owned turtles, captured for the rest.
 
     If the turtle on screen is not owned, the first write makes an owned turtle active, and then she is
@@ -67,18 +85,27 @@ def full_sync_writes(inv: Inventory, active: str | None) -> list[Write]:
     writes += [(address, [ram.FULL_HP_VALUE if turtle in inv.turtles else ram.CAPTURED_HP_VALUE])
                for turtle, address in ram.TURTLE_HP.items()
                if turtle in inv.turtles or turtle != active or switch_to]
-    writes.append((ram.MISSILE_COUNT, [ram.MISSILE_REFILL if inv.missiles else 0]))
-    writes.append((ram.ROPE_COUNT, [ram.ROPE_REFILL if inv.ropes else 0]))
+    # Owned packs are topped up to their refill (more from vanilla pickups is kept); unowned ones emptied.
+    # Vanilla pickups stay usable as bonus ammo: the area select keeps the player out of areas whose packs
+    # are missing, and missiles and ropes only lie in Areas 3 and 4 (docs/research/tmnt-ammo-och-tracker.md).
+    for has, address, refill in _packs(inv):
+        now = (ram_now or {}).get(address, 0)
+        if not has:
+            writes.append((address, [0]))
+        elif now < refill:
+            writes.append((address, [refill]))
     return writes
 
 
 def incremental_writes(old: Inventory, new: Inventory, ram_now: dict[int, int]) -> list[Write]:
+    """Newly received turtles get full HP. A pack refills when it arrives and again whenever its count is
+    at 0 (shot empty, or reset by the game at a continue), so owning a pack never leaves the player stuck."""
     writes = [(ram.TURTLE_HP[turtle], [ram.FULL_HP_VALUE])
               for turtle in ram.TURTLE_HP if turtle in new.turtles - old.turtles]
-    for had, has, address, refill in ((old.missiles, new.missiles, ram.MISSILE_COUNT, ram.MISSILE_REFILL),
-                                      (old.ropes, new.ropes, ram.ROPE_COUNT, ram.ROPE_REFILL)):
-        if has and not had:
-            writes.append((address, [max(ram_now.get(address, 0), refill)]))
+    for (had, _, _), (has, address, refill) in zip(_packs(old), _packs(new)):
+        now = ram_now.get(address, 0)
+        if has and (not had or now == 0) and now < refill:
+            writes.append((address, [refill]))
     return writes
 
 

@@ -40,8 +40,14 @@ class ClientTestCase(unittest.TestCase):
         self.ram.bytes[ram.ACTIVE_TURTLE] = 1  # Raph on screen unless a test says otherwise
         self.now = 0.0
         self.sent: list[dict] = []
+        self.messages: list[str] = []
+
+        async def display_message(_ctx, message):
+            self.messages.append(message)
+
         patches = [mock.patch.object(client_module, "read", self.ram.read),
                    mock.patch.object(client_module, "write", self.ram.write),
+                   mock.patch.object(client_module, "display_message", display_message),
                    mock.patch.object(client_module, "monotonic", lambda: self.now)]
         for patch in patches:
             patch.start()
@@ -52,12 +58,16 @@ class ClientTestCase(unittest.TestCase):
 
         self.ctx = SimpleNamespace(
             server=object(), slot_data={}, auth_status=AuthStatus.AUTHENTICATED, bizhawk_ctx=None,
+            slot=1, player_names={1: "Turtles", 2: "Link"},
             items_received=[], checked_locations=set(), finished_game=False, send_msgs=send_msgs,
             item_names=SimpleNamespace(lookup_in_game=lambda item_id, _game=None: NAME_BY_ID[item_id]))
         self.client = TMNTClient()
 
-    def give(self, *names: str) -> None:
-        self.ctx.items_received = [SimpleNamespace(item=item_table[name][0]) for name in names]
+    def give(self, *names: str, sender: int = 1) -> None:
+        """Replaces the received items; the new ones come from slot `sender` (1 = this TMNT slot)."""
+        old = {item.item: item for item in self.ctx.items_received}
+        self.ctx.items_received = [old.get(item_table[name][0]) or SimpleNamespace(item=item_table[name][0], player=sender)
+                                   for name in names]
 
     def tick(self, seconds: float = 0.5) -> None:
         self.now += seconds
@@ -219,7 +229,7 @@ class TestEntrances(ClientTestCase):
         self.assertIn(location_table[ENTRANCE_LOCATIONS[1]], self.sent_locations())
 
     def test_area_value_is_zero_based(self):
-        self.give("Raphael", "Sewer Pass: Area 4")
+        self.give("Raphael", "Sewer Pass: Area 4", "Rope Pack")
         self.enter(4)
         self.tick()
         self.tick()
@@ -231,3 +241,52 @@ class TestEntrances(ClientTestCase):
         self.tick()
         self.tick()
         self.assertNotIn(location_table[ENTRANCE_LOCATIONS[1]], self.sent_locations())
+
+
+class TestHudMailbox(ClientTestCase):
+    def test_inventory_and_cleared_bytes(self):
+        self.give("Raphael", "Donatello", "Sewer Pass: Area 1", "Rope Pack")
+        self.ctx.checked_locations = {location_table["Area 1 - Boss"], location_table["Area 4 - Boss"]}
+        self.tick()
+        self.assertEqual(self.ram.bytes[ram.MAILBOX_INVENTORY], 0b0101010)  # Raph(1), Don(3), Rope Pack(5)
+        self.assertEqual(self.ram.bytes[ram.MAILBOX_CLEARED], 0b01001)
+
+
+class TestAmmoFloor(ClientTestCase):
+    def test_owned_pack_refills_at_zero(self):
+        self.give("Raphael", "Sewer Pass: Area 1", "Missile Pack")
+        self.tick()
+        self.ram.bytes[ram.MISSILE_COUNT] = 0  # shot empty, or reset by the game at a continue
+        self.tick()
+        self.assertEqual(self.ram.bytes[ram.MISSILE_COUNT], ram.MISSILE_REFILL)
+
+    def test_owned_pack_left_alone_above_zero(self):
+        self.give("Raphael", "Sewer Pass: Area 1", "Missile Pack")
+        self.tick()
+        self.ram.bytes[ram.MISSILE_COUNT] = 3
+        self.tick()
+        self.assertEqual(self.ram.bytes[ram.MISSILE_COUNT], 3)
+
+    def test_unowned_pack_not_touched_midarea(self):
+        # A vanilla pickup is bonus ammo; only a full sync clears it.
+        self.give("Raphael", "Sewer Pass: Area 1")
+        self.tick()
+        self.ram.bytes[ram.ROPE_COUNT] = 3
+        self.tick()
+        self.assertEqual(self.ram.bytes[ram.ROPE_COUNT], 3)
+
+
+class TestAnnounce(ClientTestCase):
+    def test_items_held_at_connect_are_not_announced(self):
+        self.give("Raphael", "Sewer Pass: Area 1")
+        self.tick()
+        self.assertEqual(self.messages, [])
+
+    def test_new_items_are_announced_with_sender(self):
+        self.give("Raphael", "Sewer Pass: Area 1")
+        self.tick()
+        self.give("Raphael", "Sewer Pass: Area 1", "Rope Pack", sender=2)
+        self.tick()
+        self.give("Raphael", "Sewer Pass: Area 1", "Rope Pack", "Leonardo")
+        self.tick()
+        self.assertEqual(self.messages, ["Fick Rope Pack från Link", "Hittade Leonardo"])

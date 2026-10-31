@@ -44,6 +44,15 @@ class TestStartArea3(TMNTTestBase):
         self.assertBeatable(True)
 
 
+class TestStartArea4(TMNTTestBase):
+    options = {"start_area": "area_4"}
+
+    def test_start_area_4_comes_with_ropes(self):
+        self.assertIn("Rope Pack", precollected_names(self))
+        self.assertNotIn("Missile Pack", precollected_names(self))
+        self.assertTrue(self.can_reach_location("Area 4 - Sewer Entrance"))
+
+
 class TestSlotData(TMNTTestBase):
     options = {"start_turtle": "leonardo", "start_area": "area_2"}
 

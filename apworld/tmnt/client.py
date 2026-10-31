@@ -3,13 +3,13 @@ from time import monotonic
 from typing import TYPE_CHECKING
 
 from NetUtils import ClientStatus
-from worlds._bizhawk import RequestFailedError, read, write
+from worlds._bizhawk import RequestFailedError, display_message, read, write
 from worlds._bizhawk.client import BizHawkClient
 
 from . import ram
-from .client_logic import (AREA6_BIT, Inventory, SignalDebouncer, boss_defeated, full_sync_writes,
-                           incremental_writes,
-                           inventory_from_items, needs_full_sync, pass_bitmask)
+from .client_logic import (AREA6_BIT, Inventory, SignalDebouncer, boss_defeated, cleared_byte, full_sync_writes,
+                           incremental_writes, inventory_byte, inventory_from_items, needs_full_sync,
+                           pass_bitmask, received_message)
 from .items import GAME_NAME
 from .locations import BOSS_LOCATIONS, ENTRANCE_LOCATIONS, START_LOCATIONS, location_table
 from .rom import AUTH_LENGTH, ROM_TAG
@@ -35,6 +35,7 @@ class TMNTClient(BizHawkClient):
         self.goal = SignalDebouncer()
         self.last_inventory: Inventory | None = None
         self.expected_ack: int | None = None
+        self.announced: int | None = None  # how many of ctx.items_received have been shown in BizHawk
 
     async def validate_rom(self, ctx: "BizHawkClientContext") -> bool:
         tag = (await read(ctx.bizhawk_ctx, [(ram.ROM_TAG_OFFSET, len(ROM_TAG), "PRG ROM")]))[0]
@@ -74,14 +75,17 @@ class TMNTClient(BizHawkClient):
         passes = pass_bitmask(inventory, cleared)
 
         await self._send_checks(ctx, values, passes, now)
+        await self._announce_items(ctx)
 
-        writes = [(ram.MAILBOX_PASSES, [passes]), (ram.MAILBOX_MAGIC, [ram.MAGIC_VALUE])]
+        writes = [(ram.MAILBOX_PASSES, [passes]), (ram.MAILBOX_MAGIC, [ram.MAGIC_VALUE]),
+                  (ram.MAILBOX_INVENTORY, [inventory_byte(inventory)]),
+                  (ram.MAILBOX_CLEARED, [cleared_byte(cleared)])]
         counter, ack = values[ram.MAILBOX_LOAD_COUNTER], values[ram.MAILBOX_ACK]
         magic_ok = values[ram.MAILBOX_MAGIC] == ram.MAGIC_VALUE
         if self.last_inventory is None or needs_full_sync(counter, ack, magic_ok, self.expected_ack):
             active_id = values[ram.ACTIVE_TURTLE]
             active = ram.TURTLE_BY_ID[active_id] if active_id < len(ram.TURTLE_BY_ID) else None
-            writes += full_sync_writes(inventory, active)
+            writes += full_sync_writes(inventory, active, values)
             writes.append((ram.MAILBOX_ACK, [counter]))
             new_ack = counter
         else:
@@ -95,6 +99,18 @@ class TMNTClient(BizHawkClient):
         if not ctx.finished_game and self.goal.update({SHREDDER_KEY: shredder}, now):
             await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
             ctx.finished_game = True
+
+    async def _announce_items(self, ctx: "BizHawkClientContext") -> None:
+        """Shows each newly received item in BizHawk's message queue. Items already received when the client
+        connects are not repeated."""
+        if self.announced is None:
+            self.announced = len(ctx.items_received)
+            return
+        for item in ctx.items_received[self.announced:]:
+            name = ctx.item_names.lookup_in_game(item.item, self.game)
+            sender = ctx.player_names.get(item.player, "?") if item.player != ctx.slot else None
+            await display_message(ctx.bizhawk_ctx, received_message(name, sender))
+            self.announced += 1  # per item, so a failed request does not repeat the ones already shown
 
     async def _send_checks(self, ctx: "BizHawkClientContext", values: dict[int, int], passes: int,
                            now: float) -> None:

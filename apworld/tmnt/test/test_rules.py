@@ -16,6 +16,12 @@ class TestRules(TMNTTestBase):
         self.collect_by_name("Rope Pack")
         self.assertTrue(self.can_reach_location("Area 3 - Boss"))
 
+    def test_area4_needs_ropes(self):
+        self.collect_by_name("Sewer Pass: Area 4")
+        self.assertFalse(self.can_reach_location("Area 4 - Boss"))
+        self.collect_by_name("Rope Pack")
+        self.assertTrue(self.can_reach_location("Area 4 - Boss"))
+
     def test_area5_boss_needs_donatello(self):
         self.assertAccessDependency(["Area 5 - Boss"], [["Donatello"]], only_check_listed=True)
 
@@ -28,7 +34,7 @@ class TestRules(TMNTTestBase):
     def test_area6_needs_three_clears_not_two(self):
         self.collect_by_name([*TURTLES, "Sewer Pass: Area 2", "Zora's Scuba Kit"])
         self.assertFalse(self.reach_after_sweep("Area 6 - Shredder"))
-        self.collect_by_name("Sewer Pass: Area 4")
+        self.collect_by_name(["Sewer Pass: Area 4", "Rope Pack"])
         self.assertTrue(self.reach_after_sweep("Area 6 - Shredder"))
 
     def test_beatable(self):

@@ -28,6 +28,10 @@ class TestPassBitmask(unittest.TestCase):
         self.assertEqual(pass_bitmask(inv("Sewer Pass: Area 3", "Missile Pack"), set()), 0)
         self.assertEqual(pass_bitmask(inv("Sewer Pass: Area 3", "Missile Pack", "Rope Pack"), set()), 0b00100)
 
+    def test_pass_bitmask_area4_needs_ropes(self):
+        self.assertEqual(pass_bitmask(inv("Sewer Pass: Area 4"), set()), 0)
+        self.assertEqual(pass_bitmask(inv("Sewer Pass: Area 4", "Rope Pack"), set()), 0b01000)
+
     def test_area6_bit_requires_four_turtles_three_clears(self):
         four = inv("Leonardo", "Michelangelo", "Donatello", "Raphael")
         three = inv("Leonardo", "Michelangelo", "Raphael")
@@ -79,7 +83,17 @@ class TestWrites(unittest.TestCase):
     def test_incremental_pack_keeps_higher_count(self):
         old, new = inv("Raphael"), inv("Raphael", "Missile Pack")
         ram_now = {ram.MISSILE_COUNT: ram.MISSILE_REFILL + 3}
-        self.assertEqual(incremental_writes(old, new, ram_now), [(ram.MISSILE_COUNT, [ram.MISSILE_REFILL + 3])])
+        self.assertEqual(incremental_writes(old, new, ram_now), [])
+
+    def test_full_sync_keeps_higher_count(self):
+        ram_now = {ram.MISSILE_COUNT: ram.MISSILE_REFILL + 3}
+        writes = dict(full_sync_writes(inv("Raphael", "Missile Pack"), active="Raphael", ram_now=ram_now))
+        self.assertNotIn(ram.MISSILE_COUNT, writes)
+
+    def test_owned_pack_refills_at_zero(self):
+        same = inv("Raphael", "Rope Pack")
+        self.assertEqual(incremental_writes(same, same, {ram.ROPE_COUNT: 0}), [(ram.ROPE_COUNT, [ram.ROPE_REFILL])])
+        self.assertEqual(incremental_writes(same, same, {ram.ROPE_COUNT: 1}), [])
 
 
 
