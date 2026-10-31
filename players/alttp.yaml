@@ -5,3 +5,4 @@ A Link to the Past:
   goal: ganon
   entrance_shuffle: vanilla
   non_local_items: [Hookshot, Flippers, Moon Pearl]
+  progression_balancing: 75  # same as players/tmnt.yaml: one runner plays both games

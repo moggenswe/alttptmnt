@@ -4,3 +4,8 @@ Teenage Mutant Ninja Turtles:
   start_turtle: raphael
   start_area: area_1
   non_local_items: [Leonardo, Michelangelo, Donatello, Raphael, "Sewer Pass: Area 1", "Sewer Pass: Area 2", "Sewer Pass: Area 3", "Sewer Pass: Area 4", "Sewer Pass: Area 5", Missile Pack, Rope Pack, "Zora's Scuba Kit"]
+  # Stream: the captured turtles and both packs are hinted from the start, so the go mode route (Shredder
+  # needs all four turtles; Areas 3 and 4 need the packs) is readable from minute one.
+  start_hints: [Leonardo, Michelangelo, Donatello, Missile Pack, Rope Pack]
+  # One runner plays both games: pull cross-game progression earlier to cut dead time.
+  progression_balancing: 75
