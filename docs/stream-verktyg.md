@@ -25,8 +25,12 @@ Lägg till `tools/obs/go-mode.html` som en Browser-källa med lokal fil. Lägg t
 file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&alttp=Link&tmnt=Turtles
 ```
 
-- Panelen visar Hyrule (dungeon-bossar x/10, KLART när Ganon är besegrad) och New York (sköldpaddor x/4, bossar x/3, GO MODE, KLART när Shredder är besegrad).
-- Ikonerna är egenritad pixelgrafik direkt i filen, inga spelspritar: fyra sköldpaddshuvuden i pannbandsfärgerna, fem boss-markeringar, Missile Pack, Rope Pack, Scuba Kit, fem kloaklock för passen och tio hjärtbehållare för Hyrules dungeon-bossar. Det man har lyser, och det som saknas är grått och dämpat.
+- **Panelen visar båda spelens föremål:**
+  - **Hyrule:** 18 viktiga föremål på väg till Ganon. Svärd, båge och handskar visar nivå (svärd 1–4, båge och handskar 1–2). Dessutom dungeon-bossar x/10 och DONE när Ganon är besegrad.
+  - **New York:** sköldpaddor x/4, verktyg, pass, bossar x/3, GO MODE, och DONE när Shredder är besegrad.
+  - Livetest 2026-10-31: två Progressive Sword, Hookshot och Moon Pearl skickades till Link och tändes, med svärdet på nivå 2.
+- Ikonerna är egen pixelgrafik från `tools/sprites.py`, inga spelspritar. Det man har lyser, och det som saknas är grått och dämpat.
+- **All text som syns på streamen är engelsk:** panelen, BizHawk-menyn (SELECT AREA, Locked, Connect the AP client), meddelandena ("Got X from Y", "Found X") och OBS-texten "Into the sewers...". Dokumentationen är fortfarande svensk.
 - Den ansluter som en skrivskyddad Tracker-klient och påverkar inte spelet.
 - Med `&demo=1` visas påhittade värden utan server, och `&layout=column` lägger korten under varandra.
 - ALttP:s kristaller syns inte i panelen. De är logikhändelser utan ID och slumpas mellan dungeons. Runnern ser dem på kartan i spelet.
@@ -53,9 +57,9 @@ Skriptet patchar ROM:arna om de saknas och kopierar dem till de fasta namnen `al
 
 - `tools/obs/tmnt-alttp-scenes.json` byggs av `tools/make_obs_collection.py` och importeras i OBS under Scene Collection → Import. Kör om skriptet om repot flyttas, eftersom sökvägarna är absoluta.
 - **Scener:**
-  - **Hyrule:** ALttP-fönstret, ALttP-trackern och go mode-panelen.
-  - **Kloak (övergång):** kloakgrön bakgrund, texten "Genom kloaken...", panelen i mitten och båda trackerna.
-  - **New York:** TMNT-fönstret, TMNT-trackern och panelen.
+  - **Hyrule:** ALttP-fönstret och panelen med båda spelens föremål som en kolumn till höger.
+  - **Kloak (övergång):** kloakgrön bakgrund, texten "Into the sewers...", panelen stort i mitten och båda PopTracker-fönstren under.
+  - **New York:** TMNT-fönstret och samma panelkolumn.
 - **Övergång:** "Pizza-wipe", en stinger med `tools/obs/pizza_wipe.webm` (byggd av `tools/make_stinger.py`) och övergångspunkt 500 ms. Ett band av tomatsås med rullande pizzor sveper över och täcker hela bilden i mitten.
 - **Provat 2026-10-31 i OBS 32.0.4:**
   - Samlingen laddades utan fel.

@@ -179,6 +179,137 @@ SPRITES = {
 }
 
 
+MEDALLION = [  # X is the medallion's face; a glyph is drawn over rows 5-9, columns 4-11
+    "................",
+    ".....KKKKKK.....",
+    "...KKYYYYYYKK...",
+    "..KYYyyyyyyYYK..",
+    "..KYyXXXXXXyYK..",
+    ".KYyXXXXXXXXyYK.",
+    ".KYyXXXXXXXXyYK.",
+    ".KYyXXXXXXXXyYK.",
+    ".KYyXXXXXXXXyYK.",
+    ".KYyXXXXXXXXyYK.",
+    "..KYyXXXXXXyYK..",
+    "..KYYyyyyyyYYK..",
+    "...KKYYYYYYKK...",
+    ".....KKKKKK.....",
+    "................",
+    "................",
+]
+MEDALLION_GLYPHS = {  # 8x5, "a" and "b" are the glyph's two colours
+    "flame": ["...aa...", "..aaaa..", ".aabbaa.", ".abbbba.", "..aaaa.."],
+    "bolt": ["....aa..", "...aa...", "..aaaa..", "...aa...", "..aa...."],
+    "ring": ["..aaaa..", ".a....a.", ".a.bb.a.", ".a....a.", "..aaaa.."],
+}
+
+
+def medallion(face: str, glyph: str, a: str, b: str) -> list[str]:
+    rows = [row.replace("X", face) for row in MEDALLION]
+    for y, glyph_row in enumerate(MEDALLION_GLYPHS[glyph]):
+        row = list(rows[5 + y])
+        for x, pixel in enumerate(glyph_row):
+            if pixel != ".":
+                row[4 + x] = a if pixel == "a" else b
+        rows[5 + y] = "".join(row)
+    return rows
+
+
+def rod(top: list[str], shaft: str, shade: str) -> list[str]:
+    """A staff: five rows of head, a metal collar, then the shaft."""
+    return [*top, "......KSSK......", *[f"......K{shaft}{shade}K......"] * 8, "......KSSK......", ".......KK......."]
+
+
+# A Link to the Past items that matter for going to Ganon, drawn in the same style (not the game's sprites).
+ALTTP_SPRITES = {
+    "alttp_sword": [
+        "..............KK", ".............KWK", "............KWSK", "...........KWSK.",
+        "..........KWSK..", ".........KWSK...", "........KWSK....", ".......KWSK.....",
+        "..KK..KWSK......", "..KYKKWSK.......", "...KYYSK........", "....KYyK........",
+        "...KBKKyK.......", "..KBbK.KyK......", ".KBbK...KK......", ".KKK............",
+    ],
+    "alttp_bow": [
+        "...KKKKKKKK.....", "..KNNNNNNNWK....", "..KNnKKKKKWK....", ".KNnK.....WK....",
+        ".KNK......WK....", ".KNK......WK....", ".KNK......WK....", ".KNKddddddWSSK..",
+        ".KNK......WK....", ".KNK......WK....", ".KNK......WK....", ".KNK......WK....",
+        ".KNnK.....WK....", "..KNnKKKKKWK....", "..KNNNNNNNWK....", "...KKKKKKKK.....",
+    ],
+    "alttp_hookshot": [
+        "................", "................", "................", "................",
+        "...........KK...", "..........KSdK..", "KKKK......KSK...", "KRRKKKKKKKSdK...",
+        "KRrKSdSdSdSSK...", "KRRKKKKKKKSdK...", "KKKK......KSK...", "..........KSdK..",
+        "...........KK...", "................", "................", "................",
+    ],
+    "alttp_hammer": [
+        "................", "..KKKKKKKKKKK...", ".KSSSSSSSSSSdK..", ".KSWSSSSSSSSdK..",
+        ".KSSSSSSSSSSdK..", ".KddddddddddKK..", "..KKKKKNKKKKK...", "......KNnK......",
+        "......KNnK......", "......KNnK......", "......KNnK......", "......KNnK......",
+        "......KNnK......", "......KNnK......", "......KKKK......", "................",
+    ],
+    "alttp_firerod": rod([".......KK.......", "......KYOK......", ".....KYYOOK.....", ".....KOYYRK.....",
+                          "......KRRK......"], "R", "r"),
+    "alttp_icerod": rod([".......KK.......", "......KWCK......", ".....KWCCcK.....", ".....KCWCcK.....",
+                         "......KccK......"], "B", "b"),
+    "alttp_lamp": [
+        "................", "......KK........", ".....KYOK.......", ".....KYOK.......",
+        "......KK........", "....KKKKKK......", "...KYYYYYYK.....", "..KYWYYYYYYKKK..",
+        ".KYYYYYYYYYYyYK.", ".KYYYYYYYYYYKKyK", ".KyYYYYYYYYyK.K.", "..KyyyyyyyyK....",
+        "...KKKKKKKK.....", "................", "................", "................",
+    ],
+    "alttp_mirror": [
+        ".....KKKKKK.....", "...KKPPPPPPKK...", "..KPCCCCCCCCPK..", "..KPCWCCCCCCPK..",
+        ".KPCWCCCCCCCcPK.", ".KPCCCCCCCCCcPK.", ".KPCCCCCCCCccPK.", "..KPCCCCCCccPK..",
+        "..KPcCCCCcccPK..", "...KKPPPPPPKK...", "......KPpK......", "......KPpK......",
+        "......KPpK......", ".....KPPppK.....", "......KKKK......", "................",
+    ],
+    "alttp_pearl": [
+        "................", ".....KKKKKK.....", "...KKIIIIIIKK...", "..KIWWIIIIIIPK..",
+        "..KIWIIIIIIIPK..", ".KIIIIIIIIIIIPK.", ".KIIIIIIIIIIIPK.", ".KIIIIIIIIIIPPK.",
+        ".KIIIIIIIIIIPPK.", ".KIIIIIIIIIPPPK.", "..KIIIIIIIPPPK..", "..KPIIIIIPPPPK..",
+        "...KKPPPPPPKK...", ".....KKKKKK.....", "................", "................",
+    ],
+    "alttp_flippers": [
+        "................", "..KKK.....KKK...", ".KBBBK...KBBBK..", ".KBBBK...KBBBK..",
+        "KBBbBBK.KBBbBBK.", "KBbBbBK.KBbBbBK.", "KBbBbBK.KBbBbBK.", "KBbBbBK.KBbBbBK.",
+        "KBbBbBK.KBbBbBK.", "KBbBbBK.KBbBbBK.", ".KBBBK...KBBBK..", "..KdK.....KdK...",
+        "..KdK.....KdK...", "...K.......K....", "................", "................",
+    ],
+    "alttp_boots": [
+        "................", "....KKKKK.......", "...KRRRRRK......", "...KRWRRrK..KK..",
+        "...KRRRRrK.KWWK.", "...KRRRRrKKWWK..", "...KRRRRrKWWK...", "...KRRRRrKKK....",
+        "...KRRRRRrK.....", "...KRRRRRRrKK...", "...KRRRRRRRRrK..", "..KRRRRRRRRRRrK.",
+        "..KnnnnnnnnnnnK.", "...KKKKKKKKKKKK.", "................", "................",
+    ],
+    "alttp_glove": [
+        "................", "....KKKKKKK.....", "...KSSKSSKSK....", "...KSSKSSKSKK...",
+        "..KKSSKSSKSKSK..", "..KSKSSSSSSSSK..", "..KSSSSSSSSSSK..", "..KSSSSSSSSSsK..",
+        "..KSSSSSSSSssK..", "...KSSSSSSssK...", "...KBBBBBBBBK...", "...KBbBbBbBbK...",
+        "...KKKKKKKKKK...", "................", "................", "................",
+    ],
+    "alttp_book": [
+        "................", "..KKKKKKKKKKK...", "..KGGGGGGGGGgK..", "..KGYYYYYYYGgK..",
+        "..KGYGGGGGYGgK..", "..KGYGLLGGYGgK..", "..KGYGLLGGYGgK..", "..KGYGGGGGYGgK..",
+        "..KGYYYYYYYGgK..", "..KGGGGGGGGGgK..", "..KGGGGGGGGGgK..", "..KgggggggggWK..",
+        "..KWWWWWWWWWWK..", "...KKKKKKKKKKK..", "................", "................",
+    ],
+    "alttp_somaria": [
+        "....KKKK........", "...KRRRRK.......", "..KRrKKRrK......", "..KRK..KRK......",
+        "..KK...KRK......", ".......KRK......", ".......KYK......", ".......KRK......",
+        ".......KRK......", ".......KRK......", ".......KRK......", ".......KRK......",
+        ".......KRK......", ".......KRK......", ".......KRK......", ".......KKK......",
+    ],
+    "alttp_flute": [
+        "................", "................", "................", "................",
+        "................", "................", "KKKKKKKKKKKKKKK.", "KCWCCCCCCCCCCCcK",
+        "KCCKCCKCCKCCKCcK", "KcccccccccccccK.", ".KKKKKKKKKKKKKK.", "................",
+        "................", "................", "................", "................",
+    ],
+    "alttp_bombos": medallion("r", "flame", "O", "Y"),
+    "alttp_ether": medallion("b", "bolt", "C", "W"),
+    "alttp_quake": medallion("g", "ring", "L", "G"),
+}
+
+
 def render(rows: list[str], swap: dict[str, str] | None = None, scale: int = SCALE) -> Image.Image:
     assert all(len(row) == len(rows[0]) for row in rows), "ragged grid"
     image = Image.new("RGBA", (len(rows[0]), len(rows)), (0, 0, 0, 0))
@@ -194,6 +325,7 @@ def all_sprites(scale: int = SCALE) -> dict[str, Image.Image]:
     sprites = {name: render(TURTLE_HEAD, {"X": colours[0], "x": colours[1]}, scale)
                for name, colours in BANDANAS.items()}
     sprites |= {name: render(rows, scale=scale) for name, rows in SPRITES.items()}
+    sprites |= {name: render(rows, scale=scale) for name, rows in ALTTP_SPRITES.items()}
     return sprites
 
 
@@ -202,9 +334,11 @@ def main() -> None:
     sprites = all_sprites()
     for name, image in sprites.items():
         image.save(OUT / f"{name}.png")
-    sheet = Image.new("RGBA", (len(sprites) * 72, 72), (32, 48, 64, 255))
+    columns = 11
+    rows = -(-len(sprites) // columns)
+    sheet = Image.new("RGBA", (columns * 72, rows * 72), (32, 48, 64, 255))
     for i, image in enumerate(sprites.values()):
-        sheet.alpha_composite(image, (i * 72 + 4, 4))
+        sheet.alpha_composite(image, (i % columns * 72 + 4, i // columns * 72 + 4))
     sheet.save(OUT.parent / "sprites_preview.png")
     print(f"{len(sprites)} sprites -> {OUT}")
 

@@ -23,7 +23,7 @@
 -- The script also records what it sees in MAILBOX_BEATEN: a boss win (area byte N-1 -> N without a load)
 -- and Shredder's ending ($001B = 5). The client sends those even if it was disconnected at the time.
 --
--- A missing or unreadable area state is shown as "(saknas)" in the menu and never half-loaded.
+-- A missing or unreadable area state is shown as "(missing)" in the menu and never half-loaded.
 --
 -- Mailbox and addresses: keep in step with apworld/tmnt/ram.py.
 
@@ -97,21 +97,21 @@ end
 -- Returns false if the state could not be loaded; RAM is then untouched.
 local function load_area(area)
   if missing[area] then
-    say("State saknas för Area " .. area)
+    say("No state for Area " .. area)
     return false
   end
   local mailbox = {}
   for address = MAILBOX_FIRST, MAILBOX_LAST do mailbox[address] = read(address) end
   -- BizHawk returns false when a state does not load (e.g. one made in another BizHawk version).
   if savestate.load(state_path(area)) == false then
-    say("Kunde inte ladda Area " .. area)
+    say("Could not load Area " .. area)
     return false
   end
   -- The state overwrote RAM, mailbox included: put the values back and count the load.
   for address = MAILBOX_FIRST, MAILBOX_LAST do write(address, mailbox[address]) end
   write(MAILBOX_LOAD_COUNTER, next_counter(mailbox[MAILBOX_LOAD_COUNTER]))
   write(MAILBOX_MAGIC, MAGIC_VALUE)
-  if read(CURRENT_AREA) ~= area - 1 then say("Fel state för Area " .. area) end
+  if read(CURRENT_AREA) ~= area - 1 then say("Wrong state for Area " .. area) end
   last_area, advanced_at = read(CURRENT_AREA), nil
   last_phase, last_continues, continued = read(GAME_PHASE), read(CONTINUES), false
   return true
@@ -149,7 +149,7 @@ local function watch_continue_and_new_game()
   if phase == PHASE_ENDING and read(MAILBOX_LOAD_COUNTER) ~= 0 then record_beaten(SHREDDER_BEATEN_BIT) end
   if last_phase ~= nil and phase == PHASE_AREA_LOAD and last_phase ~= PHASE_AREA_LOAD
       and read(MAILBOX_MAGIC) == MAGIC_VALUE then
-    force_menu("Välj area")
+    force_menu("Choose an area")
   end
   last_phase, last_continues = phase, continues
 end
@@ -166,7 +166,7 @@ local function watch_area()
     if unlocked(area + 1) then
       count_load()
     else
-      force_menu("Area " .. (area + 1) .. " är låst")
+      force_menu("Area " .. (area + 1) .. " is locked")
     end
   end
 end
@@ -211,10 +211,10 @@ local function draw()
   if hud_shown and read(MAILBOX_MAGIC) == MAGIC_VALUE then draw_hud() end
   if menu_open then
     gui.drawBox(56, 40, 204, 70 + AREAS * 12, 0xFFFFFFFF, 0xE0000000)
-    gui.drawText(64, 46, "VÄLJ AREA", 0xFFFFFF00)
+    gui.drawText(64, 46, "SELECT AREA", 0xFFFFFF00)
     for area = 1, AREAS do
       local mark = area == cursor and ">" or " "
-      local lock = missing[area] and "  (saknas)" or unlocked(area) and "" or "  (låst)"
+      local lock = missing[area] and "  (missing)" or unlocked(area) and "" or "  (locked)"
       gui.drawText(64, 52 + area * 12, mark .. " Area " .. area .. lock, unlocked(area) and 0xFFFFFFFF or 0xFF808080)
     end
   end
@@ -236,7 +236,7 @@ function M.frame(buttons)
       if connected then
         menu_open, cursor = true, 1
       else
-        say("Anslut AP-klienten")
+        say("Connect the AP client")
       end
     end
   else
@@ -248,7 +248,7 @@ function M.frame(buttons)
       if unlocked(cursor) then
         if load_area(cursor) then menu_open, forced = false, false end
       else
-        say("Låst")
+        say("Locked")
       end
     end
     joypad.set({ Up = false, Down = false, Left = false, Right = false, A = false, B = false, Select = false,

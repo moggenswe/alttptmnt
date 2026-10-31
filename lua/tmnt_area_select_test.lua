@@ -63,7 +63,7 @@ step({}, 300)  -- title screen; nothing is loaded and the client has not written
 -- No client: the menu stays shut.
 open_menu()
 check(not select.is_open(), "menu stays shut without the magic byte")
-check(select.message() == "Anslut AP-klienten", "asks for the AP client without the magic byte")
+check(select.message() == "Connect the AP client", "asks for the AP client without the magic byte")
 
 -- Client connected with only Area 1 playable.
 mailbox(0x01, 0, 0)
@@ -74,7 +74,7 @@ press({ Down = true })
 press({ Down = true })
 press({ A = true })
 check(select.is_open(), "a locked area keeps the menu open")
-check(select.message() == "Låst", "a locked area says Låst")
+check(select.message() == "Locked", "a locked area says Locked")
 check(read(COUNTER) == 0, "a locked area loads nothing (counter still 0)")
 press({ B = true })
 check(not select.is_open(), "B closes the menu")
@@ -192,7 +192,7 @@ for _, buttons in ipairs({ { Select = true }, { Select = true, Up = true }, {}, 
   emu.frameadvance()
 end
 check(empty.is_open() and read(COUNTER) == counter, "a missing state loads nothing and keeps the menu open")
-check(empty.message() == "State saknas för Area 1", "a missing state says so (" .. tostring(empty.message()) .. ")")
+check(empty.message() == "No state for Area 1", "a missing state says so (" .. tostring(empty.message()) .. ")")
 
 log:write(failures == 0 and "ALL PASS\n" or string.format("%d FAILED\n", failures))
 log:write("done\n")

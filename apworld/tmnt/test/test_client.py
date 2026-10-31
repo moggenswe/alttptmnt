@@ -299,7 +299,7 @@ class TestAnnounce(ClientTestCase):
         self.tick()
         self.give("Raphael", "Sewer Pass: Area 1", "Rope Pack", "Leonardo")
         self.tick()
-        self.assertEqual(self.messages, ["Fick Rope Pack av Link", "Hittade Leonardo"])
+        self.assertEqual(self.messages, ["Got Rope Pack from Link", "Found Leonardo"])
 
 
 class TestRecapture(ClientTestCase):

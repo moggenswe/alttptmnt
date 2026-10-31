@@ -52,8 +52,8 @@ def pass_bitmask(inv: Inventory, cleared_areas: set[int]) -> int:
 
 def received_message(item: str, sender: str | None) -> str:
     """BizHawk on-screen text for a received item; sender is None for the player's own TMNT checks."""
-    # BizHawk's message font has no å/ä/ö ("från" showed as "fr n"), so the text sticks to plain letters.
-    return f"Hittade {item}" if sender is None else f"Fick {item} av {sender}"
+    # On-screen text is English (the stream's language for overlays); BizHawk's message font is ASCII only.
+    return f"Found {item}" if sender is None else f"Got {item} from {sender}"
 
 
 def inventory_byte(inv: Inventory) -> int:

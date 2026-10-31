@@ -111,7 +111,7 @@ want:write("Donatello\n")
 want:close()
 wait_for("server sent Donatello", function() return not file_exists(DIR .. "want_send.txt") end, 60 * 30)
 wait_for("Donatello has full HP", function() return read(HP[4]) == 0x80 end, 60 * 10)
-request("want_capture.txt", "received_message", 10)  -- "Fick Donatello från ..." should be on screen
+request("want_capture.txt", "received_message", 10)  -- "Got Donatello from ..." should be on screen
 
 -- 3b. The game frees an unowned turtle (as its own rescue, a continue or a new game would): the client
 -- captures her again.
