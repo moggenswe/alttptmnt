@@ -13,7 +13,7 @@ local DIR = (os.getenv("TMNT_E2E_DIR") or (SCRIPT_DIR .. "..\\output\\e2e")) .. 
 TMNT_AREA_SELECT_LIBRARY = true
 local select = dofile(SCRIPT_DIR .. "tmnt_area_select.lua")
 
-local PASSES, COUNTER, ACK, MAGIC = 0x0388, 0x0389, 0x038A, 0x038B
+local PASSES, COUNTER, ACK, MAGIC, INVENTORY, CLEARED = 0x0388, 0x0389, 0x038A, 0x038B, 0x038C, 0x038D
 local AREA, ACTIVE = 0x0048, 0x0067
 local HP = { 0x0077, 0x0078, 0x0079, 0x007A }  -- Leo, Raph, Mike, Don
 local MISSILES, ROPES = 0x00BF, 0x00A7
@@ -90,6 +90,9 @@ wait_for("Raphael active, Leo and Mike captured", function()
 end, 60 * 5)
 -- Area 1's entrance check gives Zora's Scuba Kit, which with the Area 2 pass unlocks Area 2.
 wait_for("Area 2 unlocked by the entrance check", function() return read(PASSES) & 0x02 ~= 0 end, 60 * 10)
+-- The HUD bytes: Raphael (bit 1) and the Scuba Kit (bit 6), no bosses yet.
+wait_for("HUD inventory byte = Raph + Scuba", function() return read(INVENTORY) == 0x42 and read(CLEARED) == 0 end,
+  60 * 5)
 
 -- 3. An item sent mid-area frees the turtle at once.
 local want = assert(io.open(DIR .. "want_send.txt", "w"))
@@ -113,6 +116,7 @@ step({}, 60)
 note(string.format("boss win written, counter still %d | %s", read(COUNTER), ram_line()))
 wait_for("selector counted the advance as a load", function() return read(COUNTER) ~= counter end, 60 * 5)
 step({}, 120)
+wait_for("HUD shows Area 1 cleared", function() return read(CLEARED) == 0x01 end, 60 * 5)
 note("end | " .. ram_line())
 
 local done = assert(io.open(DIR .. "done.txt", "w"))

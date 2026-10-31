@@ -78,6 +78,14 @@ check(read(COUNTER) == 0, "a locked area loads nothing (counter still 0)")
 press({ B = true })
 check(not select.is_open(), "B closes the menu")
 
+-- Select+Left hides and shows the HUD.
+check(select.hud_shown(), "the HUD is shown by default")
+step({ Select = true })
+press({ Select = true, Left = true })
+check(not select.hud_shown(), "Select+Left hides the HUD")
+press({ Select = true, Left = true })
+check(select.hud_shown(), "Select+Left shows it again")
+
 -- Loading Area 1.
 open_menu()
 press({ A = true })

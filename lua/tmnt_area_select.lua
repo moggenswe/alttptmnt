@@ -16,12 +16,20 @@
 --   * A new game from the title screen (game phase 3, which the area states never pass through) would
 --     start Area 1 without a pass, so the menu is forced open.
 --
+-- A one-line HUD at the top of the screen shows what the client says the player owns: turtles, packs,
+-- bosses beaten (x/3 needed for the Technodrome) and GO MODE once Shredder is in logic. Select+Left hides
+-- or shows it.
+--
 -- Mailbox and addresses: keep in step with apworld/tmnt/ram.py.
 
 local MAILBOX_PASSES = 0x0388
 local MAILBOX_LOAD_COUNTER = 0x0389
 local MAILBOX_ACK = 0x038A
 local MAILBOX_MAGIC = 0x038B
+local MAILBOX_INVENTORY = 0x038C  -- bit 0-3 turtles (Leo, Raph, Mike, Don), 4 Missile Pack, 5 Rope Pack, 6 Scuba
+local MAILBOX_CLEARED = 0x038D    -- bit N-1 = Area N's boss beaten
+local CLEARS_FOR_TECHNODROME = 3  -- apworld/tmnt/rules.py
+local AREA6_BIT = 0x20
 local MAGIC_VALUE = 0xA7
 local CURRENT_AREA = 0x0048  -- 0-based: Area N = value + 1
 local GAME_PHASE = 0x001B
@@ -47,6 +55,7 @@ end
 local menu_open, forced, cursor = false, false, 1
 local message, message_left = nil, 0
 local held = {}
+local hud_shown = true
 local last_area, advanced_at = nil, nil
 local last_phase, last_continues, continued = nil, nil, false
 
@@ -122,9 +131,40 @@ local function pressed(buttons, name)
   return buttons[name] and not held[name]
 end
 
+local HUD_ITEMS = {  -- label, mailbox byte, bit
+  { "LEO", MAILBOX_INVENTORY, 0 }, { "RAPH", MAILBOX_INVENTORY, 1 }, { "MIKE", MAILBOX_INVENTORY, 2 },
+  { "DON", MAILBOX_INVENTORY, 3 }, { "MISSILE", MAILBOX_INVENTORY, 4 }, { "ROPE", MAILBOX_INVENTORY, 5 },
+  { "SCUBA", MAILBOX_INVENTORY, 6 },
+}
+
+local function bit_count(value)
+  local count = 0
+  while value > 0 do
+    count, value = count + (value & 1), value >> 1
+  end
+  return count
+end
+
+local function draw_hud()
+  gui.drawBox(0, 0, 255, 9, 0xC0000000, 0xC0000000)
+  local x = 2
+  for _, item in ipairs(HUD_ITEMS) do
+    local owned = (read(item[2]) & (1 << item[3])) ~= 0
+    gui.pixelText(x, 1, item[1], owned and 0xFFFFFFFF or 0xFF505050, 0x00000000)
+    x = x + #item[1] * 4 + 4
+  end
+  if (read(MAILBOX_PASSES) & AREA6_BIT) ~= 0 then
+    gui.pixelText(x + 2, 1, "GO MODE", 0xFF40FF40, 0x00000000)
+  else
+    local cleared = math.min(bit_count(read(MAILBOX_CLEARED)), CLEARS_FOR_TECHNODROME)
+    gui.pixelText(x + 2, 1, string.format("BOSS %d/%d", cleared, CLEARS_FOR_TECHNODROME), 0xFFFFFF00, 0x00000000)
+  end
+end
+
 local function draw()
   gui.cleartext()
   gui.clearGraphics()
+  if hud_shown and read(MAILBOX_MAGIC) == MAGIC_VALUE then draw_hud() end
   if menu_open then
     gui.drawBox(56, 40, 204, 70 + AREAS * 12, 0xFFFFFFFF, 0xE0000000)
     gui.drawText(64, 46, "VÄLJ AREA", 0xFFFFFF00)
@@ -146,6 +186,7 @@ function M.frame(buttons)
   watch_area()
   watch_continue_and_new_game()
 
+  if buttons.Select and pressed(buttons, "Left") then hud_shown = not hud_shown end
   if not menu_open then
     if buttons.Select and pressed(buttons, "Up") then
       if connected then
@@ -179,6 +220,7 @@ end
 function M.is_open() return menu_open end
 function M.is_forced() return forced end
 function M.message() return message_left > 0 and message or nil end
+function M.hud_shown() return hud_shown end
 
 -- Physical P1 buttons; the keys may come with or without a "P1 " prefix.
 local function read_pad()
