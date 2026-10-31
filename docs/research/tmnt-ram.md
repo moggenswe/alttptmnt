@@ -13,7 +13,7 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 | Aktuell area ("world number") | `$0048` | Area N = värde + 1 (Area 1 = 0) | **Bekräftat** (pausskärmen visar AREA 1 när värdet är 0) |
 | Var i spelet | `$001B` | 5 = eftertexter | Dok |
 | Aktiv sköldpadda | `$0067` | 0 = Leo, 1 = Raph, 2 = Mike, 3 = Don | **Bekräftat** (2 med Mike aktiv) |
-| HP Leonardo | `$0077` | max 128 (`$80`), 16 per streck; fångad = ? | Dok |
+| HP Leonardo | `$0077` | max 128 (`$80`), 16 per streck; fångad = `00` | Dok (fångad/fri bekräftat på Raph) |
 | HP Raphael | `$0078` | som ovan | **Bekräftat**: `00` gjorde Raph fångad |
 | HP Michelangelo | `$0079` | som ovan; full = `$80` | **Bekräftat**: `00` här tömde Mikes mätare |
 | HP Donatello | `$007A` | som ovan | Dok |
@@ -32,7 +32,7 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 
 Resultat: **JA** (2026-10-31). Med Mike aktiv sattes `$0078` (Raph) till `00`. På pausskärmen saknade Raph porträtt och hälsomätare och gick inte att välja, och Splinter sa "Find and help your friend in this stage". Spelet behandlar honom alltså som tillfångatagen. Att skriva `00` till den *aktiva* sköldpaddan utlöser dödsanimationen. Klienten skriver bara fångad-värdet vid full sync direkt efter en area-laddning, så det bör inte hända, men det testas i Task 7.
 
-Återstår: kommer Raph tillbaka om `$0078` sätts till `80` igen?
+Frigivning: **JA**. Efter `80` på `$0078` gick Raph att välja igen direkt. Klienten kan alltså frige en sköldpadda mitt i en area.
 
 ## R2 – minns spelet upplockade pickups?
 
