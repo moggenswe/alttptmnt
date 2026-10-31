@@ -7,7 +7,7 @@ Frågan: kan spelaren fastna för att något som krävs inte går att nå, eller
 Ingen känd väg leder till att spelaren fastnar för gott i TMNT-delen.
 
 - **Inget går att missa:** varje TMNT-location går att ta igen.
-- **Inget tar slut:** continues och ammo med pack tar aldrig slut.
+- **Inget tar slut:** continues (genom ROM-patchen) och ammo med pack tar aldrig slut.
 - **Inga vägar runt passen:** areor utan pass nås inte.
 - **Inga framsteg saknas i våra area-states:** de skiljer sig från en riktig genomspelning bara i kastvapen, kartläge, poäng och ett värde som sätts när spelet startar.
 
@@ -37,7 +37,7 @@ TAS-datan bekräftar att missiler bara används i Area 3 och rep bara i Area 4.
 
 | Situation | Vad som händer |
 |---|---|
-| Alla ägda sköldpaddor fångas | Game over, sedan CONTINUE. Continues tar aldrig slut (`$0046` 0 blir 255). Arean startar om, och de ägda sköldpaddorna är fria igen. Testat i BizHawk. |
+| Alla ägda sköldpaddor fångas | Game over, sedan CONTINUE. Arean startar om, och de ägda sköldpaddorna är fria igen. Originalspelet ger bara två continues: vid tredje game over hamnar man på titelskärmen. ROM-patchen (`rom.py`, PRG `$1CD24`) hoppar alltid till continue-skärmen. Testat med fem game over i rad, både på original-ROM (slut efter tredje) och patchad ROM (continue varje gång). Utan patch skulle väljaren ändå tvinga upp menyn vid nytt spel, så det var inget softlock, bara en omväg via titelskärmen. |
 | Ammo tar slut | Den som har ett pack fylls på när räknaren står på 0. Spelets egna upplockningar i Area 3 och 4 återuppstår dessutom. |
 | Spelet går vidare till en låst area efter en boss | Menyn tvingas upp och kan inte stängas förrän en upplåst area laddats. Testat. |
 | Nytt spel från titelskärmen (END eller reset) | Menyn tvingas upp, och ingen area spelas utan pass. Testat. |

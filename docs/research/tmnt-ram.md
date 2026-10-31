@@ -25,7 +25,7 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 | Poäng / high score | `$C2`–`$C4` / `$C8`–`$CA` | `$C2` räknas upp i tiotal; nollställs vid nytt spel (ROM 0x1C66B) | **Bekräftat med TAS** (se `tmnt-softlock-risker.md`) |
 | Kastvapentyp per sköldpadda | `$0073`–`$0076` (trolig) | sätts när ett kastvapen plockas upp | TAS (inte helt bekräftat) |
 | Startvärde | `$0055` | sätts en gång när spelet startar, beror på exakt frame för Start | TAS |
-| Antal continues | `$0046` | börjar på 3; räknas ner vid varje game over, men 0 blir 255 och CONTINUE erbjuds ändå, så continues tar aldrig slut | **Bekräftat** (se "Game over och continue") |
+| Antal continues | `$0046` | Börjar på 3 och räknas ner vid varje game over (ROM `$CD24`: `DEC $46` / `BNE continue` / `JMP slut`). När den når 0 är spelet slut, alltså vid tredje game over. `rom.py` patchar hoppet så att continues blir obegränsade. Det tidigare påståendet "tar aldrig slut" kom från ett test som satte värdet till 0, och 0 räknas ner till 255. | **Bekräftat** (`lua/tmnt_continue_test.lua`, 2026-10-31) |
 | Bossvinst Area 1–5 | `$0048` räknas upp | Ingen egen flagga hittad. `$0048` går N−1 → N exakt en gång per bossvinst (5 gånger på hela TAS:en), när Aprils genomgång inför nästa area börjar | **Bekräftat med TAS** (se "TAS-analys") |
 | Shredder besegrad | `$001B` = 5 | sätts när texten "You defeated Shredder" visas, cirka 31 s efter sista slaget, och ligger kvar i cirka 40 s. Därefter blir `$001B` 0 och `$0048` 0 (titelskärmen) | **Bekräftat med TAS** (se "Shredder") |
 | 4 lediga bytes (brevlåda) | `$0388–$038B` | Hela `$0388–$03AF` (40 byte) ändras aldrig under TAS:en; markörvärden där skrevs aldrig över och TAS:en synkade ända till Area 6. ~~`$07F0–$07F3`~~ används av spelet (blev `44` i Area 1), och `$0778–$077F`/`$07F8–$07FF` läses av spelet (TAS:en desynkar i Area 3) | **Bekräftat med TAS** |
@@ -109,7 +109,7 @@ Gjort i BizHawk 2.11.1 med `lua/tmnt_gameover_test.lua`. Från `area1.State` skr
 
 - **Brevlådan** `$0388–$038B` överlevde paus, game over, continue-skärmen och omstarten av arean.
 - **Continue startar om arean på kartan, och alla fyra sköldpaddor får full HP**, även de som var fångade. Laddningsräknaren ändras inte, så klienten märker inget. Därför räknar `lua/tmnt_area_select.lua` upp räknaren när `$0046` har ändrats och alla fyra har full HP igen. Klienten gör då en full sync.
-- **`$0046`** räknas ner vid game over, innan man väljer. Med `$0046` = 0 blev värdet 255 och CONTINUE erbjöds ändå. "Slut på continues" går alltså inte att nå på vanligt sätt.
+- **`$0046`** räknas ner vid game over, innan man väljer. ~~Med `$0046` = 0 blev värdet 255 och CONTINUE erbjöds ändå, så continues tar aldrig slut.~~ Det var fel: spelet slutar när räknaren *når* 0, alltså vid tredje game over i ett vanligt spel. Att skriva in 0 före ett game over ger 255, och därför såg det obegränsat ut. Rättat med en ROM-patch, se raden "Antal continues" ovan.
 - **Paus** (`$0094`: 1 → 2 → 3) rör inte brevlådan.
 - **END och nytt spel från titelskärmen** testades inte direkt. Ett nytt spel passerar `$001B` = 3, vilket areastatesen aldrig gör, så väljaren tvingar då upp menyn. Det täcks av testet i `lua/tmnt_area_select_test.lua`, som gör `client.reboot_core()`.
 

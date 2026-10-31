@@ -1,7 +1,8 @@
 from worlds.Files import APTokenTypes
 
 from . import TMNTTestBase
-from ..rom import AUTH_LENGTH, ROM_TAG, TMNTProcedurePatch, tag_file_offset, write_patch
+from ..rom import (AUTH_LENGTH, CONTINUE_ORIGINAL, CONTINUE_PATCH_OFFSET, CONTINUE_PATCHED, INES_HEADER_SIZE,
+                   ROM_TAG, TMNTProcedurePatch, tag_file_offset, write_patch)
 
 
 def parse_tokens(blob: bytes) -> list[tuple[int, int, bytes]]:
@@ -39,3 +40,11 @@ class TestRomPatch(TMNTTestBase):
         write_patch(self.world, patch)
         data = {offset: data for _, offset, data in parse_tokens(patch.get_token_binary())}[tag_file_offset()]
         self.assertEqual(data[len(ROM_TAG):].rstrip(b"\x00").decode("utf-8"), name)
+
+    def test_patch_makes_continues_unlimited(self):
+        patch = TMNTProcedurePatch(player=self.player, player_name="Turtles")
+        write_patch(self.world, patch)
+        writes = {offset: data for token_type, offset, data in parse_tokens(patch.get_token_binary())
+                  if token_type == APTokenTypes.WRITE}
+        self.assertEqual(writes[INES_HEADER_SIZE + CONTINUE_PATCH_OFFSET], CONTINUE_PATCHED)
+        self.assertEqual(len(CONTINUE_PATCHED), len(CONTINUE_ORIGINAL))

@@ -43,7 +43,7 @@ local MAGIC_VALUE = 0xA7
 local CURRENT_AREA = 0x0048  -- 0-based: Area N = value + 1
 local GAME_PHASE = 0x001B
 local PHASE_AREA_LOAD = 3
-local CONTINUES = 0x0046     -- changes at every game over (0 wraps to 255; the game never runs out)
+local CONTINUES = 0x0046     -- counts down at every game over; rom.py makes continues unlimited (0 wraps to 255)
 local TURTLE_HP = { 0x0077, 0x0078, 0x0079, 0x007A }
 local FULL_HP_VALUE = 0x80
 local AREAS = 6
