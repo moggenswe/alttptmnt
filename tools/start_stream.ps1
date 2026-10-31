@@ -5,7 +5,7 @@ Starts everything for an ALttP + TMNT stream seed on this machine, in this order
   3. BizHawk with the patched ALttP ROM and SNI's Lua connector
   4. BizHawk with the patched TMNT ROM, the AP connector and the area select (lua\tmnt_stream.luases)
   5. SNI Client and BizHawk Client, connected to the server
-  6. PopTracker with the ALttP pack, tracking the ALttP slot
+  6. PopTracker twice: the ALttP pack for the ALttP slot, our TMNT pack (tools/make_poptracker_pack.py) for TMNT
 and prints the URL for the go mode panel to paste into OBS.
 
   powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\full\AP_<seed>.zip
@@ -60,7 +60,16 @@ if (-not (Test-Path $alttpRom) -or -not (Test-Path $tmntRom)) {
 }
 Need $alttpRom "the patched ALttP ROM"
 Need $tmntRom "the patched TMNT ROM"
+# Fixed file names give the BizHawk windows fixed titles ("alttp-stream [SNES] - BizHawk", "tmnt-stream [NES] -
+# BizHawk"), which the OBS scene collection (tools/make_obs_collection.py) captures whatever the seed.
+Copy-Item $alttpRom (Join-Path $SeedDir "alttp-stream.sfc") -Force
+Copy-Item $tmntRom (Join-Path $SeedDir "tmnt-stream.nes") -Force
+$alttpRom = Join-Path $SeedDir "alttp-stream.sfc"
+$tmntRom = Join-Path $SeedDir "tmnt-stream.nes"
 
+if (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue) {
+  throw "Port $Port is already in use (an old MultiServer?). Close it or pass -Port."
+}
 Write-Host "1/6 MultiServer on $Server"
 Start-Process $Python -WorkingDirectory $AP -ArgumentList @("MultiServer.py", "`"$SeedPath`"", "--host", "127.0.0.1", "--port", $Port)
 Start-Sleep 6
@@ -82,10 +91,13 @@ Start-Process $Python -WorkingDirectory $AP -ArgumentList @("SNIClient.py", "--c
 Start-Process $Python -WorkingDirectory $AP -ArgumentList @("BizHawkClient.py", "--connect", $Server)
 
 if (-not $NoTracker) {
-  Write-Host "6/6 PopTracker for $AlttpSlot"
+  Write-Host "6/6 PopTracker for $AlttpSlot and $TmntSlot (one window each)"
   Need $PopTracker "PopTracker 0.36.0"
   Start-Process $PopTracker -ArgumentList @("--load-pack", "ap_alltp", "--pack-variant", "`"Map Tracker - AP`"",
                                             "--ap-host", $Server, "--ap-slot", $AlttpSlot)
+  Start-Sleep 3
+  Start-Process $PopTracker -ArgumentList @("--load-pack", "tmnt_ap", "--pack-variant", "`"Item Tracker - AP`"",
+                                            "--ap-host", $Server, "--ap-slot", $TmntSlot)
 }
 
 $panel = "file:///" + ((Join-Path $Repo "tools\obs\go-mode.html") -replace '\\', '/')

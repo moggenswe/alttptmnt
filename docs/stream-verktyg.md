@@ -45,9 +45,36 @@ file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&
 powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\<mapp>\AP_<seed>.zip
 ```
 
-Skriptet patchar ROM:arna om de saknas. Sedan startar det MultiServer i ett eget konsolfönster, där `/send` och `/hint` skrivs, följt av SNI, BizHawk med ALttP och SNI:s Lua-connector, BizHawk med TMNT och `lua/tmnt_stream.luases`, SNI Client, BizHawk Client och PopTracker för Link. Till sist skriver det ut panelens adress för OBS. Det provades 2026-10-31 med ett nytt seed: Link och Turtles anslöt som spelare och PopTracker som tracker. Med `-NoTracker` hoppar skriptet över PopTracker.
+Skriptet patchar ROM:arna om de saknas och kopierar dem till de fasta namnen `alttp-stream.sfc` och `tmnt-stream.nes`. Då får BizHawk-fönstren samma titel oavsett seed, och OBS-samlingen hittar dem. Om porten redan används avbryts skriptet. Sedan startar det MultiServer i ett eget konsolfönster, där `/send` och `/hint` skrivs, följt av SNI, BizHawk med ALttP och SNI:s Lua-connector, BizHawk med TMNT och `lua/tmnt_stream.luases`, SNI Client, BizHawk Client och två PopTracker-fönster: ALttP-packen för Link och vår TMNT-pack för Turtles. Till sist skriver det ut panelens adress för OBS. Det provades 2026-10-31 med ett nytt seed: Link och Turtles anslöt som spelare och PopTracker som tracker. Med `-NoTracker` hoppar skriptet över PopTracker.
 
 **På streamdatorn:** BizHawk 2.11 visar en egen rad i fönstret, "Click the blue silhouette below for onboarding". Den syns i fönsterfångsten, så klicka bort den en gång innan streamen.
+
+## OBS: scensamling och pizza-wipe
+
+- `tools/obs/tmnt-alttp-scenes.json` byggs av `tools/make_obs_collection.py` och importeras i OBS under Scene Collection → Import. Kör om skriptet om repot flyttas, eftersom sökvägarna är absoluta.
+- **Scener:**
+  - **Hyrule:** ALttP-fönstret, ALttP-trackern och go mode-panelen.
+  - **Kloak (övergång):** kloakgrön bakgrund, texten "Genom kloaken...", panelen i mitten och båda trackerna.
+  - **New York:** TMNT-fönstret, TMNT-trackern och panelen.
+- **Övergång:** "Pizza-wipe", en stinger med `tools/obs/pizza_wipe.webm` (byggd av `tools/make_stinger.py`) och övergångspunkt 500 ms. Ett band av tomatsås med rullande pizzor sveper över och täcker hela bilden i mitten.
+- **Provat 2026-10-31 i OBS 32.0.4:**
+  - Samlingen laddades utan fel.
+  - Hyrule-scenen visade ALttP-spelet, ALttP-trackern och panelen live.
+  - Stingern hittades.
+  - Samlingen ligger installerad men är inte aktiv. Din aktiva samling återställdes.
+- **Måste vara på:** PopTracker ritar svart i fönsterfångst med hårdvarurendering. `software_renderer` är därför satt till true i `%APPDATA%\PopTracker\PopTracker.json`.
+- **Kvar att finjustera:** beskärningen av BizHawks meny- och statusrad (`crop_top` 21 och `crop_bottom` 22 px) och trackerrutornas storlek.
+
+## TMNT-packen till PopTracker
+
+`tools/make_poptracker_pack.py --install` bygger `poptracker/tmnt-ap/` från apworldens tabeller och installerar zip-filen i PopTracker.
+- **Innehåll:** de fyra sköldpaddorna, Missile Pack, Rope Pack, Scuba Kit, fem numrerade pass och fem numrerade bossar.
+- **Varianten "Item Tracker - AP"** tänder föremål när de tas emot och bossar när deras plats kontrolleras.
+- **Provat 2026-10-31:** startföremålen, föremål skickade med `/send` och en boss markerad med `/send_location` tändes.
+
+## Grafik
+
+All grafik är ritad för projektet i `tools/sprites.py`, som 16x16 pixelkonst: sköldpaddshuvuden, verktyg, pass, boss, hjärta och pizza. Det finns ingen fritt licensierad TMNT-fan art: figurerna tillhör Nickelodeon, så fan art kan inte licensieras fritt, och sökningen hittade bara TMNT-spritar utan licens. Det enda med CC0 var generiska ninjor och sköldpaddor. Panelen, PopTracker-packen och pizza-wipen använder alla samma bilder.
 
 ## Installation (gjord och provad 2026-10-31 på Oscars dator)
 
