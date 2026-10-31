@@ -37,6 +37,7 @@ class FakeRam:
 class ClientTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.ram = FakeRam()
+        self.ram.bytes[ram.ACTIVE_TURTLE] = 1  # Raph on screen unless a test says otherwise
         self.now = 0.0
         self.sent: list[dict] = []
         patches = [mock.patch.object(client_module, "read", self.ram.read),
@@ -74,6 +75,7 @@ class TestResync(ClientTestCase):
         self.give("Raphael", "Sewer Pass: Area 1")
         self.tick()
         self.ram.bytes = {address: ram.FULL_HP_VALUE for address in ram.TURTLE_HP.values()}  # fresh boot
+        self.ram.bytes[ram.ACTIVE_TURTLE] = 1
         self.tick()
         self.assertEqual(self.hp("Leonardo"), ram.CAPTURED_HP_VALUE)
 
@@ -88,6 +90,16 @@ class TestResync(ClientTestCase):
                                      ram.MAILBOX_LOAD_COUNTER: 2, ram.MAILBOX_ACK: 2}  # older manual state
         self.tick()
         self.assertEqual(self.hp("Leonardo"), ram.CAPTURED_HP_VALUE)
+
+
+class TestActiveTurtle(ClientTestCase):
+    def test_active_turtle_not_owned_is_not_killed(self):
+        self.give("Raphael", "Sewer Pass: Area 1")
+        self.ram.bytes[ram.ACTIVE_TURTLE] = 0  # Leo on screen, as in every area savestate
+        self.ram.bytes[ram.TURTLE_HP["Leonardo"]] = ram.FULL_HP_VALUE
+        self.tick()
+        self.assertEqual(self.hp("Leonardo"), ram.FULL_HP_VALUE)
+        self.assertEqual(self.hp("Michelangelo"), ram.CAPTURED_HP_VALUE)
 
 
 class TestRobustness(ClientTestCase):

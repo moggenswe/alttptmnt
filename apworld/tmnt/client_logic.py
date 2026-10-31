@@ -52,9 +52,12 @@ def pass_bitmask(inv: Inventory, cleared_areas: set[int]) -> int:
     return mask
 
 
-def full_sync_writes(inv: Inventory) -> list[Write]:
+def full_sync_writes(inv: Inventory, active: str | None) -> list[Write]:
+    """Full HP for owned turtles, captured for the rest, except the turtle on screen: writing 0 HP to her
+    plays the death animation. She stays playable until the player switches away."""
     writes = [(address, [ram.FULL_HP_VALUE if turtle in inv.turtles else ram.CAPTURED_HP_VALUE])
-              for turtle, address in ram.TURTLE_HP.items()]
+              for turtle, address in ram.TURTLE_HP.items()
+              if turtle in inv.turtles or turtle != active]
     writes.append((ram.MISSILE_COUNT, [ram.MISSILE_REFILL if inv.missiles else 0]))
     writes.append((ram.ROPE_COUNT, [ram.ROPE_REFILL if inv.ropes else 0]))
     return writes

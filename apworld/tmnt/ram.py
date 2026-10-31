@@ -11,7 +11,8 @@ VERIFIED = False
 CURRENT_AREA = 0x0048            # doc: "world number"; confirmed: reads 0 in Area 1
 AREA_NUMBER_OFFSET = 1           # Area N = value + 1
 GAME_PHASE = 0x001B              # doc: "where in the game", 5 = ending credits
-ACTIVE_TURTLE = 0x0067           # doc: 0=Leo, 1=Raph, 2=Mike, 3=Don
+ACTIVE_TURTLE = 0x0067           # confirmed: 0=Leo, 1=Raph, 2=Mike, 3=Don
+TURTLE_BY_ID = ("Leonardo", "Raphael", "Michelangelo", "Donatello")
 TURTLE_HP: dict[str, int] = {    # doc: 128 max, 16 per bar. Order follows the turtle ID (Leo, Raph, Mike, Don):
     "Leonardo": 0x0077,          # the xls labels $78 Mike / $79 Raph, but zeroing $79 in BizHawk emptied
     "Raphael": 0x0078,           # Mike's health bar (Oscar, 2026-10-31), matching the ID order used by

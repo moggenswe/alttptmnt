@@ -38,13 +38,20 @@ class TestPassBitmask(unittest.TestCase):
 
 class TestWrites(unittest.TestCase):
     def test_full_sync_captures_missing_turtles(self):
-        writes = dict(full_sync_writes(inv("Raphael")))
+        writes = dict(full_sync_writes(inv("Raphael"), active="Raphael"))
         self.assertEqual(writes[ram.TURTLE_HP["Leonardo"]], [ram.CAPTURED_HP_VALUE])
         self.assertEqual(writes[ram.TURTLE_HP["Raphael"]], [ram.FULL_HP_VALUE])
         self.assertEqual(writes[ram.MISSILE_COUNT], [0])
 
+    def test_full_sync_never_captures_the_active_turtle(self):
+        # Writing 0 HP to the turtle on screen plays her death animation (seen in BizHawk), and the
+        # area savestates all start with Leo active.
+        writes = dict(full_sync_writes(inv("Raphael"), active="Leonardo"))
+        self.assertNotIn(ram.TURTLE_HP["Leonardo"], writes)
+        self.assertEqual(writes[ram.TURTLE_HP["Michelangelo"]], [ram.CAPTURED_HP_VALUE])
+
     def test_full_sync_refills_packs(self):
-        writes = dict(full_sync_writes(inv("Raphael", "Missile Pack", "Rope Pack")))
+        writes = dict(full_sync_writes(inv("Raphael", "Missile Pack", "Rope Pack"), active="Raphael"))
         self.assertEqual(writes[ram.MISSILE_COUNT], [ram.MISSILE_REFILL])
         self.assertEqual(writes[ram.ROPE_COUNT], [ram.ROPE_REFILL])
 

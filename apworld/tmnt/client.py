@@ -60,7 +60,7 @@ class TMNTClient(BizHawkClient):
             pass  # BizHawk does not catch errors from game_watcher; the next tick retries
 
     async def _tick(self, ctx: "BizHawkClientContext") -> None:
-        addresses = [ram.MAILBOX_MAGIC, ram.MAILBOX_LOAD_COUNTER, ram.MAILBOX_ACK, ram.CURRENT_AREA,
+        addresses = [ram.MAILBOX_MAGIC, ram.MAILBOX_LOAD_COUNTER, ram.MAILBOX_ACK, ram.CURRENT_AREA, ram.ACTIVE_TURTLE,
                      ram.MISSILE_COUNT, ram.ROPE_COUNT, ram.SHREDDER_DEFEATED[0],
                      *(address for address, _ in ram.BOSS_DEFEATED_SIGNAL.values())]
         values = dict(zip(addresses, (b[0] for b in await read(
@@ -78,7 +78,9 @@ class TMNTClient(BizHawkClient):
         counter, ack = values[ram.MAILBOX_LOAD_COUNTER], values[ram.MAILBOX_ACK]
         magic_ok = values[ram.MAILBOX_MAGIC] == ram.MAGIC_VALUE
         if self.last_inventory is None or needs_full_sync(counter, ack, magic_ok, self.expected_ack):
-            writes += full_sync_writes(inventory)
+            active_id = values[ram.ACTIVE_TURTLE]
+            active = ram.TURTLE_BY_ID[active_id] if active_id < len(ram.TURTLE_BY_ID) else None
+            writes += full_sync_writes(inventory, active)
             writes.append((ram.MAILBOX_ACK, [counter]))
             new_ack = counter
         else:
