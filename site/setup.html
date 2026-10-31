@@ -31,7 +31,7 @@
     <h2 id="install">Install in one go</h2>
     <ol class="steps">
       <li>Get this repo: <b>Code → Download ZIP</b> on <a href="https://github.com/moggenswe/alttptmnt">GitHub</a> and
-        unzip it (for example to <code>C:	mntalttp</code>), or <code>git clone</code> it. A short path without spaces
+        unzip it (for example to <code>C:\tmntalttp</code>), or <code>git clone</code> it. A short path without spaces
         is best.</li>
       <li>Double-click <code>install.cmd</code>. It asks for your two ROMs in a file dialog (see <a href="#roms">ROMs</a>)
         and checks them.</li>
@@ -57,9 +57,7 @@
     way to repair an install. It also sets PopTracker to software rendering (needed for OBS capture) and turns off its
     first-start questions, and ends by running the TMNT tests and generating three test seeds.</p>
     <p>Without dialogs, for example from a script:</p>
-<pre><code>powershell -ExecutionPolicy Bypass -File install.ps1 -AlttpRom D:
-oms\zelda.smc -TmntRom D:
-oms	mnt.nes -Yes</code></pre>
+<pre><code>powershell -ExecutionPolicy Bypass -File install.ps1 -AlttpRom D:\roms\zelda.smc -TmntRom D:\roms\tmnt.nes -Yes</code></pre>
     <div class="warn"><b>BizHawk needs its prerequisites</b>If BizHawk does not start, install .NET Framework 4.8 and the
       Visual C++ 2015-2022 x64 runtime (most streaming PCs already have both).</div>
 
