@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stream · TMNT × ALttP</title>
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="img/pizza.png">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="index.html"><img src="img/pizza.png" alt="">TMNT <span>×</span> ALttP</a>
+  <nav class="main">
+    <a href="index.html">Overview</a><a href="setup.html">Setup</a><a href="play.html">Play</a>
+    <a href="stream.html" class="active">Stream</a><a href="help.html">Help</a><a href="dev.html">Developers</a>
+  </nav>
+</div></header>
+
+<div class="wrap"><main class="with-toc">
+  <aside class="toc"><b>On this page</b>
+    <a href="#scenes">Scenes</a><a href="#panel">Go mode panel</a><a href="#trackers">Trackers</a>
+    <a href="#wipe">Pizza-wipe</a><a href="#checklist">Before going live</a><a href="#art">About the art</a>
+  </aside>
+  <div>
+    <h1>Stream</h1>
+    <p class="lead">An OBS scene collection with three scenes, a live go mode panel for both games and a pizza-wipe
+    transition for the "portal" between Hyrule and New York.</p>
+
+    <h2 id="scenes">Scenes</h2>
+    <p>Import <code>tools\obs\tmnt-alttp-scenes.json</code> (Scene Collection → Import; build it first with
+    <code>tools\make_obs_collection.py</code>). It holds three 1920×1080 scenes:</p>
+    <table>
+      <tr><th>Scene</th><th>Shows</th></tr>
+      <tr><td>Hyrule</td><td>The ALttP BizHawk window, the ALttP PopTracker, the go mode panel.</td></tr>
+      <tr><td>Kloak (övergång)</td><td>A sewer-green interlude with the caption "Into the sewers...", the panel and both
+        trackers. Use it between the games.</td></tr>
+      <tr><td>New York</td><td>The TMNT BizHawk window, the TMNT PopTracker, the go mode panel.</td></tr>
+    </table>
+    <div class="figs">
+      <figure><img src="img/scene-hyrule.png" alt="Hyrule scene"><figcaption>Hyrule (layout preview from real captures).</figcaption></figure>
+      <figure><img src="img/scene-newyork.png" alt="New York scene"><figcaption>New York (layout preview from real captures).</figcaption></figure>
+    </div>
+    <p>The window captures look for the fixed titles <code>alttp-stream [SNES] - BizHawk</code>,
+    <code>tmnt-stream [NES] - BizHawk</code> and the two PopTracker titles. The start script gives the windows those
+    titles, so the captures work for every seed. Check the crop of BizHawk's menu and status bar
+    (top 21 px, bottom 22 px) once on the stream PC.</p>
+
+    <h2 id="panel">Go mode panel</h2>
+    <figure><img src="img/panel.png" alt="Go mode panel"><figcaption>Demo data: six Hyrule dungeon bosses down, TMNT in go mode.</figcaption></figure>
+    <p>A browser source (<code>tools\obs\go-mode.html</code>) that connects to the server as a read-only tracker for both
+    slots. URL parameters:</p>
+    <table>
+      <tr><th>Parameter</th><th>Default</th><th>Meaning</th></tr>
+      <tr><td><code>server</code></td><td><code>ws://localhost:38281</code></td><td>Archipelago server</td></tr>
+      <tr><td><code>alttp</code>, <code>tmnt</code></td><td>(none)</td><td>Slot names, here <code>Link</code> and <code>Turtles</code></td></tr>
+      <tr><td><code>password</code></td><td>(none)</td><td>Server password, if any</td></tr>
+      <tr><td><code>layout</code></td><td><code>row</code></td><td><code>column</code> stacks the two cards</td></tr>
+      <tr><td><code>demo</code></td><td>off</td><td><code>demo=1</code> shows fake data without a server</td></tr>
+    </table>
+    <p><b>Hyrule</b> shows the ten dungeon bosses as hearts and "DONE ✔" once Ganon is beaten. <b>New York</b> shows the
+    turtles, packs, passes, the Area bosses (3 needed) and "GO MODE" when the Technodrome is in logic. ALttP's crystals
+    are not counted: they are shuffled between dungeons and have no item IDs.</p>
+
+    <h2 id="trackers">Trackers</h2>
+    <div class="figs">
+      <figure><img src="img/alttp-tracker.png" alt="ALttP PopTracker"><figcaption>ALttP: the community PopTracker pack,
+        autotracked from the server (slot Link).</figcaption></figure>
+      <figure><img class="pixel" src="img/tmnt-tracker.png" alt="TMNT PopTracker"><figcaption>TMNT: this project's pack,
+        autotracked (slot Turtles): turtles, packs, numbered passes and bosses.</figcaption></figure>
+    </div>
+    <p>For the runner, Universal Tracker can also list the TMNT locations that are in logic (Archipelago Launcher →
+    Universal Tracker, connect as <code>Turtles</code>).</p>
+
+    <h2 id="wipe">Pizza-wipe</h2>
+    <figure><img src="img/pizza-wipe-frames.png" alt="Pizza-wipe frames"><figcaption>Six frames: a tomato-sauce band of
+      rolling pizzas sweeps across and covers the whole picture in the middle.</figcaption></figure>
+    <p><code>tools\obs\pizza_wipe.webm</code> (1 s, 1920×1080, transparent) is the collection's default transition,
+    a Stinger with its transition point at 500 ms. Rebuild it with <code>tools\make_stinger.py</code>.</p>
+
+    <h2 id="checklist">Before going live</h2>
+    <ol class="steps">
+      <li>Generate the seed and start everything with <code>tools\start_stream.ps1</code> (<a href="play.html#start">Play</a>).</li>
+      <li>In OBS pick the <b>TMNT x ALttP</b> collection and check that both games and both trackers show.</li>
+      <li>Close BizHawk's "Click the blue silhouette below for onboarding" line once; it shows in the capture.</li>
+      <li>Check that both trackers and the panel say they are connected (no "No server").</li>
+      <li>Switch Hyrule → Kloak → New York once to see the pizza-wipe.</li>
+      <li>Keep the server console window handy for <code>/hint</code> and <code>/send</code>.</li>
+    </ol>
+
+    <h2 id="art">About the art</h2>
+    <p>The TMNT icons, hearts, pizza and the pizza-wipe are drawn for this project in <code>tools\sprites.py</code>; no
+    game sprites or fan art are used for them.</p>
+    <figure><img class="pixel" src="img/sprites.png" alt="Sprite sheet"></figure>
+    <p>A Link to the Past is shown the usual way, with the community PopTracker pack's icons, as the ALttP community and
+    event organisers expect.</p>
+  </div>
+</main></div>
+
+<footer><div class="wrap">
+  TMNT × ALttP Archipelago randomizer · <a href="https://github.com/moggenswe/alttptmnt">github.com/moggenswe/alttptmnt</a>
+</div></footer>
+</body>
+</html>

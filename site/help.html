@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Help · TMNT × ALttP</title>
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="img/pizza.png">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="index.html"><img src="img/pizza.png" alt="">TMNT <span>×</span> ALttP</a>
+  <nav class="main">
+    <a href="index.html">Overview</a><a href="setup.html">Setup</a><a href="play.html">Play</a>
+    <a href="stream.html">Stream</a><a href="help.html" class="active">Help</a><a href="dev.html">Developers</a>
+  </nav>
+</div></header>
+
+<div class="wrap"><main>
+  <h1>Help</h1>
+  <p class="lead">Known problems, all seen while building and testing this, with what fixes them.</p>
+
+  <h2>Starting and connecting</h2>
+  <table>
+    <tr><th>You see</th><th>Cause and fix</th></tr>
+    <tr><td><code>Port 38281 is already in use</code> from the start script</td>
+      <td>An old MultiServer is still running. Close its console window, or start with <code>-Port 38282</code>.</td></tr>
+    <tr><td>"Connect the AP client" when opening the area menu</td>
+      <td>The BizHawk Client is not connected (or BizHawk was reset). Start it from the Archipelago Launcher or rerun the
+        start script; the menu works as soon as the client has written to the game.</td></tr>
+    <tr><td>BizHawk Client log: "TMNT RAM addresses are unverified placeholders"</td>
+      <td>A leftover warning; the addresses are checked (see <code>docs/research/tmnt-ram.md</code>). Safe to ignore.</td></tr>
+    <tr><td>Generation hangs with no output</td>
+      <td>Archipelago opened a file dialog for a missing base ROM, possibly behind other windows. Put both ROMs where
+        <a href="setup.html#roms">Setup</a> says.</td></tr>
+    <tr><td>Universal Tracker never answers</td>
+      <td>Create the folder <code>Archipelago\Players</code>; without it a hidden folder dialog waits.</td></tr>
+  </table>
+
+  <h2>In the game</h2>
+  <table>
+    <tr><th>You see</th><th>Cause and fix</th></tr>
+    <tr><td>"No state for Area N" or "(missing)" in the menu</td>
+      <td><code>savestates\areaN.State</code> is missing. Make the states (<a href="setup.html#states">Setup</a>).</td></tr>
+    <tr><td>"Could not load Area N"</td>
+      <td>The state was made in another BizHawk version. Make the states again in this one.</td></tr>
+    <tr><td>The menu opened by itself and B does nothing</td>
+      <td>You beat a boss and the next Area is locked, or a new game started. Load an unlocked Area.</td></tr>
+    <tr><td>A turtle I rescued in the game got captured again</td>
+      <td>You do not own her yet in Archipelago. Find her item.</td></tr>
+    <tr><td>The turtle on screen still has Leo's colours after a switch</td>
+      <td>Only the sprite colours lag; pause and unpause, or walk into the next room.</td></tr>
+    <tr><td>The run ended on the title screen after a game over</td>
+      <td>The seed is older than the unlimited-continues patch. Generate a new seed.</td></tr>
+  </table>
+
+  <h2>On stream</h2>
+  <table>
+    <tr><th>You see</th><th>Cause and fix</th></tr>
+    <tr><td>PopTracker is a black box in OBS</td>
+      <td>Set <code>"software_renderer": true</code> in <code>%APPDATA%\PopTracker\PopTracker.json</code> and restart PopTracker.</td></tr>
+    <tr><td>A BizHawk or tracker capture is empty</td>
+      <td>The window title is not the expected one. Start the games with <code>tools\start_stream.ps1</code> (it gives the
+        fixed titles), or pick the window by hand in the source's properties.</td></tr>
+    <tr><td>The panel says "No server"</td><td>The server is not running, or the URL's <code>server=</code> is wrong.
+      It reconnects by itself every 5 seconds.</td></tr>
+    <tr><td>The panel says "Game not in this seed"</td><td>The slot name in the URL does not match the seed.</td></tr>
+    <tr><td>"Click the blue silhouette below for onboarding" on screen</td>
+      <td>BizHawk 2.11's own hint; click it away once.</td></tr>
+  </table>
+
+  <h2>Emergency</h2>
+  <p>If a check is lost or a softlock happens live, the host can type in the server console:
+  <code>/send Turtles &lt;item&gt;</code> or <code>/send_location Turtles &lt;location&gt;</code>. Bosses can always be
+  played again from the area menu, and nothing in TMNT can be missed for good (see
+  <code>docs/research/tmnt-softlock-risker.md</code>).</p>
+</main></div>
+
+<footer><div class="wrap">
+  TMNT × ALttP Archipelago randomizer · <a href="https://github.com/moggenswe/alttptmnt">github.com/moggenswe/alttptmnt</a>
+</div></footer>
+</body>
+</html>

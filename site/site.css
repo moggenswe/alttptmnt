@@ -1,0 +1,126 @@
+/* TMNT x A Link to the Past - docs site. Plain CSS, works from file:// with no build step. */
+:root {
+  --bg: #0c111b;
+  --panel: #131a28;
+  --panel-2: #1a2334;
+  --line: #26324a;
+  --text: #e9edf3;
+  --muted: #9aa5b8;
+  --turtle: #45a84f;
+  --turtle-light: #7fd36b;
+  --gold: #ffd84a;
+  --sauce: #d64a2a;
+  --link: #7ad7ff;
+  --code-bg: #0a0f18;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.6 "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+a { color: var(--link); }
+a:hover { color: var(--gold); }
+img.pixel { image-rendering: pixelated; }
+
+/* Header and navigation */
+header.top {
+  position: sticky; top: 0; z-index: 10; background: rgba(12, 17, 27, 0.95);
+  border-bottom: 1px solid var(--line); backdrop-filter: blur(6px);
+}
+header.top .wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 10px 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); text-decoration: none; }
+.brand img { width: 32px; height: 32px; image-rendering: pixelated; }
+.brand span { color: var(--gold); }
+nav.main { display: flex; gap: 4px; flex-wrap: wrap; }
+nav.main a {
+  color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600;
+}
+nav.main a:hover { color: var(--text); background: var(--panel-2); }
+nav.main a.active { color: var(--bg); background: var(--turtle-light); }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+main { padding: 28px 0 60px; }
+main.with-toc { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 32px; }
+@media (max-width: 860px) {
+  main.with-toc { grid-template-columns: minmax(0, 1fr); }
+  aside.toc { display: none; }
+  table { display: block; overflow-x: auto; }
+}
+td code { overflow-wrap: anywhere; }
+
+aside.toc { position: sticky; top: 76px; align-self: start; font-size: 14px; }
+aside.toc b { display: block; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 12px; }
+aside.toc a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0; }
+aside.toc a:hover { color: var(--gold); }
+
+h1 { font-size: 34px; line-height: 1.2; margin: 0 0 8px; }
+h2 { font-size: 24px; margin: 44px 0 10px; padding-top: 6px; border-top: 1px solid var(--line); }
+h2:first-of-type { border-top: 0; }
+h3 { font-size: 18px; margin: 26px 0 6px; color: var(--gold); }
+p.lead { font-size: 18px; color: var(--muted); margin-top: 0; }
+
+/* Hero */
+.hero {
+  position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line);
+  background: var(--panel); margin-bottom: 28px;
+}
+.hero img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.hero .caption {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 22px;
+  background: linear-gradient(transparent, rgba(8, 11, 18, 0.92));
+}
+.hero .caption h1 { margin: 0; text-shadow: 0 2px 6px #000; }
+.hero .caption p { margin: 4px 0 0; color: #dfe6f0; text-shadow: 0 1px 4px #000; }
+
+/* Cards, tables, code */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 16px 0; }
+.card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px;
+}
+.card h3 { margin-top: 0; display: flex; align-items: center; gap: 8px; }
+.card h3 img { width: 28px; height: 28px; image-rendering: pixelated; }
+.card p { margin: 6px 0 0; color: var(--muted); }
+a.card { text-decoration: none; color: var(--text); display: block; }
+a.card:hover { border-color: var(--turtle); }
+
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 15px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; background: var(--panel); }
+td img { width: 24px; height: 24px; image-rendering: pixelated; vertical-align: middle; margin-right: 6px; }
+
+code { background: var(--code-bg); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 14px; }
+pre {
+  background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px;
+  overflow-x: auto; font-size: 14px; line-height: 1.5;
+}
+pre code { background: none; border: 0; padding: 0; }
+
+.note, .warn, .ok {
+  border-left: 4px solid var(--link); background: var(--panel); padding: 10px 14px; border-radius: 6px; margin: 14px 0;
+}
+.warn { border-left-color: var(--sauce); }
+.ok { border-left-color: var(--turtle); }
+.note b:first-child, .warn b:first-child, .ok b:first-child { display: block; margin-bottom: 2px; }
+
+ol.steps { counter-reset: step; list-style: none; padding-left: 0; }
+ol.steps > li { counter-increment: step; position: relative; padding-left: 44px; margin: 14px 0; }
+ol.steps > li::before {
+  content: counter(step); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--turtle); color: #0c111b; font-weight: 800; display: grid; place-items: center;
+}
+
+figure { margin: 16px 0; }
+figure img { max-width: 100%; border-radius: 8px; border: 1px solid var(--line); display: block; }
+figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+
+kbd {
+  background: var(--panel-2); border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 5px;
+  padding: 0 6px; font: 600 13px/1.6 "Segoe UI", sans-serif;
+}
+.icons-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.icons-row img { width: 36px; height: 36px; image-rendering: pixelated; }
+
+footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; padding: 22px 0 40px; }

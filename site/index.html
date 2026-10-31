@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TMNT × ALttP Randomizer</title>
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="img/pizza.png">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="index.html"><img src="img/pizza.png" alt="">TMNT <span>×</span> ALttP</a>
+  <nav class="main">
+    <a href="index.html" class="active">Overview</a><a href="setup.html">Setup</a><a href="play.html">Play</a>
+    <a href="stream.html">Stream</a><a href="help.html">Help</a><a href="dev.html">Developers</a>
+  </nav>
+</div></header>
+
+<div class="wrap"><main>
+  <div class="hero">
+    <img src="img/hero.png" alt="Key art: a sewer portal between Hyrule and New York">
+    <div class="caption">
+      <h1>TMNT × A Link to the Past</h1>
+      <p>An Archipelago randomizer where one runner plays both games with one shared item pool.</p>
+    </div>
+  </div>
+
+  <p class="lead">Link finds turtles in Hyrule's chests, the turtles find Moon Pearls in New York's sewers. The run is
+  over when both Ganon and Shredder are beaten. It is built for a charity speedrun marathon: fun to watch first,
+  roughly 1.5 to 2.5 hours long.</p>
+
+  <h2>How the two games connect</h2>
+  <div class="cards">
+    <div class="card"><h3><img src="img/leonardo.png" alt="">Turtles are items</h3>
+      <p>You start with one turtle. The other three are captured until you find them, usually in Hyrule.</p></div>
+    <div class="card"><h3><img src="img/pass.png" alt="">Areas are dungeons</h3>
+      <p>Each TMNT Area opens with its Sewer Pass (and sometimes a tool). You pick the Area from an in-game menu.</p></div>
+    <div class="card"><h3><img src="img/boss.png" alt="">Bosses hold Hyrule's items</h3>
+      <p>TMNT's bosses, sewer entrances and two gifts in the Turtle Lair hold A Link to the Past items.</p></div>
+    <div class="card"><h3><img src="img/heart.png" alt="">Two goals</h3>
+      <p>Ganon in Hyrule and Shredder in the Technodrome. The seed is done when both are down.</p></div>
+  </div>
+
+  <h2>Start here</h2>
+  <div class="cards">
+    <a class="card" href="setup.html"><h3><img src="img/rope.png" alt="">1. Setup</h3>
+      <p>What to download, where the ROMs go, one-time installation.</p></a>
+    <a class="card" href="play.html"><h3><img src="img/raphael.png" alt="">2. Play</h3>
+      <p>Generate a seed, start everything with one command, and the rules of the TMNT side.</p></a>
+    <a class="card" href="stream.html"><h3><img src="img/pizza.png" alt="">3. Stream</h3>
+      <p>OBS scene collection, go mode panel, trackers and the pizza-wipe transition.</p></a>
+    <a class="card" href="help.html"><h3><img src="img/scuba.png" alt="">4. Help</h3>
+      <p>Known problems and what to do when something does not connect.</p></a>
+  </div>
+
+  <h2>What you see on stream</h2>
+  <div class="figs">
+    <figure><img src="img/scene-hyrule.png" alt="Hyrule scene">
+      <figcaption>Hyrule: A Link to the Past, its PopTracker and the go mode panel.</figcaption></figure>
+    <figure><img src="img/scene-newyork.png" alt="New York scene">
+      <figcaption>New York: TMNT with the status bar on top, the TMNT tracker and the same panel.</figcaption></figure>
+  </div>
+
+  <h2>Status</h2>
+  <table>
+    <tr><th>Part</th><th>State</th></tr>
+    <tr><td>Logic, generation (150 seeds), ROM patch</td><td>Done and tested</td></tr>
+    <tr><td>BizHawk client, area menu, HUD, item messages</td><td>Done, tested end to end with a local server</td></tr>
+    <tr><td>Full ALttP + TMNT chain (SNI, both clients, PopTracker, panel)</td><td>Connects and syncs; not played through yet</td></tr>
+    <tr><td>OBS scene collection and stinger</td><td>Loads in OBS 32; the scene switch itself not tried live</td></tr>
+    <tr><td>A full rehearsal run of a seed</td><td>Still to do</td></tr>
+  </table>
+</main></div>
+
+<footer><div class="wrap">
+  TMNT × ALttP Archipelago randomizer · source: <a href="https://github.com/moggenswe/alttptmnt">github.com/moggenswe/alttptmnt</a> ·
+  icons drawn for this project; A Link to the Past is shown with the community PopTracker pack.
+  Teenage Mutant Ninja Turtles and The Legend of Zelda belong to their owners; this is a fan project for charity.
+</div></footer>
+</body>
+</html>

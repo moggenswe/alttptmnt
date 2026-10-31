@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play · TMNT × ALttP</title>
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="img/pizza.png">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="index.html"><img src="img/pizza.png" alt="">TMNT <span>×</span> ALttP</a>
+  <nav class="main">
+    <a href="index.html">Overview</a><a href="setup.html">Setup</a><a href="play.html" class="active">Play</a>
+    <a href="stream.html">Stream</a><a href="help.html">Help</a><a href="dev.html">Developers</a>
+  </nav>
+</div></header>
+
+<div class="wrap"><main class="with-toc">
+  <aside class="toc"><b>On this page</b>
+    <a href="#seed">Generate a seed</a><a href="#start">Start a session</a><a href="#tmnt">The TMNT side</a>
+    <a href="#menu">Area menu and HUD</a><a href="#events">What happens when…</a><a href="#alttp">The ALttP side</a>
+    <a href="#host">Host commands</a>
+  </aside>
+  <div>
+    <h1>Play</h1>
+    <p class="lead">Generate a seed, start everything with one command, then play Hyrule and New York until both
+    Ganon and Shredder are beaten.</p>
+
+    <h2 id="seed">Generate a seed</h2>
+    <p>The player files are in <code>players\</code>: <code>alttp.yaml</code> (slot <b>Link</b>) and <code>tmnt.yaml</code>
+    (slot <b>Turtles</b>).</p>
+<pre><code>cd C:\Project\tmntalttp\Archipelago
+..\.venv\Scripts\python.exe Generate.py --player_files_path ..\players --outputpath ..\output\marathon</code></pre>
+    <p>The result is <code>output\marathon\AP_&lt;seed&gt;.zip</code>. It holds the server file, both patch files and
+    the spoiler log (with the playthrough). Keep the spoiler with the production team, off screen.</p>
+    <table>
+      <tr><th>Option</th><th>Default here</th><th>What it does</th></tr>
+      <tr><td><code>start_turtle</code></td><td>raphael</td><td>The turtle you start with (or <code>random</code>).</td></tr>
+      <tr><td><code>start_area</code></td><td>area_1</td><td>The Area pass you start with; its tools come with it.</td></tr>
+      <tr><td><code>start_hints</code></td><td>Leonardo, Michelangelo, Donatello, Missile Pack, Rope Pack</td>
+        <td>Hinted from the first minute, so the way to go mode is readable.</td></tr>
+      <tr><td><code>progression_balancing</code></td><td>75 (both slots)</td><td>Pulls progression between the games
+        earlier, so the runner waits less.</td></tr>
+      <tr><td><code>non_local_items</code></td><td>all turtles, passes and tools; Hookshot, Flippers, Moon Pearl</td>
+        <td>These always land in the other game, which weaves the two together.</td></tr>
+      <tr><td>ALttP</td><td><code>mode: open</code>, <code>goal: ganon</code>, vanilla entrances</td><td>Standard
+        Archipelago A Link to the Past.</td></tr>
+    </table>
+    <div class="note"><b>Old seeds</b>Seeds generated before commit <code>18a0630</code> (2026-10-31) lack the
+      unlimited-continues patch, so the third game over ends the run. Generate a new one.</div>
+
+    <h2 id="start">Start a session</h2>
+<pre><code>cd C:\Project\tmntalttp
+powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\marathon\AP_&lt;seed&gt;.zip</code></pre>
+    <p>The script patches the ROMs if needed and then starts, in order:</p>
+    <ol>
+      <li><b>MultiServer</b> on <code>localhost:38281</code>, in its own console window (host commands go there).</li>
+      <li><b>SNI</b>.</li>
+      <li><b>BizHawk with ALttP</b> and SNI's Lua connector (window "alttp-stream [SNES] - BizHawk").</li>
+      <li><b>BizHawk with TMNT</b> and <code>lua\tmnt_stream.luases</code>: Archipelago's connector plus the area menu
+        (window "tmnt-stream [NES] - BizHawk").</li>
+      <li><b>SNI Client</b> and <b>BizHawk Client</b>, already connected.</li>
+      <li><b>Two PopTracker windows</b>: ALttP (slot Link) and TMNT (slot Turtles).</li>
+    </ol>
+    <p>It stops if port 38281 is already in use. Parameters: <code>-Port</code>, <code>-AlttpSlot</code>,
+    <code>-TmntSlot</code>, <code>-EmuHawk</code>, <code>-PopTracker</code>, <code>-NoTracker</code>.</p>
+
+    <h2 id="tmnt">The TMNT side</h2>
+    <h3>Items (12 locations, 12 items)</h3>
+    <table>
+      <tr><th>Item</th><th>What it does</th></tr>
+      <tr><td><img src="img/leonardo.png" alt=""><img src="img/raphael.png" alt=""><img src="img/michelangelo.png" alt=""><img src="img/donatello.png" alt="">Turtles</td>
+        <td>A turtle you do not own is captured and cannot be picked. Received mid-Area, it is freed at once.</td></tr>
+      <tr><td><img src="img/pass.png" alt="">Sewer Pass: Area 1–5</td><td>Opens that Area in the area menu.</td></tr>
+      <tr><td><img src="img/missile.png" alt="">Missile Pack</td><td>15 missiles for the Party Wagon (Area 3); refills whenever you hit 0.</td></tr>
+      <tr><td><img src="img/rope.png" alt="">Rope Pack</td><td>5 ropes for the rooftop gaps (Areas 3 and 4); refills whenever you hit 0.</td></tr>
+      <tr><td><img src="img/scuba.png" alt="">Zora's Scuba Kit</td><td>Needed for the underwater dam in Area 2.</td></tr>
+      <tr><td><img src="img/pizza.png" alt="">Whole Pizza</td><td>Filler.</td></tr>
+    </table>
+    <h3>What each Area needs</h3>
+    <table>
+      <tr><th>Area</th><th>To enter</th><th>Locations</th></tr>
+      <tr><td>1</td><td>Sewer Pass 1</td><td>Sewer Entrance, Boss</td></tr>
+      <tr><td>2</td><td>Sewer Pass 2 + Zora's Scuba Kit</td><td>Sewer Entrance, Boss</td></tr>
+      <tr><td>3</td><td>Sewer Pass 3 + Missile Pack + Rope Pack</td><td>Sewer Entrance, Boss</td></tr>
+      <tr><td>4</td><td>Sewer Pass 4 + Rope Pack</td><td>Sewer Entrance, Boss</td></tr>
+      <tr><td>5</td><td>Sewer Pass 5 (the boss needs Donatello)</td><td>Sewer Entrance, Boss</td></tr>
+      <tr><td>6 Technodrome</td><td>all four turtles + 3 of the 5 Area bosses beaten</td><td>Shredder (goal)</td></tr>
+    </table>
+    <p>Plus two free gifts in the <b>Turtle Lair</b> (Splinter's Gift, April's Van), sent as soon as the client connects.
+    A sewer entrance counts when its Area loads; a boss counts when you beat it.</p>
+
+    <h2 id="menu">Area menu and HUD</h2>
+    <div class="figs">
+      <figure><img class="pixel" src="img/hud.png" alt="HUD"><figcaption>The status bar: owned turtles and packs in white,
+        missing ones grey, bosses x/3, GO MODE when the Technodrome is in logic.</figcaption></figure>
+      <figure><img class="pixel" src="img/menu.png" alt="Area menu"><figcaption>The area menu: locked Areas are grey.</figcaption></figure>
+    </div>
+    <table>
+      <tr><th>Buttons</th><th>Does</th></tr>
+      <tr><td><kbd>Select</kbd> + <kbd>Up</kbd></td><td>Open the area menu (game input is held while it is open)</td></tr>
+      <tr><td><kbd>Up</kbd> / <kbd>Down</kbd>, <kbd>A</kbd></td><td>Pick an Area and load it</td></tr>
+      <tr><td><kbd>B</kbd> or <kbd>Select</kbd> + <kbd>Down</kbd></td><td>Close the menu (not when it was forced open)</td></tr>
+      <tr><td><kbd>Select</kbd> + <kbd>Left</kbd></td><td>Hide or show the status bar</td></tr>
+    </table>
+    <p>Received items show in BizHawk's message area: "Got Rope Pack from Link", "Found Leonardo".</p>
+
+    <h2 id="events">What happens when…</h2>
+    <table>
+      <tr><th>…you</th><th>Then</th></tr>
+      <tr><td>beat an Area boss</td><td>The game moves on to the next Area. If its pass is missing, the menu opens and stays
+        open until you load an unlocked Area.</td></tr>
+      <tr><td>lose every turtle</td><td>Game over, then CONTINUE. Continues are unlimited (the ROM is patched); the Area
+        restarts and your owned turtles are free again.</td></tr>
+      <tr><td>run out of missiles or ropes</td><td>With the pack you are refilled at once. Vanilla pickups still exist as
+        bonus ammo.</td></tr>
+      <tr><td>rescue a captured turtle in the game</td><td>If you do not own her, the client captures her again.</td></tr>
+      <tr><td>start a new game from the title screen</td><td>The menu opens; pick an Area.</td></tr>
+      <tr><td>beat a boss while the client is disconnected</td><td>It is remembered in RAM and sent when the client comes back.</td></tr>
+      <tr><td>see "Connect the AP client" in the menu</td><td>The BizHawk Client is not connected yet.</td></tr>
+    </table>
+
+    <h2 id="alttp">The ALttP side</h2>
+    <p>Standard Archipelago A Link to the Past through SNI: open mode, goal Ganon, vanilla entrances. Its chests hold
+    turtles, passes and packs; TMNT's bosses and entrances hold its items (Hookshot, Flippers and Moon Pearl always do).
+    Crystals are shuffled between dungeons as usual; the runner sees them on the map.</p>
+
+    <h2 id="host">Host commands</h2>
+    <p>Type these in the MultiServer console window:</p>
+    <table>
+      <tr><th>Command</th><th>Use</th></tr>
+      <tr><td><code>/hint Turtles Donatello</code></td><td>Reveal where an item is, e.g. as a donation incentive.</td></tr>
+      <tr><td><code>/send Turtles Rope Pack</code></td><td>Emergency: give an item.</td></tr>
+      <tr><td><code>/send_location Turtles Area 2 - Boss</code></td><td>Emergency: count a location as checked.</td></tr>
+    </table>
+  </div>
+</main></div>
+
+<footer><div class="wrap">
+  TMNT × ALttP Archipelago randomizer · <a href="https://github.com/moggenswe/alttptmnt">github.com/moggenswe/alttptmnt</a>
+</div></footer>
+</body>
+</html>

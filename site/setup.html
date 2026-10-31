@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup · TMNT × ALttP</title>
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="img/pizza.png">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="index.html"><img src="img/pizza.png" alt="">TMNT <span>×</span> ALttP</a>
+  <nav class="main">
+    <a href="index.html">Overview</a><a href="setup.html" class="active">Setup</a><a href="play.html">Play</a>
+    <a href="stream.html">Stream</a><a href="help.html">Help</a><a href="dev.html">Developers</a>
+  </nav>
+</div></header>
+
+<div class="wrap"><main class="with-toc">
+  <aside class="toc"><b>On this page</b>
+    <a href="#needs">What you need</a><a href="#roms">ROMs</a><a href="#code">Code and Archipelago</a>
+    <a href="#emu">BizHawk and SNI</a><a href="#states">Area savestates</a><a href="#trackers">Trackers</a>
+    <a href="#obs">OBS</a><a href="#check">Check the install</a>
+  </aside>
+  <div>
+    <h1>Setup</h1>
+    <p class="lead">One-time installation on the streaming PC (Windows 10/11). Paths below are the ones the start
+    script expects; every one of them can be changed with a parameter.</p>
+
+    <h2 id="needs">What you need</h2>
+    <table>
+      <tr><th>Tool</th><th>Version</th><th>Where it goes</th><th>Download</th></tr>
+      <tr><td>Python</td><td>3.12 (3.12.10 to 3.13)</td><td>installed; a venv in <code>.venv</code></td>
+        <td><a href="https://www.python.org/downloads/">python.org</a></td></tr>
+      <tr><td>Git</td><td>any</td><td>installed</td><td><a href="https://git-scm.com/">git-scm.com</a></td></tr>
+      <tr><td>Archipelago (source)</td><td>tag <code>0.6.8</code></td><td><code>Archipelago\</code> in the repo</td>
+        <td><a href="https://github.com/ArchipelagoMW/Archipelago">GitHub</a></td></tr>
+      <tr><td>BizHawk</td><td>2.11.1</td><td><code>%USERPROFILE%\Downloads\BizHawk-2.11.1-win-x64\</code></td>
+        <td><a href="https://github.com/TASEmulators/BizHawk/releases">GitHub</a></td></tr>
+      <tr><td>SNI</td><td>v0.0.103</td><td><code>Archipelago\SNI\</code></td>
+        <td><a href="https://github.com/alttpo/sni/releases">GitHub</a></td></tr>
+      <tr><td>PopTracker</td><td>0.36.0</td><td><code>%USERPROFILE%\Downloads\PopTracker-0.36.0\</code></td>
+        <td><a href="https://github.com/black-sliver/PopTracker/releases">GitHub</a></td></tr>
+      <tr><td>ALttP PopTracker pack</td><td>v0.5.1</td><td>PopTracker's <code>packs\</code></td>
+        <td><a href="https://github.com/StripesOO7/alttp-ap-poptracker-pack/releases">GitHub</a></td></tr>
+      <tr><td>Universal Tracker (optional)</td><td>v0.3.8</td><td><code>Archipelago\custom_worlds\tracker.apworld</code></td>
+        <td><a href="https://github.com/FarisTheAncient/Archipelago/releases">GitHub</a></td></tr>
+      <tr><td>OBS Studio</td><td>32</td><td>installed</td><td><a href="https://obsproject.com/">obsproject.com</a></td></tr>
+    </table>
+
+    <h2 id="roms">ROMs</h2>
+    <p>You bring your own dumps. They never go into git (the repo ignores <code>*.nes</code>, <code>*.sfc</code>,
+    <code>*.smc</code>).</p>
+    <table>
+      <tr><th>Game</th><th>Version</th><th>md5</th><th>File</th></tr>
+      <tr><td>A Link to the Past</td><td>Japan 1.0 (<i>Zelda no Densetsu: Kamigami no Triforce</i>), no copier header,
+        1 048 576 bytes</td><td><code>03a63945398191337e896e5771f77173</code></td>
+        <td><code>Archipelago\Zelda no Densetsu - Kamigami no Triforce (Japan).sfc</code></td></tr>
+      <tr><td>Teenage Mutant Ninja Turtles</td><td>NES, USA, clean iNES header, 262 160 bytes</td>
+        <td><code>5e24ccd733d15e42d847274e7add0a76</code></td>
+        <td><code>roms\Teenage Mutant Ninja Turtles (USA).nes</code> and a copy in <code>Archipelago\</code></td></tr>
+    </table>
+    <p>A <code>.smc</code> dump of ALttP usually has a 512-byte copier header (1 049 088 bytes). Strip it and check:</p>
+<pre><code>python -c "d=open('roms/Zelda no Densetsu.smc','rb').read()[512:]; open('Archipelago/Zelda no Densetsu - Kamigami no Triforce (Japan).sfc','wb').write(d); import hashlib; print(hashlib.md5(d).hexdigest())"</code></pre>
+    <div class="note"><b>Why both places for TMNT?</b>The tools in <code>lua\</code> read <code>roms\</code>; Archipelago looks
+      for the base ROM next to itself when it patches a seed.</div>
+
+    <h2 id="code">Code and Archipelago</h2>
+    <ol class="steps">
+      <li>Clone this repo and Archipelago at the pinned tag:
+<pre><code>git clone https://github.com/moggenswe/alttptmnt.git C:\Project\tmntalttp
+cd C:\Project\tmntalttp
+git clone https://github.com/ArchipelagoMW/Archipelago.git Archipelago
+git -C Archipelago checkout 0.6.8</code></pre></li>
+      <li>Make the venv and install Archipelago's requirements:
+<pre><code>py -3.12 -m venv .venv
+cd Archipelago
+..\.venv\Scripts\python.exe ModuleUpdate.py --yes
+cd ..</code></pre></li>
+      <li>Link the TMNT world into Archipelago (in <code>cmd</code>; a junction, so edits in <code>apworld\tmnt</code> apply at once):
+<pre><code>mklink /J Archipelago\worlds\tmnt apworld\tmnt</code></pre></li>
+    </ol>
+
+    <h2 id="emu">BizHawk and SNI</h2>
+    <ol class="steps">
+      <li>Unzip BizHawk 2.11.1 to <code>%USERPROFILE%\Downloads\BizHawk-2.11.1-win-x64\</code>. BizHawk runs both games:
+        TMNT on its NES core, ALttP on its SNES core.</li>
+      <li>Unzip SNI into <code>Archipelago\SNI\</code> so that <code>Archipelago\SNI\sni.exe</code> exists. SNI's
+        <code>lua\Connector.lua</code> is what BizHawk runs for ALttP.</li>
+    </ol>
+    <div class="warn"><b>Use one BizHawk version everywhere.</b>The area savestates only load in the BizHawk version that
+      made them. If the stream PC uses another version, make the states again there (next step).</div>
+
+    <h2 id="states">Area savestates</h2>
+    <p>The in-game area menu loads one savestate per TMNT Area. Make them once, in the BizHawk that will be used live:</p>
+<pre><code>%USERPROFILE%\Downloads\BizHawk-2.11.1-win-x64\EmuHawk.exe --lua=C:\Project\tmntalttp\lua\tmnt_make_area_states.lua "C:\Project\tmntalttp\roms\Teenage Mutant Ninja Turtles (USA).nes"</code></pre>
+    <p>It writes <code>savestates\area1.State</code> … <code>area6.State</code> with a screenshot next to each. A patched
+    seed ROM can load states made from the clean ROM.</p>
+
+    <h2 id="trackers">Trackers</h2>
+    <ol class="steps">
+      <li>Unzip PopTracker to <code>%USERPROFILE%\Downloads\PopTracker-0.36.0\</code> and put the ALttP pack zip into its
+        <code>packs\</code> folder.</li>
+      <li>Build and install the TMNT pack (made from the TMNT world's own tables):
+<pre><code>.venv\Scripts\python.exe tools\make_poptracker_pack.py --install</code></pre></li>
+      <li>Start PopTracker once, then set these in <code>%APPDATA%\PopTracker\PopTracker.json</code>:
+<pre><code>"software_renderer": true,
+"check_for_updates": false,
+"add_emo_packs": false</code></pre>
+        <div class="warn"><b>software_renderer is required for OBS.</b>With the hardware renderer, OBS window capture shows
+          PopTracker as a black box.</div></li>
+      <li>Optional: put <code>tracker.apworld</code> in <code>Archipelago\custom_worlds\</code> and create an empty folder
+        <code>Archipelago\Players</code> (Universal Tracker hangs on a hidden dialog without it).</li>
+    </ol>
+
+    <h2 id="obs">OBS</h2>
+    <p>Build the scene collection (absolute paths for this PC) and import it in OBS under
+    <b>Scene Collection → Import</b>:</p>
+<pre><code>.venv\Scripts\python.exe tools\make_obs_collection.py</code></pre>
+    <p>The file is <code>tools\obs\tmnt-alttp-scenes.json</code>. See <a href="stream.html">Stream</a> for the scenes.</p>
+
+    <h2 id="check">Check the install</h2>
+<pre><code>cd Archipelago
+..\.venv\Scripts\python.exe -m unittest discover -s worlds\tmnt\test -t .
+cd ..
+.venv\Scripts\python.exe tools\gen_many.py --count 20 --players players\ --ap Archipelago\</code></pre>
+    <p>Expect <code>OK</code> from the tests and <code>ok=20 failed=0</code> from the generator. Then generate a seed and
+    start everything as on <a href="play.html">Play</a>.</p>
+  </div>
+</main></div>
+
+<footer><div class="wrap">
+  TMNT × ALttP Archipelago randomizer · <a href="https://github.com/moggenswe/alttptmnt">github.com/moggenswe/alttptmnt</a>
+</div></footer>
+</body>
+</html>

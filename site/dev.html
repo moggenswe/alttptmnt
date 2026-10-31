@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Developers · TMNT × ALttP</title>
+<link rel="stylesheet" href="site.css">
+<link rel="icon" href="img/pizza.png">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="index.html"><img src="img/pizza.png" alt="">TMNT <span>×</span> ALttP</a>
+  <nav class="main">
+    <a href="index.html">Overview</a><a href="setup.html">Setup</a><a href="play.html">Play</a>
+    <a href="stream.html">Stream</a><a href="help.html">Help</a><a href="dev.html" class="active">Developers</a>
+  </nav>
+</div></header>
+
+<div class="wrap"><main>
+  <h1>Developers</h1>
+  <p class="lead">How the pieces fit, where they live and how to test them. The repo's own notes in <code>docs/</code> are
+  in Swedish.</p>
+
+  <h2>How it works</h2>
+  <ul>
+    <li><b>TMNT world</b> (<code>apworld/tmnt</code>): items, locations, rules, options and a ROM patch (an AP tag plus
+      unlimited continues).</li>
+    <li><b>BizHawk client</b> (<code>client.py</code>, logic in <code>client_logic.py</code>): reads the game's RAM and a
+      small mailbox at <code>$0388</code>, sends checks, and writes turtles' HP, packs and the pass mask.</li>
+    <li><b>Area menu</b> (<code>lua/tmnt_area_select.lua</code>): loads one savestate per Area, counts loads in the
+      mailbox so the client syncs, watches for boss wins, continues and new games, and draws the HUD.</li>
+    <li><b>A Link to the Past</b>: Archipelago's own world through SNI, unchanged.</li>
+  </ul>
+  <table>
+    <tr><th>Mailbox byte</th><th>Written by</th><th>Meaning</th></tr>
+    <tr><td><code>$0388</code></td><td>client</td><td>Pass mask: bit N-1 = Area N playable, bit 5 = Technodrome</td></tr>
+    <tr><td><code>$0389</code></td><td>menu</td><td>Load counter (1-255; 0 = nothing loaded)</td></tr>
+    <tr><td><code>$038A</code></td><td>client</td><td>Ack of the load counter (full sync done)</td></tr>
+    <tr><td><code>$038B</code></td><td>client</td><td>Magic <code>A7</code>: the client is there</td></tr>
+    <tr><td><code>$038C</code></td><td>client</td><td>Owned items for the HUD</td></tr>
+    <tr><td><code>$038D</code></td><td>client</td><td>Bosses the server has as checked</td></tr>
+    <tr><td><code>$038E</code></td><td>menu</td><td>Wins the menu saw (bosses, Shredder), for a client that was away</td></tr>
+  </table>
+
+  <h2>Repo layout</h2>
+  <table>
+    <tr><th>Path</th><th>What</th></tr>
+    <tr><td><code>apworld/tmnt/</code></td><td>The Archipelago world and client, with tests in <code>test/</code></td></tr>
+    <tr><td><code>lua/</code></td><td>Area menu, stream session file, savestate maker, BizHawk tests and research scripts</td></tr>
+    <tr><td><code>tools/</code></td><td>start script, end-to-end runner, OBS collection, sprites, stinger, PopTracker pack, seed checks</td></tr>
+    <tr><td><code>tools/obs/</code></td><td>Go mode panel, sprites, pizza-wipe, scene collection</td></tr>
+    <tr><td><code>poptracker/tmnt-ap/</code></td><td>The TMNT PopTracker pack (generated)</td></tr>
+    <tr><td><code>players/</code></td><td>Player files for the marathon seed</td></tr>
+    <tr><td><code>docs/</code></td><td>Design, plan, research (RAM map, softlock risks, ammo and trackers), stream tools</td></tr>
+    <tr><td><code>site/</code></td><td>This site</td></tr>
+  </table>
+
+  <h2>Tests</h2>
+<pre><code>:: unit tests (logic, client, ROM patch)
+cd Archipelago
+..\.venv\Scripts\python.exe -m unittest discover -s worlds\tmnt\test -t .
+cd ..
+
+:: many seeds
+.venv\Scripts\python.exe tools\gen_many.py --count 100 --players players\ --ap Archipelago\
+
+:: area menu in BizHawk, writes savestates\area_select_test\result.txt
+%USERPROFILE%\Downloads\BizHawk-2.11.1-win-x64\EmuHawk.exe --lua=lua\tmnt_area_select_test.lua "roms\Teenage Mutant Ninja Turtles (USA).nes"
+
+:: the whole chain: server, BizHawk, menu and client, scripted
+.venv\Scripts\python.exe tools\e2e_run.py --seed-zip output\e2e\AP_&lt;seed&gt;.zip --rom output\e2e\&lt;patched&gt;.nes</code></pre>
+  <p>Last run (2026-10-31): 135 unit tests, area menu 40/40, end-to-end run passing, 150 seeds generated without errors.</p>
+
+  <h2>Rebuild generated files</h2>
+<pre><code>.venv\Scripts\python.exe tools\sprites.py                     :: tools\obs\sprites\*.png
+.venv\Scripts\python.exe tools\make_poptracker_pack.py --install  :: poptracker\tmnt-ap
+.venv\Scripts\python.exe tools\make_stinger.py                 :: tools\obs\pizza_wipe.webm (needs imageio-ffmpeg)
+.venv\Scripts\python.exe tools\make_obs_collection.py          :: tools\obs\tmnt-alttp-scenes.json</code></pre>
+
+  <h2>Research</h2>
+  <ul>
+    <li><code>docs/research/tmnt-ram.md</code>: the RAM map, how it was confirmed (BizHawk, TAS 4543M), the mailbox.</li>
+    <li><code>docs/research/tmnt-softlock-risker.md</code>: can anything get the runner stuck, and the area-state analysis.</li>
+    <li><code>docs/research/tmnt-ammo-och-tracker.md</code>: how missiles and ropes are gated, and which trackers to use.</li>
+  </ul>
+</main></div>
+
+<footer><div class="wrap">
+  TMNT × ALttP Archipelago randomizer · <a href="https://github.com/moggenswe/alttptmnt">github.com/moggenswe/alttptmnt</a>
+</div></footer>
+</body>
+</html>
