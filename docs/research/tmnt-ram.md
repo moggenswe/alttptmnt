@@ -23,9 +23,9 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 | Desarmerade bomber (Area 2) | `$007D` | | Dok |
 | Pausad | `$0094` | 3 vid paus, 0 annars | Dok |
 | Antal continues | `$0046` | börjar på 3 | Dok |
-| Bossvinst Area 1–5 | | inte dokumenterad; troligen när `$0048` räknas upp | Okänd |
+| Bossvinst Area 1–5 | `$0048` räknas upp | Ingen egen flagga hittad. `$0048` går N−1 → N exakt en gång per bossvinst (5 gånger på hela TAS:en), när Aprils genomgång inför nästa area börjar | **Bekräftat med TAS** (se "TAS-analys") |
 | Shredder besegrad | `$001B` = 5 | eftertexterna börjar | Dok |
-| 4 lediga bytes (brevlåda) | ~~`$07F0–$07F3`~~ | **Används av spelet**: alla fyra blev `44` under spel i Area 1. Ny plats letas med "Track unused". | Underkänd |
+| 4 lediga bytes (brevlåda) | `$0388–$038B` | Hela `$0388–$03AF` (40 byte) ändras aldrig under TAS:en; markörvärden där skrevs aldrig över och TAS:en synkade ända till Area 6. ~~`$07F0–$07F3`~~ används av spelet (blev `44` i Area 1), och `$0778–$077F`/`$07F8–$07FF` läses av spelet (TAS:en desynkar i Area 3) | **Bekräftat med TAS** |
 | Ledigt ROM-utrymme för AP-taggen (PRG-offset) | `0x1BE00` | 582 byte `0xFF` på `$1BD92–$1BFD7` (bank 6); taggen tar 70 byte | Skannat ur ROM-filen |
 
 ## R1 – går det att låsa en sköldpadda genom att sätta HP till fångad-värdet?
@@ -40,7 +40,9 @@ Resultat: **NEJ** (2026-10-31). En pizza i första byggnaden i Area 1 låg där 
 
 ## MISSILE_REFILL / ROPE_REFILL
 
-Minsta antal som räcker i Area 3:   → värde (+50 %):
+Missiles: TAS:en plockar 10 i Area 3 (frame 20188) och skjuter alla 10 innan Area 4. En vanlig spelare behöver alltså minst 10, sannolikt fler → förslag `MISSILE_REFILL = 15`.
+
+Ropes: TAS:en har 0 rep i hela Area 3 och plockar sina första i Area 4 (3 st, frame 30757, använder 1). Det är **ropeless**-skippet, en damage boost som också görs i realtid men bara av de allra bästa (Oscar, 2026-10-31). Logiken behåller därför "Area 3 kräver Rope Pack". Antalet rep en vanlig spelare behöver går inte att läsa ur TAS:en; `ROPE_REFILL` måste spelas fram.
 
 ## Övrigt / överraskningar
 
@@ -72,3 +74,17 @@ TASVideos-publikationen 4543M ligger i `tas/4543M/` (inte i git). Den synkar bar
 | 49799 | 5 | Area 6 |
 
 Bossvinsterna ligger strax före dessa frames. Det gör filmen användbar för att hitta en bossflagga: ta en RAM-ögonblicksbild före och efter bossens sista träff och jämför. Filmen slutar med `$001B` = 4, alltså före eftertexterna.
+
+## TAS-analys: bossvinst, brevlåda, missiles (2026-10-31)
+
+Gjord med TAS 4543M i BizHawk 2.6.1 (`--movie`). Skript: `lua/tmnt_tas_ram_dump.lua` (RAM var 5:e frame + varje ändring av kända adresser), `tools/analyze_tas_ram.py` och `lua/tmnt_tas_mailbox_check.lua`. Rådata i `tas/4543M/ramdump/` (inte i git).
+
+- **Bossflagga:** ingen byte ändras exakt en gång per area, och ingen byte står still i 5–30 s före varje areabyte för att sedan slå om. Bästa signalen är därför areabyten själv: `$0048` går N−1 → N en gång per bossvinst och aldrig annars under TAS:en. Det sker när Aprils genomgång inför nästa area börjar, alltså en stund efter själva bossvinsten.
+  - **Följd för Task 7:** efter en bossvinst fortsätter spelet av sig själv till nästa area, även om spelaren saknar dess pass. Areaväljaren eller klienten måste fånga `$0048`-ändringen (utan föregående savestate-laddning) och skicka spelaren tillbaka till menyn.
+  - **Shredder:** TAS:en slutar på sista träffen; `$001B` är 4 på sista framen, så `$001B` = 5 är fortfarande bara dokumenterat.
+- **Brevlåda:** 23 sammanhängande områden (minst 4 byte, stacken `$0100–$01FF` utesluten) ändrades aldrig efter frame 200. Markörvärdet `A7` skrevs på frame 200 i elva av dem:
+  - Skrivs över av spelet (frame 673, i början av Area 1): `$03F7–$03F9`, `$049F`, `$04CF`, `$0618–$0627`, `$064C–$064F`, `$06B1–$06B7`.
+  - Läses av spelet: markörer i `$0778–$077F` och `$07F8–$07FF` får TAS:en att desynka i Area 3.
+  - Säkra: `$0388–$03AF` och `$0600–$0603`, `$060A–$0610` — inga överskrivningar, och TAS:en når Area 6 på exakt samma frames.
+  - **Förslag:** `MAILBOX_BASE = 0x0388`.
+  - **Begränsning:** TAS:en täcker inte allt (game over, continue-skärmen, pausmenyn används nästan inte), och skrivningar av samma värde (`00` → `00`) syns inte i en dump.
