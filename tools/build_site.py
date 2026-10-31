@@ -30,14 +30,62 @@ SKIP_PARTS = {"__pycache__", ".pytest_cache"}
 SKIP_SUFFIXES = {".pyc"}
 FORBIDDEN_SUFFIXES = {".nes", ".sfc", ".smc", ".state", ".saveram", ".aplttp", ".aptmnt", ".apsave", ".bk2"}
 
-README = """TMNT x A Link to the Past - an Archipelago randomizer created by Mogswe
+README = """TMNT x A Link to the Past
+An Archipelago randomizer created by Mogswe - BETA
+Version {commit}, {date}
 
-1. Double-click install.cmd. It asks for your two ROMs (A Link to the Past, Japan 1.0, and
-   Teenage Mutant Ninja Turtles, NES USA), lists what it needs to download and asks before it does.
-2. Double-click start.cmd: create a seed, start a session, check everything before going live, stop it.
+WHAT IS THIS?
+  One runner plays two games at once: The Legend of Zelda: A Link to the Past (SNES)
+  and Teenage Mutant Ninja Turtles (NES). The items of both games are shuffled
+  together, so Link can find a turtle in a Hyrule chest and the turtles can find
+  Link's Moon Pearl in a New York sewer. You win when Ganon and Shredder are both beaten.
 
-The full guide is in site/index.html (open it in a browser). Windows 10 or 11.
-Version {commit}, {date}.
+WHAT YOU NEED
+  - A PC with Windows 10 or 11 and an internet connection for the first install.
+  - Your own two ROM files (they are not included and never will be):
+      * A Link to the Past, the Japanese 1.0 version (.sfc or .smc)
+      * Teenage Mutant Ninja Turtles, the NES USA version (.nes)
+    The installer checks them and tells you if a ROM is the wrong version.
+  - OBS Studio, only if you want to stream.
+
+GET STARTED (about 10 minutes)
+  1. Unzip this folder to a SHORT path, for example C:\\tmntalttp
+     (a long path such as inside Downloads can make the install fail).
+  2. Double-click install.cmd.
+     - Pick your two ROMs when it asks.
+     - It lists what it will download (about 290 MB) and asks "Can I download these?".
+       Answer Y. Everything is installed inside this folder; nothing else on the PC changes.
+     - A game window opens and closes by itself once; that is normal.
+  3. Double-click start.cmd and choose with a number:
+       1  Create a seed           - makes a new shuffled game
+       2  Start a session         - opens both games, the trackers and everything else
+       3  Check before going live - every line should say OK
+       4  Stop the session        - closes everything and saves your game
+
+WHILE PLAYING
+  - Both games run side by side. Press Select+Start to pause and jump to the other game
+    (or Ctrl+Shift+Space on the keyboard). Press Start to play on.
+  - In TMNT, Select+Up opens the Area menu: you pick which Area to play.
+  - When something arrives for the other game, the game you are playing tells you
+    at the bottom left, for example "Zelda got Hookshot".
+
+IF SOMETHING GOES WRONG
+  - Run start.cmd -> 3 "Check before going live". Every problem line says what to do.
+  - Close everything with start.cmd -> 4 and start again with 2. Your progress is kept
+    on the server and in the game's save.
+  - More help: open site\\index.html in this folder (the full guide, also online at
+    https://alttptmnt.vercel.app), page "Help".
+
+THIS IS A BETA
+  It works and is tested, but has not had a full playthrough yet. Get the newest
+  version from https://alttptmnt.vercel.app before each session.
+
+WHAT IS IN THIS FOLDER
+  install.cmd / start.cmd   the two files you double-click
+  site\\                     the full guide (open index.html)
+  apworld\\, lua\\, tools\\    the randomizer itself; no need to touch
+  players\\                  the seed settings (alttp.yaml, tmnt.yaml)
+  poptracker\\               the TMNT item tracker
 """
 
 
