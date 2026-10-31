@@ -25,8 +25,8 @@ BIZHAWK_CLASS = "WindowsForms10.Window.8.app.0.3297317_r6_ad1"  # BizHawk 2.11.1
 TRANSITION_POINT_MS = 500  # tools/make_stinger.py
 # Go mode panel sizes, each shown at 1:1. tools/obs/go-mode.html scales itself to its source's size (vector text
 # and icons), so a bigger panel is a bigger source, never a stretched one.
-PANEL = (670, 290)
-PANEL_SEWERS = (1005, 435)  # 1.5x
+PANEL = (670, 340)
+PANEL_SEWERS = (1005, 510)  # 1.5x
 
 # BizHawk's window has a menu bar and a status bar around the game picture (2x zoom, client area).
 BIZHAWK_CROP = {"crop_top": 21, "crop_bottom": 22, "crop_left": 0, "crop_right": 0}
@@ -95,10 +95,10 @@ def build(server: str, alttp: str, tmnt: str) -> dict:
                                   item(tmnt_tracker, 2, *tracker_box, scale_filter="bicubic"),
                                   item(panel, 3, *panel_box)])
     sewer_scene = scene("Sewers (transition)", [item(sewer, 1, 0, 0, WIDTH, HEIGHT),
-                                             item(caption, 2, 160, 90, 1600, 180),
-                                             item(panel_sewers, 3, (WIDTH - PANEL_SEWERS[0]) // 2, 290, *PANEL_SEWERS),
-                                             item(alttp_tracker, 4, 40, 740, 560, 320, scale_filter="bicubic"),
-                                             item(tmnt_tracker, 5, 1320, 740, 560, 320, scale_filter="bicubic")])
+                                             item(caption, 2, 160, 50, 1600, 170),
+                                             item(panel_sewers, 3, (WIDTH - PANEL_SEWERS[0]) // 2, 235, *PANEL_SEWERS),
+                                             item(alttp_tracker, 4, 40, 770, 560, 290, scale_filter="bicubic"),
+                                             item(tmnt_tracker, 5, 1320, 770, 560, 290, scale_filter="bicubic")])
 
     stinger = {"name": "Pizza-wipe", "uuid": str(uuid.uuid4()), "id": "obs_stinger_transition",
                "versioned_id": "obs_stinger_transition",

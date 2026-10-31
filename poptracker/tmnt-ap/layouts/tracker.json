@@ -5,7 +5,7 @@
     "content": {
       "type": "itemgrid",
       "item_margin": "4,4",
-      "item_size": 48,
+      "item_size": 64,
       "rows": [
         [
           "leonardo",
@@ -41,7 +41,7 @@
     "content": {
       "type": "itemgrid",
       "item_margin": "4,4",
-      "item_size": 48,
+      "item_size": 64,
       "rows": [
         [
           "leonardo",

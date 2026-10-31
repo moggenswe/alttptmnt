@@ -4,7 +4,8 @@
 
 Writes poptracker/tmnt-ap/ (the pack source, in git) and output/tmnt-ap-poptracker.zip; --install also copies
 the zip into PopTracker's packs folder. Item and location IDs come from apworld/tmnt, so the mapping cannot
-drift; the images are tools/sprites.py's, with Area numbers drawn on the pass and boss icons.
+drift; the images are tools/icons.py's (32x32 pixel art at 2x), each with its grey "-off" variant for items not
+found yet.
 """
 import argparse
 import json
@@ -21,8 +22,8 @@ sys.path.insert(0, str(REPO / "tools"))
 
 from worlds.tmnt.items import AREA_PASSES, TOOLS, TURTLES, item_table  # noqa: E402
 from worlds.tmnt.locations import BOSS_LOCATIONS, location_table  # noqa: E402
-import sprites  # noqa: E402
 
+ICONS = REPO / "tools" / "obs" / "sprites"  # written by tools/icons.py
 PACK = REPO / "poptracker" / "tmnt-ap"
 ZIP = REPO / "output" / "tmnt-ap-poptracker.zip"
 # install.ps1 puts PopTracker in apps\; an older manual install lived in Downloads.
@@ -30,33 +31,18 @@ POPTRACKER_PACKS = next((p for p in (REPO / "apps" / "PopTracker-0.36.0" / "pack
                                      Path.home() / "Downloads" / "PopTracker-0.36.0" / "packs") if p.exists()),
                         REPO / "apps" / "PopTracker-0.36.0" / "packs")
 VERSION = "0.1.0"
-SCALE = 3  # 16x16 art at 3x = 48 px, PopTracker's item size here, so every pixel stays crisp
+ITEM_SIZE = 64  # 32x32 icons at exactly 2x, so every pixel stays crisp
 
 TOOL_CODES = {"Missile Pack": "missile", "Rope Pack": "rope", "Zora's Scuba Kit": "scuba"}
-DIGITS = {  # 3x5 pixel font
-    "1": [".K.", "KK.", ".K.", ".K.", "KKK"], "2": ["KK.", "..K", ".K.", "K..", "KKK"],
-    "3": ["KK.", "..K", ".K.", "..K", "KK."], "4": ["K.K", "K.K", "KKK", "..K", "..K"],
-    "5": ["KKK", "K..", "KK.", "..K", "KK."],
-}
 
 
-def numbered(image: Image.Image, number: int) -> Image.Image:
-    """The icon with its Area number, yellow on a dark box, in the bottom right corner."""
-    out = image.copy()
-    scale = SCALE
-    left, top = out.width - 5 * scale, out.height - 7 * scale
-    for y in range(7):
-        for x in range(5):
-            digit = 1 <= x <= 3 and 1 <= y <= 5 and DIGITS[str(number)][y - 1][x - 1] == "K"
-            colour = (255, 216, 74, 255) if digit else (16, 20, 24, 255)
-            for dy in range(scale):
-                for dx in range(scale):
-                    out.putpixel((left + x * scale + dx, top + y * scale + dy), colour)
-    return out
+def icon(name: str) -> Image.Image:
+    return Image.open(ICONS / f"{name}.png").resize((ITEM_SIZE, ITEM_SIZE), Image.NEAREST)
 
 
 def toggle(name: str, code: str) -> dict:
-    return {"name": name, "type": "toggle", "img": f"images/{code}.png", "codes": code}
+    return {"name": name, "type": "toggle", "img": f"images/{code}.png", "disabled_img": f"images/{code}-off.png",
+            "codes": code}
 
 
 def build() -> None:
@@ -65,13 +51,11 @@ def build() -> None:
     for folder in ("images", "items", "layouts", "scripts"):
         (PACK / folder).mkdir(parents=True)
 
-    art = sprites.all_sprites(SCALE)
-    images = {turtle.lower(): art[turtle.lower()] for turtle in TURTLES}
-    images |= {code: art[code] for code in TOOL_CODES.values()}
-    images |= {f"pass{n}": numbered(art["pass"], n) for n in range(1, 6)}
-    images |= {f"boss{n}": numbered(art["boss"], n) for n in range(1, 6)}
-    for code, image in images.items():
-        image.save(PACK / "images" / f"{code}.png")
+    codes = [turtle.lower() for turtle in TURTLES] + list(TOOL_CODES.values())
+    codes += [f"pass{n}" for n in range(1, 6)] + [f"boss{n}" for n in range(1, 6)]
+    for code in codes:
+        for suffix in ("", "-off"):
+            icon(code + suffix).save(PACK / "images" / f"{code}{suffix}.png")
 
     items = [toggle(turtle, turtle.lower()) for turtle in TURTLES]
     items += [toggle(tool, TOOL_CODES[tool]) for tool in TOOLS]
@@ -79,7 +63,7 @@ def build() -> None:
     items += [toggle(BOSS_LOCATIONS[n], f"boss{n}") for n in range(1, 6)]
     (PACK / "items" / "items.json").write_text(json.dumps(items, indent=2), encoding="utf-8")
 
-    grid = {"type": "itemgrid", "item_margin": "4,4", "item_size": 48, "rows": [
+    grid = {"type": "itemgrid", "item_margin": "4,4", "item_size": ITEM_SIZE, "rows": [
         [turtle.lower() for turtle in ("Leonardo", "Raphael", "Michelangelo", "Donatello")],
         list(TOOL_CODES.values()),
         [f"pass{n}" for n in range(1, 6)],
@@ -158,8 +142,8 @@ Item tracker for the TMNT slot of the ALttP + TMNT Archipelago seed: the four tu
 Zora's Scuba Kit, the five sewer passes and the five Area bosses (3 needed for the Technodrome).
 Variant "Item Tracker - AP" lights everything from the Archipelago server.
 
-Built by tools/make_poptracker_pack.py in https://github.com/moggenswe/alttptmnt; the pixel art is drawn for
-the project (tools/sprites.py), no game sprites.
+Built by tools/make_poptracker_pack.py in https://github.com/moggenswe/alttptmnt; the icons were made with
+ChatGPT for the project and turned into 32x32 pixel art by tools/icons.py. The characters belong to their owners.
 """
 
 

@@ -29,17 +29,17 @@ file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&
   - **Hyrule:** dungeon bosses x/10, and DONE when Ganon is defeated.
   - **New York:** turtles x/4, tools, passes, bosses x/3, GO MODE, and DONE when Shredder is defeated.
   - **ALttP items** are shown with the standard icons from the ALttP pack for PopTracker, which the community and ESA recognise. The panel has no Zelda icons of its own. They were tried and removed 2026-10-31 by the owner's decision.
-- The TMNT icons and the hearts are original pixel art from `tools/sprites.py`, not game sprites. What you have is lit, and what is missing is grey and dimmed.
+- The icons (the ten Zelda dungeon bosses, the turtles, tools, passes and Area bosses) come from `tools/icons.py`, which turns the ChatGPT-made sheets in `art/icons/` into 32x32 pixel art. What you have is in colour; what is missing shows its grey "-off" variant.
 - **All text shown on stream is in English:** the panel, the BizHawk menu (SELECT AREA, Locked, Connect the AP client), the messages ("Got X from Y", "Found X") and the OBS text "Into the sewers...".
 - It connects as a read-only Tracker client and does not affect the game.
 - With `&demo=1` it shows made-up values without a server, and `&layout=row` puts the cards side by side.
-- **The panel is vector-based:** the text is HTML, and the icons are SVG from `tools/sprites.py`, with each pixel as a square. The page scales itself to the source size with CSS `zoom`. The base size is 670×290, and 1330×175 with `layout=row`. Tried in OBS 32.2.2 at 670×290, 1005×435 and 1340×580, and it was sharp at all of them.
+- **The panel is vector-based:** the text is HTML, and the icons are SVG from `tools/icons.py`, with each pixel as a square. The page scales itself to the source size with CSS `zoom`. The base size is 670×340, and 1330×225 with `layout=row`. Tried in OBS 32.2.2 at several sizes, and it was sharp at all of them.
 - **Change the size in the source, not on the canvas:**
   1. Right-click the panel → Properties → Width/Height.
   2. Right-click again → Transform → Reset Transform, so it is shown at 1:1.
 
   Dragging the corners of the frame makes OBS stretch a finished image, and the panel turns blurry. That was why it was blurry before: it was drawn at 900×240 and squeezed down to 670 px with the "point" filter (reported by the owner 2026-10-31).
-- **Sizes in the collection:** Hyrule and New York use 670×290. Sewers has its own source at 1005×435. The trackers are scaled with "bicubic", the games still with "point".
+- **Sizes in the collection:** Hyrule and New York use 670×340. Sewers has its own source at 1005×510. The trackers are scaled with "bicubic", the games still with "point".
 - ALttP crystals are not shown in the panel. They are logic events without an ID and are shuffled between dungeons. The runner sees them on the in-game map.
 - Tested 2026-10-31 against a local MultiServer, both with a TMNT seed (`/send` and `/send_location` gave live updates up to GO MODE) and with a full ALttP+TMNT seed. Not tested in OBS.
 
@@ -136,7 +136,7 @@ Tried live 2026-10-31: a check on the server gave "Zelda got Bombs (3)" in the T
 
 ## Graphics
 
-The TMNT graphics, the heart and the pizza are drawn for the project in `tools/sprites.py`, as 16x16 pixel art. ALttP is shown as usual with the ALttP pack's icons in PopTracker. That is the ESA and community standard, and responsibility for Nintendo's graphics lies there. There is no freely licensed TMNT fan art: the characters belong to Nickelodeon, so fan art cannot be freely licensed, and the search only found unlicensed TMNT sprites. The only CC0 material was generic ninjas and turtles. The panel, the PopTracker pack and the pizza wipe all use the same images.
+The overlay icons were made with ChatGPT for the project (sheets in `art/icons/`) and turned into 32x32 pixel art by `tools/icons.py`; the characters they show belong to their owners. The heart and the pizza are drawn in `tools/sprites.py`, as 16x16 pixel art. ALttP is shown as usual with the ALttP pack's icons in PopTracker. That is the ESA and community standard, and responsibility for Nintendo's graphics lies there. The panel and the TMNT PopTracker pack use the same icons.
 
 ## Installation (done and tested 2026-10-31 on the owner's computer)
 

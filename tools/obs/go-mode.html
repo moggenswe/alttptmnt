@@ -12,8 +12,8 @@
   Parameters: server (ws:// address), alttp and tmnt (slot names), password, demo=1 (fake data, no server),
   layout=column|row.
 
-  Size: the panel scales itself to fill the browser source (the design is 670x290; layout=row is 1330x175), and
-  text and icons (SVG, tools/sprites.py) are vector, so it stays sharp at any size. Set the size in the source's
+  Size: the panel scales itself to fill the browser source (the design is 670x340; layout=row is 1330x225), and
+  text and icons (SVG, tools/icons.py) are vector, so it stays sharp at any size. Set the size in the source's
   properties (Width, Height) and show the source at 1:1. Dragging the source bigger or smaller in the OBS canvas
   instead makes OBS stretch a finished picture, which blurs it.
 
@@ -55,9 +55,10 @@
   .state.done { color: var(--done); }
   .state.off { color: var(--bad); font-size: 22px; }
   .icons { display: flex; gap: 4px; align-items: center; margin: 2px 0; height: 32px; }
+  .icons { height: 48px; }
   .icons .gap { width: 14px; }
-  .icon { width: 32px; height: 32px; transition: opacity 0.4s, filter 0.4s; }
-  .icon.off { opacity: 0.38; filter: grayscale(1) brightness(1.3); }
+  /* 32x32 pixel icons at 1.5x; not found yet = their grey "-off" variant (tools/icons.py). */
+  .icon { width: 48px; height: 48px; }
 </style>
 </head>
 <body>
@@ -66,7 +67,7 @@
     <div class="head"><span class="title">Hyrule · Ganon</span>
       <span class="counts">Bosses <b id="alttp-bosses">–</b></span></div>
     <div class="state" id="alttp-state">Connecting…</div>
-    <div class="icons" id="alttp-hearts"></div></div>
+    <div class="icons" id="alttp-bosses-icons"></div></div>
   <div class="card newyork">
     <div class="head"><span class="title">New York · Shredder</span>
       <span class="counts">Turtles <b id="tmnt-turtles">–</b> · Bosses <b id="tmnt-bosses">–</b></span></div>
@@ -85,7 +86,7 @@ if (ROW) document.getElementById("panel").classList.add("row");
 
 // Fill the browser source whatever its size: CSS zoom lays the panel out again at the new size, so text and the
 // SVG icons are drawn sharp (unlike OBS stretching the finished picture).
-const DESIGN = ROW ? [1330, 175] : [670, 290];
+const DESIGN = ROW ? [1330, 225] : [670, 340];
 function fit() {
   document.getElementById("panel").style.zoom = Math.min(innerWidth / DESIGN[0], innerHeight / DESIGN[1]);
 }
@@ -96,16 +97,20 @@ const ALTTP = "A Link to the Past";
 const TMNT = "Teenage Mutant Ninja Turtles";
 const ALTTP_BOSSES = ["Eastern Palace", "Desert Palace", "Tower of Hera", "Palace of Darkness", "Swamp Palace",
   "Skull Woods", "Thieves' Town", "Ice Palace", "Misery Mire", "Turtle Rock"].map(d => `${d} - Boss`);
+const ALTTP_BOSS_ICONS = ["armos", "lanmolas", "moldorm", "helmasaur", "arrghus", "mothula", "blind", "kholdstare",
+  "vitreous", "trinexx"].map(boss => `alttp-${boss}`);  // in the order of ALTTP_BOSSES
 const TMNT_BOSSES = [1, 2, 3, 4, 5].map(n => `Area ${n} - Boss`);
 const TURTLES = ["Leonardo", "Michelangelo", "Donatello", "Raphael"];
 const CLEARS_FOR_TECHNODROME = 3;  // apworld/tmnt/rules.py
 
 const $ = id => document.getElementById(id);
 
-// Our own pixel icons, drawn for this project by tools/sprites.py (no game sprites, no fan art).
+// Pixel icons made for this project (tools/icons.py), as SVG: each has a grey "-off" twin for "not yet".
 function icon(sprite, title) {
-  return Object.assign(document.createElement("img"), { src: `sprites/${sprite}.svg`, title, alt: title,
-    className: "icon off" });
+  const img = Object.assign(document.createElement("img"), { src: `sprites/${sprite}-off.svg`, title, alt: title,
+    className: "icon" });
+  img.dataset.sprite = sprite;
+  return img;
 }
 const gap = () => Object.assign(document.createElement("span"), { className: "gap" });
 const iconsFor = {};  // item or location name -> its icon
@@ -113,16 +118,20 @@ for (const turtle of TURTLES) {
   $("tmnt-turtle-icons").appendChild(iconsFor[turtle] = icon(turtle.toLowerCase(), turtle));
 }
 $("tmnt-turtle-icons").appendChild(gap());
-TMNT_BOSSES.forEach(boss => $("tmnt-turtle-icons").appendChild(iconsFor[boss] = icon("boss", boss)));
+TMNT_BOSSES.forEach((boss, i) => $("tmnt-turtle-icons").appendChild(iconsFor[boss] = icon(`boss${i + 1}`, boss)));
 [["Missile Pack", "missile"], ["Rope Pack", "rope"], ["Zora's Scuba Kit", "scuba"]].forEach(
   ([name, sprite]) => $("tmnt-gear-icons").appendChild(iconsFor[name] = icon(sprite, name)));
 $("tmnt-gear-icons").appendChild(gap());
 [1, 2, 3, 4, 5].forEach(n => $("tmnt-gear-icons").appendChild(
-  iconsFor[`Sewer Pass: Area ${n}`] = icon("pass", `Sewer Pass: Area ${n}`)));
-ALTTP_BOSSES.forEach(boss => $("alttp-hearts").appendChild(iconsFor[boss] = icon("heart", boss)));
+  iconsFor[`Sewer Pass: Area ${n}`] = icon(`pass${n}`, `Sewer Pass: Area ${n}`)));
+ALTTP_BOSSES.forEach((boss, i) => $("alttp-bosses-icons").appendChild(iconsFor[boss] = icon(ALTTP_BOSS_ICONS[i], boss)));
 
 function light(names, has) {
-  for (const name of names) iconsFor[name].classList.toggle("off", !has(name));
+  for (const name of names) {
+    const img = iconsFor[name];
+    const src = `sprites/${img.dataset.sprite}${has(name) ? "" : "-off"}.svg`;
+    if (img.getAttribute("src") !== src) img.setAttribute("src", src);
+  }
 }
 
 function renderTmnt(s) {

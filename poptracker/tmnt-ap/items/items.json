@@ -3,102 +3,119 @@
     "name": "Leonardo",
     "type": "toggle",
     "img": "images/leonardo.png",
+    "disabled_img": "images/leonardo-off.png",
     "codes": "leonardo"
   },
   {
     "name": "Michelangelo",
     "type": "toggle",
     "img": "images/michelangelo.png",
+    "disabled_img": "images/michelangelo-off.png",
     "codes": "michelangelo"
   },
   {
     "name": "Donatello",
     "type": "toggle",
     "img": "images/donatello.png",
+    "disabled_img": "images/donatello-off.png",
     "codes": "donatello"
   },
   {
     "name": "Raphael",
     "type": "toggle",
     "img": "images/raphael.png",
+    "disabled_img": "images/raphael-off.png",
     "codes": "raphael"
   },
   {
     "name": "Missile Pack",
     "type": "toggle",
     "img": "images/missile.png",
+    "disabled_img": "images/missile-off.png",
     "codes": "missile"
   },
   {
     "name": "Rope Pack",
     "type": "toggle",
     "img": "images/rope.png",
+    "disabled_img": "images/rope-off.png",
     "codes": "rope"
   },
   {
     "name": "Zora's Scuba Kit",
     "type": "toggle",
     "img": "images/scuba.png",
+    "disabled_img": "images/scuba-off.png",
     "codes": "scuba"
   },
   {
     "name": "Sewer Pass: Area 1",
     "type": "toggle",
     "img": "images/pass1.png",
+    "disabled_img": "images/pass1-off.png",
     "codes": "pass1"
   },
   {
     "name": "Sewer Pass: Area 2",
     "type": "toggle",
     "img": "images/pass2.png",
+    "disabled_img": "images/pass2-off.png",
     "codes": "pass2"
   },
   {
     "name": "Sewer Pass: Area 3",
     "type": "toggle",
     "img": "images/pass3.png",
+    "disabled_img": "images/pass3-off.png",
     "codes": "pass3"
   },
   {
     "name": "Sewer Pass: Area 4",
     "type": "toggle",
     "img": "images/pass4.png",
+    "disabled_img": "images/pass4-off.png",
     "codes": "pass4"
   },
   {
     "name": "Sewer Pass: Area 5",
     "type": "toggle",
     "img": "images/pass5.png",
+    "disabled_img": "images/pass5-off.png",
     "codes": "pass5"
   },
   {
     "name": "Area 1 - Boss",
     "type": "toggle",
     "img": "images/boss1.png",
+    "disabled_img": "images/boss1-off.png",
     "codes": "boss1"
   },
   {
     "name": "Area 2 - Boss",
     "type": "toggle",
     "img": "images/boss2.png",
+    "disabled_img": "images/boss2-off.png",
     "codes": "boss2"
   },
   {
     "name": "Area 3 - Boss",
     "type": "toggle",
     "img": "images/boss3.png",
+    "disabled_img": "images/boss3-off.png",
     "codes": "boss3"
   },
   {
     "name": "Area 4 - Boss",
     "type": "toggle",
     "img": "images/boss4.png",
+    "disabled_img": "images/boss4-off.png",
     "codes": "boss4"
   },
   {
     "name": "Area 5 - Boss",
     "type": "toggle",
     "img": "images/boss5.png",
+    "disabled_img": "images/boss5-off.png",
     "codes": "boss5"
   }
 ]

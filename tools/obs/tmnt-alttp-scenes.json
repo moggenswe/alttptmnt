@@ -16,7 +16,7 @@
     "sources": [
         {
             "name": "ALttP (BizHawk)",
-            "uuid": "f5bf8af8-e46d-4bfd-b394-dc838ea43b8d",
+            "uuid": "3863580d-4d0a-4111-b643-509e63f8a549",
             "id": "window_capture",
             "versioned_id": "window_capture",
             "settings": {
@@ -45,7 +45,7 @@
         },
         {
             "name": "TMNT (BizHawk)",
-            "uuid": "d0104ab3-ce15-44f7-9267-16223909693c",
+            "uuid": "16d7a18c-3c4c-4488-b954-cd9071327b1a",
             "id": "window_capture",
             "versioned_id": "window_capture",
             "settings": {
@@ -74,7 +74,7 @@
         },
         {
             "name": "ALttP-tracker (PopTracker)",
-            "uuid": "642de978-ccd4-4dd0-b4a2-4fd593b429a9",
+            "uuid": "dd3eead2-ed7b-4514-81bc-21f8badf3ced",
             "id": "window_capture",
             "versioned_id": "window_capture",
             "settings": {
@@ -103,7 +103,7 @@
         },
         {
             "name": "TMNT-tracker (PopTracker)",
-            "uuid": "85419431-3873-46c2-aacf-fa20c71b9737",
+            "uuid": "9d9bbace-51ec-4216-9844-af4d82e68fab",
             "id": "window_capture",
             "versioned_id": "window_capture",
             "settings": {
@@ -132,14 +132,14 @@
         },
         {
             "name": "Go mode panel",
-            "uuid": "064c7808-aea0-4d4f-8ae6-5ed08f0099d0",
+            "uuid": "3c8e3439-98c9-4012-b121-611540d961ad",
             "id": "browser_source",
             "versioned_id": "browser_source",
             "settings": {
                 "is_local_file": false,
                 "url": "file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&alttp=Link&tmnt=Turtles",
                 "width": 670,
-                "height": 290,
+                "height": 340,
                 "fps_custom": false,
                 "shutdown": false,
                 "restart_when_active": false
@@ -163,14 +163,14 @@
         },
         {
             "name": "Go mode panel (Sewers)",
-            "uuid": "15f409a7-f249-4dac-aea7-65612cb49381",
+            "uuid": "0f2f8729-0c5f-4e44-b801-6c388ddeb3ae",
             "id": "browser_source",
             "versioned_id": "browser_source",
             "settings": {
                 "is_local_file": false,
                 "url": "file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&alttp=Link&tmnt=Turtles",
                 "width": 1005,
-                "height": 435,
+                "height": 510,
                 "fps_custom": false,
                 "shutdown": false,
                 "restart_when_active": false
@@ -194,7 +194,7 @@
         },
         {
             "name": "Sewers background",
-            "uuid": "07617a73-5864-4cff-8e03-e6d91852760b",
+            "uuid": "a4413c66-1d02-4417-b60b-d72cbfdcffdb",
             "id": "color_source_v3",
             "versioned_id": "color_source_v3",
             "settings": {
@@ -221,7 +221,7 @@
         },
         {
             "name": "Sewers caption",
-            "uuid": "1b6d0959-fe33-4897-8109-0148c0c9b740",
+            "uuid": "4fa061f6-0bf1-47bd-bdcb-f54fb8215e40",
             "id": "text_gdiplus_v3",
             "versioned_id": "text_gdiplus_v3",
             "settings": {
@@ -257,7 +257,7 @@
         },
         {
             "name": "Hyrule",
-            "uuid": "7263de24-097c-4b1d-a7c7-0d7bb9e83075",
+            "uuid": "e8933861-3f1b-4405-b9f5-98f94c5a7030",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
@@ -266,7 +266,7 @@
                 "items": [
                     {
                         "name": "ALttP (BizHawk)",
-                        "source_uuid": "f5bf8af8-e46d-4bfd-b394-dc838ea43b8d",
+                        "source_uuid": "3863580d-4d0a-4111-b643-509e63f8a549",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -305,7 +305,7 @@
                     },
                     {
                         "name": "ALttP-tracker (PopTracker)",
-                        "source_uuid": "642de978-ccd4-4dd0-b4a2-4fd593b429a9",
+                        "source_uuid": "dd3eead2-ed7b-4514-81bc-21f8badf3ced",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -329,7 +329,7 @@
                         },
                         "bounds": {
                             "x": 670,
-                            "y": 780
+                            "y": 730
                         },
                         "scale_filter": "bicubic",
                         "blend_method": "default",
@@ -344,7 +344,7 @@
                     },
                     {
                         "name": "Go mode panel",
-                        "source_uuid": "064c7808-aea0-4d4f-8ae6-5ed08f0099d0",
+                        "source_uuid": "3c8e3439-98c9-4012-b121-611540d961ad",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -360,7 +360,7 @@
                         "group_item_backup": false,
                         "pos": {
                             "x": 1250,
-                            "y": 790
+                            "y": 740
                         },
                         "scale": {
                             "x": 1.0,
@@ -368,7 +368,7 @@
                         },
                         "bounds": {
                             "x": 670,
-                            "y": 290
+                            "y": 340
                         },
                         "scale_filter": "point",
                         "blend_method": "default",
@@ -404,7 +404,7 @@
         },
         {
             "name": "Sewers (transition)",
-            "uuid": "af87ad08-a880-4773-a938-f49715ee9b45",
+            "uuid": "963cace0-7c03-4f30-980c-27e43aa85b3a",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
@@ -413,7 +413,7 @@
                 "items": [
                     {
                         "name": "Sewers background",
-                        "source_uuid": "07617a73-5864-4cff-8e03-e6d91852760b",
+                        "source_uuid": "a4413c66-1d02-4417-b60b-d72cbfdcffdb",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -452,7 +452,7 @@
                     },
                     {
                         "name": "Sewers caption",
-                        "source_uuid": "1b6d0959-fe33-4897-8109-0148c0c9b740",
+                        "source_uuid": "4fa061f6-0bf1-47bd-bdcb-f54fb8215e40",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -468,7 +468,7 @@
                         "group_item_backup": false,
                         "pos": {
                             "x": 160,
-                            "y": 90
+                            "y": 50
                         },
                         "scale": {
                             "x": 1.0,
@@ -476,7 +476,7 @@
                         },
                         "bounds": {
                             "x": 1600,
-                            "y": 180
+                            "y": 170
                         },
                         "scale_filter": "point",
                         "blend_method": "default",
@@ -491,7 +491,7 @@
                     },
                     {
                         "name": "Go mode panel (Sewers)",
-                        "source_uuid": "15f409a7-f249-4dac-aea7-65612cb49381",
+                        "source_uuid": "0f2f8729-0c5f-4e44-b801-6c388ddeb3ae",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -507,7 +507,7 @@
                         "group_item_backup": false,
                         "pos": {
                             "x": 457,
-                            "y": 290
+                            "y": 235
                         },
                         "scale": {
                             "x": 1.0,
@@ -515,7 +515,7 @@
                         },
                         "bounds": {
                             "x": 1005,
-                            "y": 435
+                            "y": 510
                         },
                         "scale_filter": "point",
                         "blend_method": "default",
@@ -530,7 +530,7 @@
                     },
                     {
                         "name": "ALttP-tracker (PopTracker)",
-                        "source_uuid": "642de978-ccd4-4dd0-b4a2-4fd593b429a9",
+                        "source_uuid": "dd3eead2-ed7b-4514-81bc-21f8badf3ced",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -546,7 +546,7 @@
                         "group_item_backup": false,
                         "pos": {
                             "x": 40,
-                            "y": 740
+                            "y": 770
                         },
                         "scale": {
                             "x": 1.0,
@@ -554,7 +554,7 @@
                         },
                         "bounds": {
                             "x": 560,
-                            "y": 320
+                            "y": 290
                         },
                         "scale_filter": "bicubic",
                         "blend_method": "default",
@@ -569,7 +569,7 @@
                     },
                     {
                         "name": "TMNT-tracker (PopTracker)",
-                        "source_uuid": "85419431-3873-46c2-aacf-fa20c71b9737",
+                        "source_uuid": "9d9bbace-51ec-4216-9844-af4d82e68fab",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -585,7 +585,7 @@
                         "group_item_backup": false,
                         "pos": {
                             "x": 1320,
-                            "y": 740
+                            "y": 770
                         },
                         "scale": {
                             "x": 1.0,
@@ -593,7 +593,7 @@
                         },
                         "bounds": {
                             "x": 560,
-                            "y": 320
+                            "y": 290
                         },
                         "scale_filter": "bicubic",
                         "blend_method": "default",
@@ -629,7 +629,7 @@
         },
         {
             "name": "New York",
-            "uuid": "160a2ec5-f7ca-43d0-9bbe-261bcab95031",
+            "uuid": "e829e29b-3bc0-40c5-ba89-7ec3c90dbb32",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
@@ -638,7 +638,7 @@
                 "items": [
                     {
                         "name": "TMNT (BizHawk)",
-                        "source_uuid": "d0104ab3-ce15-44f7-9267-16223909693c",
+                        "source_uuid": "16d7a18c-3c4c-4488-b954-cd9071327b1a",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -677,7 +677,7 @@
                     },
                     {
                         "name": "TMNT-tracker (PopTracker)",
-                        "source_uuid": "85419431-3873-46c2-aacf-fa20c71b9737",
+                        "source_uuid": "9d9bbace-51ec-4216-9844-af4d82e68fab",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -701,7 +701,7 @@
                         },
                         "bounds": {
                             "x": 670,
-                            "y": 780
+                            "y": 730
                         },
                         "scale_filter": "bicubic",
                         "blend_method": "default",
@@ -716,7 +716,7 @@
                     },
                     {
                         "name": "Go mode panel",
-                        "source_uuid": "064c7808-aea0-4d4f-8ae6-5ed08f0099d0",
+                        "source_uuid": "3c8e3439-98c9-4012-b121-611540d961ad",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -732,7 +732,7 @@
                         "group_item_backup": false,
                         "pos": {
                             "x": 1250,
-                            "y": 790
+                            "y": 740
                         },
                         "scale": {
                             "x": 1.0,
@@ -740,7 +740,7 @@
                         },
                         "bounds": {
                             "x": 670,
-                            "y": 290
+                            "y": 340
                         },
                         "scale_filter": "point",
                         "blend_method": "default",
@@ -779,7 +779,7 @@
     "transitions": [
         {
             "name": "Pizza-wipe",
-            "uuid": "82183182-fbac-41b1-8e1e-326e0db67d49",
+            "uuid": "29fc1a1a-78b0-450d-854b-bfb1fbaee72b",
             "id": "obs_stinger_transition",
             "versioned_id": "obs_stinger_transition",
             "settings": {

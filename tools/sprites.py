@@ -1,11 +1,10 @@
-"""Our own 16x16 pixel icons for the stream overlay, the TMNT PopTracker pack and the pizza-wipe stinger.
+"""The hand-drawn 16x16 pixel art that is left: the heart (site) and the pizza (pizza-wipe stinger, site icon).
+The overlay's item and boss icons come from tools/icons.py.
 
     .venv/Scripts/python.exe tools/sprites.py
 
 Writes tools/obs/sprites/<name>.png at 4x (64x64, nearest neighbour) and <name>.svg, the same pixels as vector
-squares, which the go mode panel uses so it stays sharp at any size. All art here is drawn for this project:
-no game sprites and no fan art, since free TMNT fan art does not exist (the characters belong to Nickelodeon).
-Each grid row is one line of pixels; each letter is a colour from PALETTE, "." is transparent.
+squares, which stay sharp at any size. Each grid row is one line of pixels; each letter is a colour from PALETTE, "." is transparent.
 """
 from pathlib import Path
 
@@ -30,117 +29,7 @@ PALETTE = {
     "T": "#d64a2a", "t": "#f2c46b",  # tomato sauce, cheese light
 }
 
-TURTLE_HEAD = [
-    "....KKKKKKKK....",
-    "..KKGGGGGGGGKK..",
-    ".KGGLLLGGGGGGgK.",
-    ".KGLLGGGGGGGGgK.",
-    "KGGGGGGGGGGGGGgK",
-    "KXXXXXXXXXXXXXXK",
-    "KXWWkXXXXXXkWWXK",
-    "KxXXXXXXXXXXXXxK",
-    "KGGGGGGGGGGGGGgK",
-    "KGGGGGGGGGGGGGgK",
-    ".KGGGMMMMMMGGgK.",
-    ".KGGGGMMMMGGGgK.",
-    "..KgGGGGGGGGgK..",
-    "...KKggggggKK...",
-    ".....KKKKKK.....",
-    "................",
-]
-BANDANAS = {"leonardo": "Bb", "raphael": "Rr", "michelangelo": "Oo", "donatello": "Pp"}
-
 SPRITES = {
-    "missile": [
-        "................",
-        "................",
-        "....KKK.........",
-        "....KRrK........",
-        ".....KRrKKKKKK..",
-        "y..KKSSSSSSSSRK.",
-        "yYyKSSSWWSSSSRRK",
-        "YYYKSSSSSSSSsRRK",
-        "yYyKsssssssssRRK",
-        "y..KKddddddddRK.",
-        ".....KRrKKKKKK..",
-        "....KRrK........",
-        "....KKK.........",
-        "................",
-        "................",
-        "................",
-    ],
-    "rope": [
-        "........KKKK....",
-        ".......KSSSdK...",
-        "........KKSdK...",
-        ".........KSdK...",
-        "....KKKKKKSK....",
-        "..KKNNNNNNKK....",
-        ".KNNnnnnnnNNK...",
-        "KNNnKKKKKKnNNK..",
-        "KNnK......KnNK..",
-        "KNnK.KKKK.KnNK..",
-        "KNNnKNNNNKnNNK..",
-        ".KNNnnnnnnNNK...",
-        "..KKNNNNNNKK....",
-        "....KKKKKK......",
-        "................",
-        "................",
-    ],
-    "scuba": [
-        "............KK..",
-        "...........KYyK.",
-        "..KKKKKKKKKKYyK.",
-        ".KddddddddddKyK.",
-        "KdCCCCdKdCCCCdK.",
-        "KdCWCCdKdCWCCdK.",
-        "KdCCCcdKdCCCcdK.",
-        "KdCCccdKdCCccdK.",
-        ".KddddddddddKyK.",
-        "..KKKKKKKKKKYyK.",
-        "............KyK.",
-        "..........KKYyK.",
-        "..........KyyK..",
-        "...........KK...",
-        "................",
-        "................",
-    ],
-    "pass": [
-        ".....KKKKKK.....",
-        "...KKddddddKK...",
-        "..KdssssssssdK..",
-        ".KdsSdSSSSdSsdK.",
-        ".KdsSSSSSSSSsdK.",
-        "KdsSdSKKKKSdSsdK",
-        "KdsSSSKSSSSSSsdK",
-        "KdsSdSKKKKSdSsdK",
-        "KdsSSSSSSKSSSsdK",
-        "KdsSdSKKKKSdSsdK",
-        ".KdsSSSSSSSSsdK.",
-        ".KdsSdSSSSdSsdK.",
-        "..KdssssssssdK..",
-        "...KKddddddKK...",
-        ".....KKKKKK.....",
-        "................",
-    ],
-    "boss": [
-        ".....KKKKKK.....",
-        "...KKddddddKK...",
-        "..KddsssssddK...",
-        ".KdsssssssssdK..",
-        ".KdsKKKsKKKsdK..",
-        "KdsKRRKsKRRKsdK.",
-        "KdssKKsssKKssdK.",
-        "KddsssssssssddK.",
-        ".KddssKKKssddK..",
-        "..KddsdsdsddK...",
-        "...KddddddddK...",
-        "....KKKKKKKK....",
-        "................",
-        "................",
-        "................",
-        "................",
-    ],
     "heart": [
         "................",
         "..KKKK....KKKK..",
@@ -211,9 +100,7 @@ def svg(rows: list[str], swap: dict[str, str] | None = None) -> str:
 
 def all_grids() -> dict[str, tuple[list[str], dict[str, str] | None]]:
     """name -> (grid, colour swap) for every sprite."""
-    grids = {name: (TURTLE_HEAD, {"X": colours[0], "x": colours[1]}) for name, colours in BANDANAS.items()}
-    grids |= {name: (rows, None) for name, rows in SPRITES.items()}
-    return grids
+    return {name: (rows, None) for name, rows in SPRITES.items()}
 
 
 def all_sprites(scale: int = SCALE) -> dict[str, Image.Image]:
