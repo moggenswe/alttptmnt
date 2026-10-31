@@ -35,31 +35,39 @@
         is best.</li>
       <li>Double-click <code>install.cmd</code>. It asks for your two ROMs in a file dialog (see <a href="#roms">ROMs</a>)
         and checks them.</li>
-      <li>Wait. The first run downloads about 200 MB and installs Archipelago's Python packages, which takes a few minutes.
-        BizHawk opens by itself for about half a minute to make the TMNT area savestates.</li>
+      <li>It lists what it needs to download, with sizes and sources (about 290 MB on a new PC), and asks
+        <b>Can I download these? [Y/n]</b>. Answer <b>n</b> and it stops without downloading or installing anything.</li>
+      <li>Wait. The first run takes a few minutes, mostly for Archipelago's Python packages. BizHawk opens by itself for
+        about half a minute to make the TMNT area savestates.</li>
       <li>Answer <b>Y</b> to add the scene collection to OBS (OBS must be closed for that), then generate a seed and start
         playing as on <a href="play.html">Play</a>.</li>
     </ol>
-    <p>What it installs, all inside the repo folder (nothing system-wide, no admin rights):</p>
+    <p>What it installs, all inside the repo folder (nothing system-wide, and no admin rights unless Windows lacks the
+    Visual C++ runtime):</p>
     <table>
       <tr><th>What</th><th>Version</th><th>Where</th></tr>
-      <tr><td>Python (through <a href="https://github.com/astral-sh/uv">uv</a> 0.12.24)</td><td>3.12</td><td><code>.venv\</code></td></tr>
+      <tr><td>Python (through <a href="https://github.com/astral-sh/uv">uv</a> 0.12.24)</td><td>3.12</td><td><code>apps\python\</code>, <code>.venv\</code></td></tr>
       <tr><td>Archipelago (source) with its packages; the TMNT world linked in</td><td>0.6.8</td><td><code>Archipelago\</code></td></tr>
       <tr><td>SNI</td><td>v0.0.103</td><td><code>Archipelago\SNI\</code></td></tr>
       <tr><td>BizHawk</td><td>2.11.1</td><td><code>apps\BizHawk-2.11.1\</code></td></tr>
+      <tr><td>Visual C++ 2015-2022 x64 runtime, only if Windows lacks it (BizHawk needs it; a Windows admin prompt
+        asks first)</td><td>newest</td><td>Windows</td></tr>
       <tr><td>PopTracker with the ALttP pack (v0.5.1) and the TMNT pack</td><td>0.36.0</td><td><code>apps\PopTracker-0.36.0\</code></td></tr>
       <tr><td>Universal Tracker</td><td>v0.3.8</td><td><code>Archipelago\custom_worlds\</code></td></tr>
       <tr><td>TMNT area savestates</td><td></td><td><code>savestates\</code></td></tr>
       <tr><td>OBS scene collection "TMNT x ALttP"</td><td></td><td>OBS's scene collections (if you say yes)</td></tr>
     </table>
-    <p>Every download is pinned to a version and checked against a SHA-256 sum. Downloads are kept in
+    <p>Every download is pinned to a version and checked against a SHA-256 sum (the Visual C++ runtime, which Microsoft
+    only offers as its newest build, is checked by its Microsoft signature). Downloads are kept in
     <code>.cache\downloads</code>; running <code>install.cmd</code> again skips what is already installed, so it is also the
     way to repair an install. It also sets PopTracker to software rendering (needed for OBS capture) and turns off its
     first-start questions, and ends by running the TMNT tests and generating three test seeds.</p>
     <p>Without dialogs, for example from a script:</p>
 <pre><code>powershell -ExecutionPolicy Bypass -File install.ps1 -AlttpRom D:\roms\zelda.smc -TmntRom D:\roms\tmnt.nes -Yes</code></pre>
-    <div class="warn"><b>BizHawk needs its prerequisites</b>If BizHawk does not start, install .NET Framework 4.8 and the
-      Visual C++ 2015-2022 x64 runtime (most streaming PCs already have both).</div>
+    <p><code>-Yes</code> answers yes to every question, the downloads included.</p>
+    <div class="warn"><b>BizHawk needs .NET Framework 4.8</b>It is part of Windows 10 (1903 and later) and Windows 11. On an
+      older Windows the installer stops before downloading anything and links to
+      <a href="https://dotnet.microsoft.com/download/dotnet-framework/net48">Microsoft's download</a>.</div>
 
     <h2 id="roms">ROMs</h2>
     <p>You bring your own dumps. The installer checks the md5, removes a copier header from the ALttP dump and copies
