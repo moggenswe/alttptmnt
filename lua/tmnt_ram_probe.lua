@@ -17,14 +17,20 @@
 -- Edit WATCH as addresses are found; the values feed apworld/tmnt/ram.py.
 
 local WATCH = {
-  -- { "label", 0xADDR },  (source: tasvideos.org/GameResources/NES/TeenageMutantNinjaTurtles)
-  { "hp $77",    0x0077 },
-  { "hp $78",    0x0078 },
-  { "hp $79",    0x0079 },
-  { "hp $7A",    0x007A },
-  { "bombs",     0x007D },
-  { "techno",    0x0055 },
-  { "turtle id", 0x0400 },
+  -- { "label", 0xADDR },  (source: adelikat/JXQ TMNT.xls RAM sheet; see apworld/tmnt/ram.py)
+  { "world",     0x0048 },
+  { "phase",     0x001B },
+  { "turtle",    0x0067 },
+  { "hp leo",    0x0077 },
+  { "hp mike",   0x0078 },
+  { "hp raph",   0x0079 },
+  { "hp don",    0x007A },
+  { "missiles",  0x00BF },
+  { "ropes",     0x00A7 },
+  { "mbox $7F0", 0x07F0 },
+  { "mbox $7F1", 0x07F1 },
+  { "mbox $7F2", 0x07F2 },
+  { "mbox $7F3", 0x07F3 },
 }
 
 local RAM_SIZE = 0x800
