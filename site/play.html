@@ -18,7 +18,7 @@
 
 <div class="wrap"><main class="with-toc">
   <aside class="toc"><b>On this page</b>
-    <a href="#seed">Generate a seed</a><a href="#start">Start a session</a><a href="#swap">Switching games</a><a href="#tmnt">The TMNT side</a>
+    <a href="#menu-start">Start menu</a><a href="#seed">Generate a seed</a><a href="#start">Start a session</a><a href="#swap">Switching games</a><a href="#tmnt">The TMNT side</a>
     <a href="#menu">Area menu and HUD</a><a href="#events">What happens when…</a><a href="#alttp">The ALttP side</a>
     <a href="#host">Host commands</a>
   </aside>
@@ -27,12 +27,38 @@
     <p class="lead">Generate a seed, start everything with one command, then play Hyrule and New York until both
     Ganon and Shredder are beaten.</p>
 
+    <h2 id="menu-start">The start menu</h2>
+    <p>Double-click <code>start.cmd</code> in the install folder. Choose with a number and Enter:</p>
+<pre><code>TMNT x A Link to the Past
+
+  Session: not running
+  Newest seed: AP_71282438010694857283.zip (made 2026-10-31 18:25)
+
+  1  Create a seed
+  2  Start a session
+  3  Check before going live
+  4  Stop the session
+  5  Open the guide
+  Q  Quit (a running session keeps running)</code></pre>
+    <table>
+      <tr><th>Choice</th><th>What it does</th></tr>
+      <tr><td>1 Create a seed</td><td>Makes a new seed from <code>players\</code> into <code>output\seeds</code> (about a
+        minute) and offers to start it.</td></tr>
+      <tr><td>2 Start a session</td><td>Picks a seed (Enter = the newest), starts everything as described below,
+        then runs the check.</td></tr>
+      <tr><td>3 Check before going live</td><td>One line per part, <b>OK</b>, <b>WARN</b> or <b>FAIL</b>, with what to
+        do under each problem: install, server and slots, SNI, both BizHawk windows and their scripts, both clients,
+        both trackers, the game swap, and in OBS the scene collection, the scenes and the pizza-wipe.</td></tr>
+      <tr><td>4 Stop the session</td><td>Closes BizHawk gently first (so A Link to the Past's save is written), then the
+        trackers, the clients, the server and SNI.</td></tr>
+    </table>
+
     <h2 id="seed">Generate a seed</h2>
     <p>The player files are in <code>players\</code>: <code>alttp.yaml</code> (slot <b>Link</b>) and <code>tmnt.yaml</code>
-    (slot <b>Turtles</b>).</p>
+    (slot <b>Turtles</b>). <code>start.cmd</code> → 1 does this; by hand:</p>
 <pre><code>cd C:\Project\tmntalttp\Archipelago
-..\.venv\Scripts\python.exe Generate.py --player_files_path ..\players --outputpath ..\output\marathon</code></pre>
-    <p>The result is <code>output\marathon\AP_&lt;seed&gt;.zip</code>. It holds the server file, both patch files and
+..\.venv\Scripts\python.exe Generate.py --player_files_path ..\players --outputpath ..\output\seeds</code></pre>
+    <p>The result is <code>output\seeds\AP_&lt;seed&gt;.zip</code>. It holds the server file, both patch files and
     the spoiler log (with the playthrough). Keep the spoiler with the production team, off screen.</p>
     <table>
       <tr><th>Option</th><th>Default here</th><th>What it does</th></tr>
@@ -51,9 +77,11 @@
       unlimited-continues patch, so the third game over ends the run. Generate a new one.</div>
 
     <h2 id="start">Start a session</h2>
+    <p><code>start.cmd</code> → 2 runs this script; by hand:</p>
 <pre><code>cd C:\Project\tmntalttp
-powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\marathon\AP_&lt;seed&gt;.zip</code></pre>
-    <p>The script patches the ROMs if needed and then starts, in order:</p>
+powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\seeds\AP_&lt;seed&gt;.zip</code></pre>
+    <p>The script patches the ROMs if needed, looks after A Link to the Past's save (<a href="#saves">below</a>) and
+    then starts, in order:</p>
     <ol>
       <li><b>MultiServer</b> on <code>localhost:38281</code>, in its own console window (host commands go there).</li>
       <li><b>SNI</b>.</li>
@@ -71,6 +99,19 @@ powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\mar
     <code>-SwapHotkey</code> (default <code>ctrl+shift+space</code>, <code>none</code> for no key) and
     <code>-NoObsSwitch</code> (the swap leaves OBS alone).</p>
 
+    <h3 id="saves">A Link to the Past's save</h3>
+    <p>Before BizHawk starts, <code>tools\bizhawk_saves.py</code> makes sure of three things:</p>
+    <ul>
+      <li><b>Autosave every minute.</b> BizHawk normally writes the save to disk only when it closes, so a crash would
+        lose the whole session. The script turns on BizHawk's own autosave.</li>
+      <li><b>Back after a crash.</b> BizHawk ignores its autosave when an older save file exists, so the script puts the
+        newer autosave in place first (the old file is kept as <code>alttp-stream.SaveRAM.before-recovery</code>).</li>
+      <li><b>One save per seed.</b> Every seed runs as <code>alttp-stream.sfc</code>, and BizHawk names saves after the
+        ROM. The script parks the last seed's save as <code>alttp-stream.&lt;seed&gt;.SaveRAM</code> and brings this
+        seed's back, so a new seed never opens an old seed's file.</li>
+    </ul>
+    <p>TMNT keeps no save of its own: its progress is on the server and in the area savestates.</p>
+
     <h2 id="swap">Switching games</h2>
     <p>Both games run all the time, each in its own BizHawk window; the controller drives the window in front. To
     switch:</p>
@@ -81,6 +122,12 @@ powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\mar
       <tr><td><b>Ctrl+Shift+Space</b> on the keyboard</td><td>The same, without pausing: pause first.</td></tr>
       <tr><td>Alt+Tab or a click on a game window</td><td>Also fine: OBS follows whichever game window is in front.</td></tr>
     </table>
+    <p><b>Notices from the game behind.</b> When an item arrives for the other game, the game you are playing says so
+    at the bottom left for two seconds: "Zelda got Hookshot" in TMNT, "TMNT got Rope Pack" in A Link to the Past. When
+    a TMNT Area becomes playable, whichever game you play says "TMNT: Area 3 is open" (or "the Technodrome (GO MODE)").
+    That is the moment to think about switching.</p>
+    <figure><img src="img/notice-in-tmnt.png" alt="A notice in the TMNT window"><figcaption>A real notice: a check on
+      the server put "Zelda got Bombs (3)" in the TMNT window half a second later.</figcaption></figure>
     <p>What the pause looks like: TMNT shows its information screen. A Link to the Past opens the item menu, or, when
     Select reached the game first, the "Continue / Save and Quit" box with Continue picked; Start goes back to the game
     from either.</p>

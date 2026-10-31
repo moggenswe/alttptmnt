@@ -51,6 +51,39 @@ powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\<ma
 
 Skriptet patchar ROM:arna om de saknas och kopierar dem till de fasta namnen `alttp-stream.sfc` och `tmnt-stream.nes`. Då får BizHawk-fönstren samma titel oavsett seed, och OBS-samlingen hittar dem. Om porten redan används avbryts skriptet. Sedan startar det MultiServer i ett eget konsolfönster, där `/send` och `/hint` skrivs, följt av SNI, spelbytet (`tools/game_swap.py`, eget konsolfönster), BizHawk med ALttP och `lua/alttp_stream.luases` (SNI:s Lua-connector och bytesskriptet), BizHawk med TMNT och `lua/tmnt_stream.luases` (connectorn, områdesmenyn och bytesskriptet), SNI Client, BizHawk Client och två PopTracker-fönster: ALttP-packen för Link och vår TMNT-pack för Turtles. Till sist skriver det ut panelens adress för OBS. Det provades 2026-10-31 med ett nytt seed: Link och Turtles anslöt som spelare och PopTracker som tracker. Med `-NoTracker` hoppar skriptet över PopTracker.
 
+## Startmenyn (start.cmd)
+
+`start.cmd` i repomappen öppnar en meny där man väljer med en siffra, så ingen behöver PowerShell. Bakom menyn ligger `tools/menu.ps1`.
+
+1. **Create a seed:** kör Generate.py med `players/` och lägger resultatet i `output/seeds`.
+2. **Start a session:** man väljer seed, där Enter ger det nyaste. Menyn kör `tools/start_stream.ps1` och efter 20 sekunder kontrollen.
+3. **Check before going live:** kör `tools/preflight.py`. Den ger en rad per del, OK, WARN eller FAIL, och en åtgärd under varje problem. Den kollar:
+   - installationen;
+   - servern och slottarna, som den läser som Tracker;
+   - SNI;
+   - båda BizHawk-fönstren och deras titlar;
+   - TCP-kopplingarna BizHawk ↔ SNI och BizHawk ↔ BizHawk Client;
+   - att båda klienterna och båda PopTracker är anslutna till servern;
+   - spelbytet och Lua-skripten;
+   - i OBS: scensamling, scener och övergång.
+4. **Stop the session:** stänger BizHawk varsamt först, så att Zeldas sparfil skrivs, och därefter PopTracker, klienterna, servern och SNI.
+
+Provat 2026-10-31 genom att styra menyn med ett skript: seed skapat, session startad, kontrollen gav OK på allt utom att OBS inte var igång, och sessionen stoppades rent.
+
+## Zeldas sparfil
+
+`tools/bizhawk_saves.py` körs av startskriptet innan BizHawk startar. Uppförandet hos BizHawk 2.11.1 provades för hand 2026-10-31.
+
+- **Autosparning:** "AutosaveSaveRAM" sätts på, med en gång i minuten (3600 bildrutor). Utan den hamnar sparfilen på disk först när BizHawk stängs normalt, så en krasch tappar hela passet.
+- **Efter en krasch:** autosparningen skrivs till `alttp-stream.AutoSaveRAM.SaveRAM`, men BizHawk läser den bara om den vanliga `alttp-stream.SaveRAM` saknas. Är autosparningen nyare kopierar skriptet den över den vanliga filen. Den gamla behålls som `.before-recovery`.
+- **En sparfil per seed:** alla seeds körs som `alttp-stream.sfc`, och BizHawk döper sparfilen efter ROM:en. Förra seedets sparfil parkeras därför som `alttp-stream.<seed>.SaveRAM` och det här seedets läggs tillbaka. `alttp-stream.seed` anger vems filen är.
+
+## Föremålsnotiser
+
+`tools/game_swap.py` följer servern som Tracker. När ett föremål kommer till spelet i bakgrunden skrivs en rad i `output/swap/<system>-notice.txt` för spelet i förgrunden. `lua/game_swap.lua` visar den med `gui.addmessage`, längst ner till vänster i två sekunder, till exempel "Zelda got Hookshot" i TMNT. Områdesmenyn skriver `NES-event.txt` när klienten öppnar ett nytt pass, och det blir "TMNT: Area 3 is open" i det spel man spelar.
+
+Provat live 2026-10-31: en kontroll på servern gav "Zelda got Bombs (3)" i TMNT-fönstret efter cirka 0,5 sekunder.
+
 ## Byta spel
 
 - **Select+Start** på handkontrollen pausar spelet man lämnar (Start), tar fram det andra spelets BizHawk-fönster och byter OBS-scen med pizza-wipen. **Ctrl+Shift+Space** gör samma sak från tangentbordet, men utan paus. Alt+Tab och klick fungerar också, eftersom OBS följer det spelfönster som ligger överst.
@@ -103,7 +136,7 @@ TMNT-grafiken, hjärtat och pizzan är ritade för projektet i `tools/sprites.py
 | ALttP-pack | v0.5.1 (stabil; v0.5.2-beta10 finns) | `Downloads\PopTracker-0.36.0\packs\` | https://github.com/StripesOO7/alttp-ap-poptracker-pack/releases |
 | OBS Studio | 32.0.4 | redan installerat | |
 
-Nedladdade original ligger i `Downloadsp-tools\`.
+Nedladdade original ligger i `Downloads\ap-tools\`.
 
 ## Hela kedjan, provad 2026-10-31
 

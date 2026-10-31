@@ -391,10 +391,5 @@ if ($LASTEXITCODE) { Fail "Generating test seeds failed." }
 
 Write-Host ""
 Write-Host "Installed." -ForegroundColor Yellow
-Write-Host "Next:"
-Write-Host "  1. Generate a seed:"
-Write-Host "       cd `"$AP`""
-Write-Host "       ..\.venv\Scripts\python.exe Generate.py --player_files_path ..\players --outputpath ..\output\marathon"
-Write-Host "  2. Start everything:"
-Write-Host "       powershell -ExecutionPolicy Bypass -File `"$Repo\tools\start_stream.ps1`" -Seed output\marathon\AP_<seed>.zip"
-Write-Host "  3. Docs: $Repo\site\index.html"
+Write-Host "Next: double-click start.cmd (in $Repo) to create a seed and start a session."
+Write-Host "Guide: $Repo\site\index.html"

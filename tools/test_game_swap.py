@@ -69,10 +69,102 @@ class RequestFiles(unittest.TestCase):
             self.assertEqual(requests.changes_in_scripts(now + 5), [])
             self.assertEqual(requests.changes_in_scripts(now + 20), [("NES", False)])
 
+    def test_events_from_before_the_start_are_ignored(self):
+        with tempfile.TemporaryDirectory() as folder:
+            folder = Path(folder)
+            (folder / "NES-event.txt").write_text("7-1\nTMNT: Area 1 is open\n")
+            requests = game_swap.Requests(folder)
+            self.assertEqual(requests.events(), [])
+            (folder / "NES-event.txt").write_text("7-2\nTMNT: Area 3 is open\n")
+            self.assertEqual(requests.events(), [("NES", "TMNT: Area 3 is open")])
+            self.assertEqual(requests.events(), [])
+
     def test_missing_folder_is_made(self):
         with tempfile.TemporaryDirectory() as folder:
             game_swap.Requests(Path(folder) / "output" / "swap")
             self.assertTrue((Path(folder) / "output" / "swap").is_dir())
+
+
+class NoticeFiles(unittest.TestCase):
+    def test_numbers_grow_and_old_lines_drop_off(self):
+        with tempfile.TemporaryDirectory() as folder:
+            notices = game_swap.Notices(Path(folder))
+            for n in range(25):
+                notices.add("SNES", f"TMNT got item {n}")
+            lines = (Path(folder) / "SNES-notice.txt").read_text().splitlines()
+            self.assertEqual(len(lines), game_swap.Notices.KEEP)
+            numbers = [int(line.split(" ", 1)[0]) for line in lines]
+            self.assertEqual(numbers, sorted(set(numbers)))
+            self.assertEqual(lines[-1].split(" ", 1)[1], "TMNT got item 24")
+            self.assertFalse((Path(folder) / "NES-notice.txt").exists())
+
+    def test_a_new_run_numbers_above_the_last_one(self):
+        with tempfile.TemporaryDirectory() as folder:
+            first = game_swap.Notices(Path(folder))
+            first.add("NES", "a")
+            second = game_swap.Notices(Path(folder))
+            second.add("NES", "b")
+            self.assertGreater(second.number, first.number)
+
+    def test_item_notice(self):
+        self.assertEqual(game_swap.item_notice("NES", "Rope Pack", "SNES"), ("SNES", "TMNT got Rope Pack"))
+        self.assertEqual(game_swap.item_notice("SNES", "Hookshot", "NES"), ("NES", "Zelda got Hookshot"))
+        self.assertIsNone(game_swap.item_notice("NES", "Rope Pack", "NES"))  # TMNT shows its own items
+        self.assertIsNone(game_swap.item_notice("NES", "Rope Pack", None))   # nothing played yet
+        self.assertIsNone(game_swap.item_notice(None, "Bow", "NES"))         # another game's item
+
+
+class FakeArchipelago:
+    """Enough of an Archipelago server for game_swap.ItemWatch: room info, data package, a Tracker login and
+    whatever PrintJSON packets the test pushes."""
+
+    def __init__(self):
+        self.outbox, self.connects = [], []
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            self.port = probe.getsockname()[1]
+        self.server = serve(self.handle, "127.0.0.1", self.port)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def handle(self, ws):
+        ws.send(json.dumps([{"cmd": "RoomInfo", "games": ["A Link to the Past", "Teenage Mutant Ninja Turtles"]}]))
+        for raw in ws:
+            for packet in json.loads(raw):
+                if packet["cmd"] == "GetDataPackage":
+                    ws.send(json.dumps([{"cmd": "DataPackage", "data": {"games": {
+                        "A Link to the Past": {"item_name_to_id": {"Hookshot": 10}},
+                        "Teenage Mutant Ninja Turtles": {"item_name_to_id": {"Rope Pack": 20}}}}}]))
+                elif packet["cmd"] == "Connect":
+                    self.connects.append(packet)
+                    ws.send(json.dumps([{"cmd": "Connected", "slot_info": {
+                        "1": {"name": "Link", "game": "A Link to the Past"},
+                        "2": {"name": "Turtles", "game": "Teenage Mutant Ninja Turtles"}}}]))
+                    for item in self.outbox:
+                        ws.send(json.dumps([item]))
+
+    def close(self):
+        self.server.shutdown()
+
+
+class ItemWatching(unittest.TestCase):
+    def test_items_for_both_games_are_queued(self):
+        fake = FakeArchipelago()
+        fake.outbox = [
+            {"cmd": "PrintJSON", "type": "ItemSend", "receiving": 2, "item": {"item": 20, "player": 1}},
+            {"cmd": "PrintJSON", "type": "Hint", "receiving": 1, "item": {"item": 10, "player": 2}},
+            {"cmd": "PrintJSON", "type": "ItemCheat", "receiving": 1, "item": {"item": 10, "player": 1}},
+        ]
+        lines = []
+        watch = game_swap.ItemWatch(f"ws://127.0.0.1:{fake.port}", "Turtles", None, lines.append)
+        watch.start()
+        try:
+            got = [watch.items.get(timeout=5), watch.items.get(timeout=5)]
+        finally:
+            fake.close()
+        self.assertEqual(got, [("NES", "Rope Pack"), ("SNES", "Hookshot")])
+        self.assertEqual(fake.connects[0]["tags"], ["Tracker"])
+        self.assertEqual(fake.connects[0]["name"], "Turtles")
+        self.assertTrue(any("watching" in line for line in lines))
 
 
 class FakeObs:

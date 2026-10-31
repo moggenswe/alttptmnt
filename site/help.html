@@ -37,6 +37,9 @@
       <td>Create the folder <code>Archipelago\Players</code>; without it a hidden folder dialog waits.</td></tr>
   </table>
 
+  <p>Start with <code>start.cmd</code> → <b>3 Check before going live</b>: every FAIL or WARN line says what to do
+  under it.</p>
+
   <h2>In the game</h2>
   <table>
     <tr><th>You see</th><th>Cause and fix</th></tr>
@@ -58,6 +61,15 @@
     <tr><td>Select+Start pauses but the other game does not come up</td>
       <td>Look in the game swap window. "no ... window": that BizHawk is closed or has no game loaded. "Windows did not
         let ... come to the front": click the window once; it happens when another program holds the focus.</td></tr>
+    <tr><td>BizHawk crashed while playing A Link to the Past</td>
+      <td>Start the session again (<code>start.cmd</code> → 2, same seed). The start puts BizHawk's autosave back, at
+        most a minute old; the start window says "using BizHawk's autosave of ...". Then load the file in the game.</td></tr>
+    <tr><td>A Link to the Past shows another seed's save file</td>
+      <td>Start sessions with <code>start.cmd</code>, which gives each seed its own save. Old saves are kept as
+        <code>alttp-stream.&lt;seed&gt;.SaveRAM</code> in BizHawk's <code>SNES\SaveRAM</code> folder.</td></tr>
+    <tr><td>No "Zelda got ..." / "TMNT got ..." notices</td>
+      <td>They show only in the game in front, for items of the game behind, at the bottom left for two seconds. The
+        game swap window says "items: watching the server" when they are on.</td></tr>
     <tr><td>"controller swap stopped" in the game swap window</td>
       <td>That game's BizHawk closed or its Lua scripts stopped. Restart it with its session file
         (<code>lua\alttp_stream.luases</code> or <code>lua\tmnt_stream.luases</code>).</td></tr>

@@ -7,6 +7,12 @@ local DIR = SCRIPT_DIR .. "..\\savestates\\game_swap_test\\"
 os.execute('mkdir "' .. DIR .. '" 2>nul')
 local system = emu.getsystemid()
 for _, name in ipairs({ "-request.txt", "-ack.txt", "-ready.txt" }) do os.remove(DIR .. system .. name) end
+local function write_notices(text)
+  local file = io.open(DIR .. system .. "-notice.txt", "w")
+  file:write(text)
+  file:close()
+end
+write_notices("100 a notice from before the script started\n")
 
 GAME_SWAP_DIR, GAME_SWAP_LIBRARY = DIR, true
 local swap = dofile(SCRIPT_DIR .. "game_swap.lua")
@@ -55,6 +61,14 @@ check("a new press writes a new token", second ~= nil and second ~= first and sw
 frames(125)
 check("an unanswered request says to start the helper",
       swap.message() ~= nil and swap.message():find("game_swap.py", 1, true) ~= nil)
+
+check("an old notice is not shown", #swap.shown() == 0)
+write_notices("100 a notice from before the script started\n101 Zelda got Hookshot\n102 TMNT: Area 3 is open\n")
+frames(20)
+check("new notices are shown once, in order", #swap.shown() == 2 and swap.shown()[1] == "Zelda got Hookshot"
+      and swap.shown()[2] == "TMNT: Area 3 is open")
+frames(40)
+check("a notice is not shown twice", #swap.shown() == 2)
 
 lines[#lines + 1] = failed == 0 and "ALL PASS" or (failed .. " FAILED")
 local out = io.open(DIR .. system .. "-result.txt", "w")

@@ -9,7 +9,18 @@ local SCRIPT_DIR = debug.getinfo(1, "S").source:sub(2):match("^(.*[/\\])") or ""
 local OUT = SCRIPT_DIR .. "..\\savestates\\area_select_test\\"
 
 TMNT_AREA_SELECT_LIBRARY = true
+TMNT_AREA_SELECT_EVENT_FILE = OUT .. "NES-event.txt"
+os.remove(TMNT_AREA_SELECT_EVENT_FILE)
 local select = dofile(SCRIPT_DIR .. "tmnt_area_select.lua")
+
+local function event_text()
+  local file = io.open(TMNT_AREA_SELECT_EVENT_FILE, "r")
+  if not file then return nil end
+  file:read("*l")  -- token
+  local text = file:read("*l")
+  file:close()
+  return text
+end
 
 local PASSES, COUNTER, ACK, MAGIC = 0x0388, 0x0389, 0x038A, 0x038B
 local BEATEN = 0x038E
@@ -68,6 +79,7 @@ check(select.message() == "Connect the AP client", "asks for the AP client witho
 -- Client connected with only Area 1 playable.
 mailbox(0x01, 0, 0)
 open_menu()
+check(event_text() == nil, "connecting announces no area")
 check(select.is_open(), "Select+Up opens the menu once the magic byte is there")
 client.screenshot(OUT .. "menu.png")
 press({ Down = true })
@@ -121,6 +133,7 @@ check(read(BEATEN) == 0x01, "a load keeps MAILBOX_BEATEN")
 -- Boss beaten, next area unlocked: counted as a load after the delay, no menu.
 write(PASSES, 0x03)
 step({}, 10)
+check(event_text() == "TMNT: Area 2 is open", "a new pass is announced (" .. tostring(event_text()) .. ")")
 write(AREA, 1)
 step({}, 60)
 check(read(COUNTER) == 2, "counter unchanged while the client reads the boss win")
@@ -129,6 +142,9 @@ check(not select.is_open() and read(COUNTER) == 3, "an unlocked next area counts
 
 -- Every area loads its own state.
 write(PASSES, 0x3F)
+step({}, 2)
+check(event_text() == "TMNT: Area 3, Area 4, Area 5, the Technodrome (GO MODE) are open",
+      "several passes at once are one announcement (" .. tostring(event_text()) .. ")")
 for area = 1, 6 do
   open_menu()
   for _ = 2, area do press({ Down = true }) end

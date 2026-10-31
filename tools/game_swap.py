@@ -8,6 +8,9 @@ tools/start_stream.ps1 starts it in its own console window. While it runs:
 - Whenever a game window comes to the front (a swap, Alt+Tab or a click), OBS switches to that game's scene
   (Hyrule or New York) through OBS's WebSocket server, with the collection's default transition (the pizza-wipe).
   OBS is only switched while it shows one of the two game scenes, so a host's own scene is left alone.
+- With --server, items that arrive for the game behind are shown in the game being played ("TMNT got Rope Pack",
+  "Zelda got Hookshot"), and so are new TMNT areas ("TMNT: Area 3 is open", from lua/tmnt_area_select.lua). It
+  watches the server as a read-only Tracker on --slot.
 
 OBS: Tools -> WebSocket Server Settings -> Enable WebSocket server (OBS 28 or later). The port and password are read
 from OBS's settings on this PC; --obs-url, --obs-password or OBS_WEBSOCKET_PASSWORD override them.
@@ -21,8 +24,10 @@ import ctypes.wintypes as wt
 import hashlib
 import json
 import os
+import queue
 import re
 import sys
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -31,6 +36,8 @@ REPO = Path(__file__).resolve().parent.parent
 SWAP_DIR = REPO / "output" / "swap"  # lua/game_swap.lua writes <system>-request.txt here
 SYSTEMS = ("SNES", "NES")             # emu.getsystemid(): A Link to the Past, TMNT
 GAME_NAMES = {"SNES": "A Link to the Past", "NES": "TMNT"}
+SHORT_NAMES = {"SNES": "Zelda", "NES": "TMNT"}  # in notices, which BizHawk shows in small type
+AP_GAMES = {"A Link to the Past": "SNES", "Teenage Mutant Ninja Turtles": "NES"}  # Archipelago's game names
 DEFAULT_SCENES = {"SNES": "Hyrule", "NES": "New York"}  # tools/make_obs_collection.py
 OBS_SETTINGS = Path(os.environ.get("APPDATA", "")) / "obs-studio" / "plugin_config" / "obs-websocket" / "config.json"
 
@@ -84,7 +91,8 @@ def obs_auth(password: str, salt: str, challenge: str) -> str:
 
 class Requests:
     """Swap requests from lua/game_swap.lua: a token per press in <system>-request.txt, answered in -ack.txt.
-    The script also rewrites <system>-ready.txt every ten seconds while it runs."""
+    The script also rewrites <system>-ready.txt every ten seconds while it runs. Game events (a token line, then a
+    text line) come in <system>-event.txt."""
 
     ALIVE_SECONDS = 15
 
@@ -92,7 +100,25 @@ class Requests:
         self.folder = folder
         folder.mkdir(parents=True, exist_ok=True)
         self.seen = {system: self._read(system) for system in SYSTEMS}  # presses from before we started
+        self.seen_events = {system: self._read_event(system)[0] for system in SYSTEMS}
         self.alive = {system: False for system in SYSTEMS}
+
+    def _read_event(self, system: str) -> tuple[str | None, str | None]:
+        try:
+            lines = (self.folder / f"{system}-event.txt").read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError):
+            return None, None
+        return (lines[0].strip() or None, lines[1].strip()) if len(lines) >= 2 else (None, None)
+
+    def events(self) -> list[tuple[str, str]]:
+        """(system, text) of each event written since the last call."""
+        found = []
+        for system in SYSTEMS:
+            token, text = self._read_event(system)
+            if token and token != self.seen_events[system]:
+                self.seen_events[system] = token
+                found.append((system, text))
+        return found
 
     def changes_in_scripts(self, now: float | None = None) -> list[tuple[str, bool]]:
         """(system, running) for each game whose script started or stopped since the last call."""
@@ -124,6 +150,93 @@ class Requests:
                 (self.folder / f"{system}-ack.txt").write_text(token, encoding="ascii")
                 asked.append(system)
         return asked
+
+
+class Notices:
+    """Lines "<number> <text>" in <system>-notice.txt; lua/game_swap.lua shows each new number once."""
+
+    KEEP = 20
+
+    def __init__(self, folder: Path):
+        self.folder = folder
+        self.lines = {system: [] for system in SYSTEMS}
+        # Numbers keep growing across restarts of this script (above the last one written, and at least the
+        # time in milliseconds), so the game never mistakes a new notice for one it has already shown.
+        self.number = 0
+        for system in SYSTEMS:
+            try:
+                text = (folder / f"{system}-notice.txt").read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for line in text.splitlines():
+                head = line.split(" ", 1)[0]
+                if head.isdigit():
+                    self.number = max(self.number, int(head))
+
+    def add(self, system: str, text: str) -> None:
+        self.number = max(self.number + 1, int(time.time() * 1000))
+        lines = (self.lines[system] + [f"{self.number} {' '.join(text.split())}"])[-self.KEEP:]
+        self.lines[system] = lines
+        (self.folder / f"{system}-notice.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def item_notice(item_system: str | None, item: str, playing: str | None) -> tuple[str, str] | None:
+    """(system to show it in, text) for an item that arrived, or None when the game being played shows it itself."""
+    if not item_system or not playing or item_system == playing:
+        return None
+    return playing, f"{SHORT_NAMES[item_system]} got {item}"
+
+
+class ItemWatch(threading.Thread):
+    """Watches the Archipelago server as a read-only Tracker and queues (system, item name) for every item sent to
+    one of the two games. Reconnects every five seconds; problems are logged once."""
+
+    def __init__(self, url: str, slot: str, password: str | None, log):
+        super().__init__(daemon=True)
+        self.url, self.slot, self.password, self.log = url, slot, password or "", log
+        self.items: queue.Queue = queue.Queue()
+        self.last_problem = None
+
+    def run(self) -> None:
+        while True:
+            try:
+                self._watch()
+            except Exception as error:
+                problem = f"items: server not reachable at {self.url} ({error or type(error).__name__})"
+                if problem != self.last_problem:
+                    self.log(problem)
+                    self.last_problem = problem
+            time.sleep(5)
+
+    def _watch(self) -> None:
+        from websockets.sync.client import connect
+        with connect(self.url, open_timeout=5, close_timeout=1, max_size=None) as ws:
+            def packets():
+                for raw in ws:
+                    yield from json.loads(raw)
+
+            stream = packets()
+            room = next(p for p in stream if p.get("cmd") == "RoomInfo")
+            ws.send(json.dumps([{"cmd": "GetDataPackage", "games": room.get("games", [])}]))
+            package = next(p for p in stream if p.get("cmd") == "DataPackage")
+            names = {game: {number: name for name, number in data.get("item_name_to_id", {}).items()}
+                     for game, data in package["data"]["games"].items()}
+            ws.send(json.dumps([{"cmd": "Connect", "password": self.password, "game": "", "name": self.slot,
+                                 "uuid": "tmnt-alttp-game-swap", "items_handling": 0, "tags": ["Tracker"],
+                                 "version": {"major": 0, "minor": 6, "build": 8, "class": "Version"},
+                                 "slot_data": False}]))
+            reply = next(p for p in stream if p.get("cmd") in ("Connected", "ConnectionRefused"))
+            if reply["cmd"] == "ConnectionRefused":
+                raise ConnectionError(f"refused: {', '.join(reply.get('errors', []))}")
+            games = {int(slot): info.get("game") for slot, info in reply.get("slot_info", {}).items()}
+            self.last_problem = None
+            self.log(f"items: watching the server at {self.url}")
+            for packet in stream:
+                if packet.get("cmd") == "PrintJSON" and packet.get("type") in ("ItemSend", "ItemCheat"):
+                    game = games.get(packet.get("receiving"))
+                    item = names.get(game, {}).get(packet.get("item", {}).get("item"))
+                    if game in AP_GAMES and item:
+                        self.items.put((AP_GAMES[game], item))
 
 
 # --- OBS -------------------------------------------------------------------------------------------------
@@ -321,6 +434,9 @@ def main() -> int:
     parser.add_argument("--scene-alttp", default=DEFAULT_SCENES["SNES"])
     parser.add_argument("--scene-tmnt", default=DEFAULT_SCENES["NES"])
     parser.add_argument("--swap-dir", type=Path, default=SWAP_DIR)
+    parser.add_argument("--server", help="Archipelago server, e.g. ws://localhost:38281, for item notices")
+    parser.add_argument("--slot", default="Turtles", help="any slot of the seed, to watch the server as a tracker")
+    parser.add_argument("--server-password")
     args = parser.parse_args()
     scenes = {"SNES": args.scene_alttp, "NES": args.scene_tmnt}
 
@@ -338,7 +454,12 @@ def main() -> int:
         else:
             log(f"could not take the hotkey {args.hotkey} (another program has it); pass --hotkey")
     requests = Requests(args.swap_dir)
+    notices = Notices(args.swap_dir)
     obs = None if args.no_obs else Obs(args.obs_url, args.obs_password, log)
+    watch = None
+    if args.server:
+        watch = ItemWatch(args.server, args.slot, args.server_password, log)
+        watch.start()
     shown = foreground_system()
     last_played = shown
 
@@ -355,7 +476,8 @@ def main() -> int:
             log(f"Windows did not let {GAME_NAMES[target]} come to the front; click its window")
 
     log("game swap ready: Select+Start on the controller" + (f" or {hotkey}" if hotkey else "")
-        + (", OBS follows the game" if obs else ", OBS left alone (--no-obs)"))
+        + (", OBS follows the game" if obs else ", OBS left alone (--no-obs)")
+        + (", item notices on" if watch else ""))
     message = wt.MSG()
     next_script_check = 0.0
     try:
@@ -375,6 +497,15 @@ def main() -> int:
                 shown = last_played = playing
                 if obs:
                     obs.show(scenes[playing], set(scenes.values()))
+            for system, text in requests.events():  # "TMNT: Area 3 is open": wherever the runner is
+                if last_played:
+                    notices.add(last_played, text)
+                    log(f"notice in {GAME_NAMES[last_played]}: {text}")
+            while watch and not watch.items.empty():
+                notice = item_notice(*watch.items.get(), last_played)
+                if notice:
+                    notices.add(*notice)
+                    log(f"notice in {GAME_NAMES[notice[0]]}: {notice[1]}")
             time.sleep(0.03)
     except KeyboardInterrupt:
         return 0

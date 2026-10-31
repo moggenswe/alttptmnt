@@ -52,7 +52,9 @@ local BOSS_ADVANCE_DELAY = 120
 local MESSAGE_FRAMES = 120
 
 local SCRIPT_DIR = debug.getinfo(1, "S").source:sub(2):match("^(.*[/\\])") or ""
-local M = { state_dir = TMNT_AREA_SELECT_STATE_DIR or (SCRIPT_DIR .. "..\\savestates\\") }
+local M = { state_dir = TMNT_AREA_SELECT_STATE_DIR or (SCRIPT_DIR .. "..\\savestates\\"),
+            -- tools/game_swap.py shows "Area N is open" in whichever game is being played
+            event_file = TMNT_AREA_SELECT_EVENT_FILE or (SCRIPT_DIR .. "..\\output\\swap\\NES-event.txt") }
 
 local function read(address) return memory.readbyte(address, "RAM") end
 local function write(address, value) memory.writebyte(address, value, "RAM") end
@@ -70,6 +72,38 @@ local last_phase, last_continues, continued = nil, nil, false
 
 local function say(text)
   message, message_left = text, MESSAGE_FRAMES
+end
+
+-- Passes the client opened since the last frame, written as "<token>\n<text>" for tools/game_swap.py. The first
+-- mask after the client (re)connects is only remembered, so a reconnect announces nothing.
+local known_passes, events = nil, 0
+local event_session = tostring(os.time())
+
+local function watch_passes(connected)
+  if not connected then
+    known_passes = nil
+    return
+  end
+  local passes = read(MAILBOX_PASSES)
+  if known_passes and passes ~= known_passes then
+    local opened = {}
+    for area = 1, AREAS do
+      local bit = 1 << (area - 1)
+      if (passes & bit) ~= 0 and (known_passes & bit) == 0 then
+        opened[#opened + 1] = area == AREAS and "the Technodrome (GO MODE)" or ("Area " .. area)
+      end
+    end
+    if #opened > 0 then
+      events = events + 1
+      local file = io.open(M.event_file, "w")
+      if file then
+        file:write(event_session .. "-" .. events .. "\nTMNT: " .. table.concat(opened, ", ")
+                   .. (#opened == 1 and " is open" or " are open") .. "\n")
+        file:close()
+      end
+    end
+  end
+  known_passes = passes
 end
 
 local function unlocked(area)
@@ -227,6 +261,7 @@ end
 -- One frame of the script. buttons: P1 buttons held this frame, e.g. { Select = true, Up = true }.
 function M.frame(buttons)
   local connected = read(MAILBOX_MAGIC) == MAGIC_VALUE
+  watch_passes(connected)
   watch_area()
   watch_continue_and_new_game()
 

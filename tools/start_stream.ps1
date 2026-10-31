@@ -3,7 +3,7 @@ Starts everything for an ALttP + TMNT stream seed on this machine, in this order
   1. MultiServer in its own console window (type /send, /hint etc. there)
   2. SNI (from Archipelago\SNI)
   3. the game swap (tools\game_swap.py) in its own console window: Select+Start or Ctrl+Shift+Space swaps games,
-     and OBS follows the game in front
+     OBS follows the game in front, and items for the game behind are shown in the game being played
   4. BizHawk with the patched ALttP ROM, SNI's Lua connector and the swap script (lua\alttp_stream.luases)
   5. BizHawk with the patched TMNT ROM, the AP connector, the area select and the swap script
      (lua\tmnt_stream.luases)
@@ -15,7 +15,9 @@ and prints the URL for the go mode panel to paste into OBS.
   powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed <zip> -NoTracker
   powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed <zip> -NoObsSwitch   (the host switches scenes)
 
-The patched ROMs are made next to the seed's patch files if they are not there yet. Slot names come from
+Before BizHawk starts, tools\bizhawk_saves.py turns on BizHawk's autosave, recovers A Link to the Past's save after
+a crash and gives every seed its own save. The patched ROMs are made next to the seed's patch files if they are not
+there yet. Slot names come from
 players\*.yaml (Link, Turtles). Tested 2026-10-31; see docs\stream-verktyg.md.
 #>
 param(
@@ -88,6 +90,16 @@ $tmntRom = Join-Path $SeedDir "tmnt-stream.nes"
 if (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue) {
   throw "Port $Port is already in use (an old MultiServer?). Close it or pass -Port."
 }
+# BizHawk rewrites its config.ini when it closes, and the save files below must not be in use.
+if (Get-Process EmuHawk -ErrorAction SilentlyContinue) {
+  throw "BizHawk is already running. Close it first (start.cmd -> Stop the session)."
+}
+# Autosave, crash recovery and one A Link to the Past save per seed (see the script).
+& $Python (Join-Path $Repo "tools\bizhawk_saves.py") --bizhawk (Split-Path $EmuHawk) `
+  --seed ([IO.Path]::GetFileNameWithoutExtension($SeedPath))
+if ($LASTEXITCODE) { throw "tools\bizhawk_saves.py failed." }
+New-Item -ItemType Directory -Force (Join-Path $Repo "output") | Out-Null
+Set-Content -Path (Join-Path $Repo "output\session.txt") -Value $SeedPath -Encoding utf8  # shown by start.cmd
 Write-Host "1/7 MultiServer on $Server"
 Start-Process $Python -WorkingDirectory $AP -ArgumentList @("MultiServer.py", "`"$SeedPath`"", "--host", "127.0.0.1", "--port", $Port)
 Start-Sleep 6
@@ -99,7 +111,8 @@ if (-not (Get-Process sni -ErrorAction SilentlyContinue)) {
 
 # Before BizHawk: it makes output\swap, where the swap scripts in BizHawk write.
 Write-Host "3/7 Game swap (Select+Start or $SwapHotkey)"
-$swapArgs = @("-u", "`"$(Join-Path $Repo 'tools\game_swap.py')`"", "--hotkey", $SwapHotkey)
+$swapArgs = @("-u", "`"$(Join-Path $Repo 'tools\game_swap.py')`"", "--hotkey", $SwapHotkey,
+              "--server", "ws://$Server", "--slot", $TmntSlot)
 if ($NoObsSwitch) { $swapArgs += "--no-obs" }
 Start-Process $Python -WorkingDirectory $Repo -ArgumentList $swapArgs
 Start-Sleep 2
