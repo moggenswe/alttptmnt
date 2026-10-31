@@ -1,0 +1,7 @@
+name: Link
+game: A Link to the Past
+A Link to the Past:
+  mode: open
+  goal: ganon
+  entrance_shuffle: vanilla
+  non_local_items: [Hookshot, Flippers, Moon Pearl]
