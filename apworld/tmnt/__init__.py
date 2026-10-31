@@ -38,7 +38,22 @@ class TMNTWorld(World):
     start_turtle: str
     start_area: int
 
+    # Universal Tracker can rebuild this world from the server's slot_data alone (no YAML needed), so the
+    # runner gets an in-logic location list for the TMNT slot.
+    ut_can_gen_without_yaml = True
+
+    @staticmethod
+    def interpret_slot_data(slot_data: dict[str, Any]) -> dict[str, Any]:
+        """Universal Tracker: returning the slot_data makes it regenerate with it in re_gen_passthrough."""
+        return slot_data
+
     def generate_early(self) -> None:
+        passthrough = getattr(self.multiworld, "re_gen_passthrough", {}).get(self.game)
+        if passthrough:  # Universal Tracker regenerating a seed: take the choices the real seed made
+            self.start_turtle = passthrough["start_turtle"]
+            self.start_area = passthrough["start_area"]
+            self.options.include_pickups.value = int(passthrough["include_pickups"])
+            return
         self.start_turtle = self.options.start_turtle.current_key.capitalize()
         self.start_area = self.options.start_area.value
 

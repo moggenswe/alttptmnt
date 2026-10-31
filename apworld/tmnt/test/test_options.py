@@ -59,3 +59,18 @@ class TestSlotData(TMNTTestBase):
     def test_slot_data(self):
         self.assertEqual(self.world.fill_slot_data(),
                          {"start_turtle": "Leonardo", "start_area": 2, "include_pickups": False})
+
+
+class TestUniversalTracker(TMNTTestBase):
+    """Universal Tracker regenerates the world from slot_data, so a random start must come back the same."""
+    options = {"start_turtle": "raphael", "start_area": "area_1"}
+
+    def test_regen_takes_choices_from_slot_data(self):
+        self.multiworld.re_gen_passthrough = {self.world.game: {"start_turtle": "Donatello", "start_area": 4,
+                                                                "include_pickups": False}}
+        self.world.generate_early()
+        self.assertEqual((self.world.start_turtle, self.world.start_area), ("Donatello", 4))
+
+    def test_interpret_slot_data_hands_it_back(self):
+        slot_data = self.world.fill_slot_data()
+        self.assertEqual(type(self.world).interpret_slot_data(slot_data), slot_data)
