@@ -3,6 +3,8 @@
 -- writes. It talks to e2e_run.py through files in the folder given by TMNT_E2E_DIR:
 --   driver.txt      what happened, one line per step
 --   want_send.txt   "Donatello" when the server should /send that item (e2e_run.py deletes it when sent)
+--   want_capture.txt a name: e2e_run.py saves a picture of the BizHawk window as capture_<name>.png
+--   want_client_stop.txt / want_client_start.txt   stop or restart the AP client (deleted when done)
 --   done.txt        written last
 -- Seed assumptions (output/tmnt_only/tmnt.yaml, seed 11): start Raphael + Area 1 pass; the two free start
 -- locations give the Area 2 and Area 3 passes; Area 1's entrance holds Zora's Scuba Kit.
@@ -13,7 +15,8 @@ local DIR = (os.getenv("TMNT_E2E_DIR") or (SCRIPT_DIR .. "..\\output\\e2e")) .. 
 TMNT_AREA_SELECT_LIBRARY = true
 local select = dofile(SCRIPT_DIR .. "tmnt_area_select.lua")
 
-local PASSES, COUNTER, ACK, MAGIC, INVENTORY, CLEARED = 0x0388, 0x0389, 0x038A, 0x038B, 0x038C, 0x038D
+local PASSES, COUNTER, ACK, MAGIC, INVENTORY, CLEARED, BEATEN = 0x0388, 0x0389, 0x038A, 0x038B, 0x038C, 0x038D,
+  0x038E
 local AREA, ACTIVE = 0x0048, 0x0067
 local HP = { 0x0077, 0x0078, 0x0079, 0x007A }  -- Leo, Raph, Mike, Don
 local MISSILES, ROPES = 0x00BF, 0x00A7
@@ -70,6 +73,14 @@ local function file_exists(path)
   return file ~= nil
 end
 
+-- Asks e2e_run.py for something and waits (up to `seconds`) until it has deleted the request file.
+local function request(name, text, seconds)
+  local file = assert(io.open(DIR .. name, "w"))
+  file:write(text, "\n")
+  file:close()
+  return wait_for(name .. " handled", function() return not file_exists(DIR .. name) end, 60 * seconds)
+end
+
 client.unpause()
 note("driver started | " .. ram_line())
 step({}, 60)
@@ -100,6 +111,12 @@ want:write("Donatello\n")
 want:close()
 wait_for("server sent Donatello", function() return not file_exists(DIR .. "want_send.txt") end, 60 * 30)
 wait_for("Donatello has full HP", function() return read(HP[4]) == 0x80 end, 60 * 10)
+request("want_capture.txt", "received_message", 10)  -- "Fick Donatello från ..." should be on screen
+
+-- 3b. The game frees an unowned turtle (as its own rescue, a continue or a new game would): the client
+-- captures her again.
+memory.writebyte(HP[3], 0x80, "RAM")
+wait_for("Michelangelo captured again", function() return read(HP[3]) == 0 end, 60 * 5)
 
 -- 4. A locked area does not load (Area 3 needs Missile Pack and Rope Pack).
 local counter = read(COUNTER)
@@ -108,15 +125,20 @@ note(string.format("tried Area 3: message=%s counter %d -> %d | %s", tostring(se
   read(COUNTER), ram_line()))
 press({ B = true })
 
--- 5. Boss win: the area byte moves 0 -> 1 with the counter unchanged. Area 2 is unlocked, so after the
--- delay the selector counts it as a load and the client does a full sync.
+-- 5. Boss win while the AP client is stopped: the area byte moves 0 -> 1 with the counter unchanged. The
+-- selector records it in MAILBOX_BEATEN and, Area 2 being unlocked, counts it as a load. The restarted
+-- client must still send "Area 1 - Boss".
+request("want_client_stop.txt", "stop", 20)
+step({}, 120)
 counter = read(COUNTER)
 memory.writebyte(AREA, 1, "RAM")
-step({}, 60)
-note(string.format("boss win written, counter still %d | %s", read(COUNTER), ram_line()))
-wait_for("selector counted the advance as a load", function() return read(COUNTER) ~= counter end, 60 * 5)
-step({}, 120)
-wait_for("HUD shows Area 1 cleared", function() return read(CLEARED) == 0x01 end, 60 * 5)
+step({}, 200)
+note(string.format("boss win written with the client stopped: counter %d -> %d | %s", counter, read(COUNTER),
+  ram_line()))
+wait_for("selector recorded the win in MAILBOX_BEATEN", function() return read(BEATEN) & 0x01 ~= 0 end, 60)
+request("want_client_start.txt", "start", 20)
+wait_for("restarted client sent the boss (HUD shows Area 1 cleared)", function() return read(CLEARED) == 0x01 end,
+  60 * 60)
 note("end | " .. ram_line())
 
 local done = assert(io.open(DIR .. "done.txt", "w"))

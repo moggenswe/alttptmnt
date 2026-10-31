@@ -38,7 +38,8 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=300)
     args = parser.parse_args()
     out = args.out.resolve()
-    for name in ("driver.txt", "want_send.txt", "done.txt"):
+    for name in ("driver.txt", "want_send.txt", "want_capture.txt", "want_client_stop.txt", "want_client_start.txt",
+                 "done.txt"):
         (out / name).unlink(missing_ok=True)
 
     python = sys.executable
@@ -58,10 +59,15 @@ def main() -> int:
         processes.append(emuhawk)
         time.sleep(5)
         client_log = open(out / "client.log", "w", encoding="utf-8")
-        client = subprocess.Popen([python, "-u", "BizHawkClient.py", "--nogui", "--connect", f"localhost:{PORT}"],
-                                  cwd=AP, stdin=subprocess.PIPE, stdout=client_log, stderr=subprocess.STDOUT,
-                                  text=True, env=env)
-        processes.append(client)
+
+        def start_client() -> subprocess.Popen:
+            started = subprocess.Popen([python, "-u", "BizHawkClient.py", "--nogui", "--connect", f"localhost:{PORT}"],
+                                       cwd=AP, stdin=subprocess.PIPE, stdout=client_log, stderr=subprocess.STDOUT,
+                                       text=True, env=env)
+            processes.append(started)
+            return started
+
+        client = start_client()
 
         end = time.monotonic() + args.timeout
         while time.monotonic() < end and not (out / "done.txt").exists():
@@ -71,6 +77,20 @@ def main() -> int:
                 server.stdin.write(f"/send {SLOT} {item}\n")
                 server.stdin.flush()
                 want.unlink()
+            capture = out / "want_capture.txt"
+            if capture.exists():
+                name = capture.read_text(encoding="utf-8").strip()
+                subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File",
+                                str(REPO / "tools" / "capture_bizhawk.ps1"), "-Out", str(out / f"capture_{name}.png")],
+                               capture_output=True)
+                capture.unlink()
+            if (out / "want_client_stop.txt").exists():
+                client.terminate()
+                client.wait()
+                (out / "want_client_stop.txt").unlink()
+            if (out / "want_client_start.txt").exists():
+                client = start_client()
+                (out / "want_client_start.txt").unlink()
             time.sleep(0.5)
         finished = (out / "done.txt").exists()
         print("driver finished" if finished else "TIMEOUT")

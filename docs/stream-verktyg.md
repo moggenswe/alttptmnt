@@ -15,7 +15,7 @@ Ladda `lua/tmnt_stream.luases` i BizHawk 2.11:s Lua-konsol (File → Open Sessio
 
 **HUD-raden** högst upp visar LEO RAPH MIKE DON, MISSILE ROPE SCUBA (vitt = har, grått = saknas) och BOSS x/3. Den växlar till GO MODE när Technodrome är i logik.
 
-**Meddelanden:** när ett föremål kommer visar klienten "Fick Rope Pack från Link" eller "Hittade Leonardo" i BizHawks meddelandefält. Det syns i fönstret och därmed i OBS:s fönsterfångst.
+**Meddelanden:** när ett föremål kommer visar klienten "Fick Rope Pack av Link" eller "Hittade Leonardo" i BizHawks meddelandefält, nere till vänster i fönstret. Det syns i OBS:s fönsterfångst. Typsnittet saknar å/ä/ö, så texten använder bara vanliga bokstäver. Bekräftat med en fönsterbild under e2e-testet 2026-10-31.
 
 ## OBS: go mode-panelen
 
