@@ -12,7 +12,7 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 |---|---|---|---|
 | Aktuell area ("world number") | `$0048` | Area N = värde + 1 (Area 1 = 0) | **Bekräftat** (pausskärmen visar AREA 1 när värdet är 0) |
 | Var i spelet | `$001B` | 5 = eftertexter | Dok |
-| Aktiv sköldpadda | `$0067` | 0 = Leo, 1 = Raph, 2 = Mike, 3 = Don | **Bekräftat** (2 med Mike aktiv) |
+| Aktiv sköldpadda | `$0067` | 0 = Leo, 1 = Raph, 2 = Mike, 3 = Don. Går att skriva: byter sköldpadda direkt | **Bekräftat** (se "Byte av aktiv sköldpadda") |
 | HP Leonardo | `$0077` | max 128 (`$80`), 16 per streck; fångad = `00` | Dok (fångad/fri bekräftat på Raph) |
 | HP Raphael | `$0078` | som ovan | **Bekräftat**: `00` gjorde Raph fångad |
 | HP Michelangelo | `$0079` | som ovan; full = `$80` | **Bekräftat**: `00` här tömde Mikes mätare |
@@ -22,7 +22,7 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 | Kastvapen per sköldpadda | `$00A8–$00AB` | Leo, Raph, Mike, Don | Dok |
 | Desarmerade bomber (Area 2) | `$007D` | | Dok |
 | Pausad | `$0094` | 3 vid paus, 0 annars | Dok |
-| Antal continues | `$0046` | börjar på 3 | Dok |
+| Antal continues | `$0046` | börjar på 3; räknas ner vid varje game over, men 0 blir 255 och CONTINUE erbjuds ändå, så continues tar aldrig slut | **Bekräftat** (se "Game over och continue") |
 | Bossvinst Area 1–5 | `$0048` räknas upp | Ingen egen flagga hittad. `$0048` går N−1 → N exakt en gång per bossvinst (5 gånger på hela TAS:en), när Aprils genomgång inför nästa area börjar | **Bekräftat med TAS** (se "TAS-analys") |
 | Shredder besegrad | `$001B` = 5 | eftertexterna börjar | Dok |
 | 4 lediga bytes (brevlåda) | `$0388–$038B` | Hela `$0388–$03AF` (40 byte) ändras aldrig under TAS:en; markörvärden där skrevs aldrig över och TAS:en synkade ända till Area 6. ~~`$07F0–$07F3`~~ används av spelet (blev `44` i Area 1), och `$0778–$077F`/`$07F8–$07FF` läses av spelet (TAS:en desynkar i Area 3) | **Bekräftat med TAS** |
@@ -31,6 +31,8 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 ## R1 – går det att låsa en sköldpadda genom att sätta HP till fångad-värdet?
 
 Resultat: **JA** (2026-10-31). Med Mike aktiv sattes `$0078` (Raph) till `00`. På pausskärmen saknade Raph porträtt och hälsomätare och gick inte att välja, och Splinter sa "Find and help your friend in this stage". Spelet behandlar honom alltså som tillfångatagen. Att skriva `00` till den *aktiva* sköldpaddan utlöser dödsanimationen. Klienten skriver bara fångad-värdet vid full sync direkt efter en area-laddning, så det bör inte hända, men det testas i Task 7.
+
+Korrigering (2026-10-31, `lua/tmnt_gameover_test.lua`): HP `00` dödar ingen förrän en fiende träffar sköldpaddan. På kartan händer ingenting alls, och i kloaken står hon kvar tills hon tar skada. Dödsanimationen i R1-testet kom alltså av en träff.
 
 Frigivning: **JA**. Efter `80` på `$0078` gick Raph att välja igen direkt. Klienten kan alltså frige en sköldpadda mitt i en area.
 
@@ -55,7 +57,7 @@ Gjorda 2026-10-31 i BizHawk 2.11.1 med `lua/tmnt_make_area_states.lua`. Resultat
 
 - **Metod:** vid ett nytt spel sätts `$0048` till 0 på den frame där `$001B` blir 3. Arean laddas några frames senare. Om N−1 skrivs till `$0048` på den framen och de två följande laddar spelet Area N i stället. Skärmdumparna visar rätt area för alla sex: startön, dammen, staden med Party Wagon, Area 4, Area 5 och insidan av Technodrome. Varje state sparas 120 frames efter laddningen.
 - **Utgångsläge:** statesen kommer från ett nytt spel. Alla fyra sköldpaddor har full HP, Leo är aktiv och inga vapen finns.
-- **Öppen risk till Task 7:** om spelaren inte har Leo skriver klienten `00` till hans HP vid full sync, och han är då aktiv. Enligt R1 utlöser det dödsanimationen. Lösningen är antingen att byta aktiv sköldpadda (`$0067`) före HP-skrivningen eller att göra states per startsköldpadda.
+- **Löst risk:** om spelaren inte har Leo, som är aktiv i alla states, byter klienten först `$0067` till en ägd sköldpadda och fångar sedan Leo (se "Byte av aktiv sköldpadda").
 - **Inte testat:** att varje area går att spela klart från en sådan state, till exempel om något sätts först när föregående boss besegras.
 - **Versioner:** statesen fungerar bara i den BizHawk-version som skapade dem. 2.11.1 vägrar ladda states från 2.6.1 ("doesn't contain sync settings … Loadstate cancelled"). Gör dem därför om i den version som används på streamen.
 
@@ -88,3 +90,53 @@ Gjord med TAS 4543M i BizHawk 2.6.1 (`--movie`). Skript: `lua/tmnt_tas_ram_dump.
   - Säkra: `$0388–$03AF` och `$0600–$0603`, `$060A–$0610` — inga överskrivningar, och TAS:en når Area 6 på exakt samma frames.
   - **Förslag:** `MAILBOX_BASE = 0x0388`.
   - **Begränsning:** TAS:en täcker inte allt (game over, continue-skärmen, pausmenyn används nästan inte), och skrivningar av samma värde (`00` → `00`) syns inte i en dump.
+
+## Byte av aktiv sköldpadda (`$0067`), 2026-10-31
+
+Gjort i BizHawk 2.11.1 från `savestates/area1.State` (Leo aktiv) med `lua/tmnt_turtle_swap_test.lua`. Bilder och RAM-logg hamnar i `savestates/swap_test/`.
+
+- **`$0067` = 1 och Leos HP = `00`, på samma frame eller med en frames mellanrum:** ingen dödsanimation. Pausmenyn visar Raph vald och Leo utan porträtt, och Splinter säger "Find and help your friend". Spelet behandlar alltså Leo som fångad.
+- **På kartan:** figuren behåller Leos blå färg tills man går in någonstans. Nere i kloaken har sköldpaddan rött pannband och sai, alltså Raph.
+- **Inne i kloaken:** bytet fungerar likadant. Färgerna byts vid nästa paus eller rumsbyte, och fram till dess syns Leos färger.
+- **Följd för klienten:** vid full sync kan klienten byta till en ägd sköldpadda först och sedan fånga den som syns. Det är inbyggt i `client_logic.full_sync_writes`, och risken "Leo aktiv i alla states" i Task 7 är därmed borta.
+
+## Game over och continue, 2026-10-31
+
+Gjort i BizHawk 2.11.1 med `lua/tmnt_gameover_test.lua`. Från `area1.State` skrevs en brevlåda, spelet pausades, och sedan fick fienderna i första kloaken döda alla fyra sköldpaddorna.
+
+- **Brevlådan** `$0388–$038B` överlevde paus, game over, continue-skärmen och omstarten av arean.
+- **Continue startar om arean på kartan, och alla fyra sköldpaddor får full HP**, även de som var fångade. Laddningsräknaren ändras inte, så klienten märker inget. Därför räknar `lua/tmnt_area_select.lua` upp räknaren när `$0046` har ändrats och alla fyra har full HP igen. Klienten gör då en full sync.
+- **`$0046`** räknas ner vid game over, innan man väljer. Med `$0046` = 0 blev värdet 255 och CONTINUE erbjöds ändå. "Slut på continues" går alltså inte att nå på vanligt sätt.
+- **Paus** (`$0094`: 1 → 2 → 3) rör inte brevlådan.
+- **END och nytt spel från titelskärmen** testades inte direkt. Ett nytt spel passerar `$001B` = 3, vilket areastatesen aldrig gör, så väljaren tvingar då upp menyn. Det täcks av testet i `lua/tmnt_area_select_test.lua`, som gör `client.reboot_core()`.
+
+## Areaväljaren och hela kedjan, 2026-10-31
+
+- **`lua/tmnt_area_select.lua`:** Select+Upp öppnar menyn, Select+Ned eller B stänger den, Upp/Ned flyttar och A laddar. Spelets knappar hålls tillbaka medan menyn är öppen. Ritat med `gui.drawText`, som inte syns i `client.screenshot` men syns i fönstret.
+- **`lua/tmnt_area_select_test.lua`** testar väljaren utan spelare och klient: 33 kontroller i BizHawk 2.11.1, alla godkända. Det täcker:
+  - magic saknas,
+  - låst area ("Låst"),
+  - laddning av alla sex areor,
+  - att räknaren hoppar över 0,
+  - tvingad meny efter bossvinst mot låst area, och uppräkning mot upplåst,
+  - ett riktigt game over med continue,
+  - nytt spel efter omstart.
+- **`tools/e2e_run.py`** kör hela kedjan lokalt:
+  - MultiServer på 127.0.0.1,
+  - BizHawk 2.11.1 med `lua/tmnt_e2e.luases`, där AP-connectorn och `lua/tmnt_e2e_driver.lua` körs samtidigt,
+  - `BizHawkClient.py --nogui`.
+
+  Med seed 11 (`output/tmnt_only/tmnt.yaml`) gick alla steg igenom:
+  - klienten ansluter och skriver magic och passmask,
+  - Area 1 laddas från menyn medan connectorn kör (Task 2: `savestate.load` från ett annat skript stör inte connectorn),
+  - full sync gör Raph aktiv och fångar Leo och Mike,
+  - ingångscheck, sedan `/send Turtles Donatello`, varefter Donatello har full HP inom en sekund,
+  - Area 3 är låst,
+  - en bossvinst (`$0048` 0 → 1) skickar "Area 1 - Boss", och därefter räknar väljaren upp räknaren.
+- **Savestates från den rena ROM:en fungerar med den patchade.** ROM-taggen ligger i oanvänt utrymme. Samma area-states kan alltså användas för varje seed.
+
+## Missiles och rep finns i banorna, 2026-10-31
+
+Spelet har egna upplockningar: TAS:en plockar 10 missiles i Area 3 (frame 20188) och 3 rep i Area 4 (frame 30757). StrategyWiki nämner 3 rep i byggnad F i Area 3. Enligt TASVideos-forumet har Area 4 en rep-sträcka med tre luckor.
+
+**Öppen designfråga:** "Area 3 kräver Missile Pack och Rope Pack" stoppar bara väljaren. Inne i banan kan spelaren plocka spelets egna missiles och rep även utan pack, och klienten skriver bara 0 vid full sync. Antingen räcker det, eller så ska klienten hålla antalet på 0 utan pack. Det beslutet är Oscars. `ROPE_REFILL` = 5 räcker till minst en rep-sträcka med tre luckor.
