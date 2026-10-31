@@ -9,3 +9,4 @@ output/
 __pycache__/
 savestates/
 tas/
+*.smc
