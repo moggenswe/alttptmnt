@@ -1,0 +1,198 @@
+-- Area select for the TMNT Archipelago slot (plan Task 7). Runs in BizHawk next to Archipelago's
+-- connector_bizhawk_generic.lua (open both in the Lua console, or lua/tmnt_stream.luases).
+--
+-- Select+Up opens the menu, Select+Down or B closes it, Up/Down moves, A loads the area. Game input is held
+-- back while the menu is open. An area loads only if its bit is set in the pass mask that the AP client
+-- writes to the mailbox; the menu does not open at all until the client has written its magic byte.
+--
+-- After a boss the game moves on to the next area by itself (area byte N-1 -> N). If the player lacks that
+-- area's pass the menu opens and cannot be closed until another area is loaded. If the pass is there, the
+-- script counts it as a load (so the client syncs the inventory) once the client has had time to see the
+-- boss win, which it reads from the area byte moving while the load counter stays put.
+--
+-- Two more ways into an area also count as loads, since the client only syncs turtles and packs on one:
+--   * Continue after a game over restarts the area with every turtle at full HP, unowned ones too. The
+--     continue byte changes at the game over; once all four HP are full again the counter goes up.
+--   * A new game from the title screen (game phase 3, which the area states never pass through) would
+--     start Area 1 without a pass, so the menu is forced open.
+--
+-- Mailbox and addresses: keep in step with apworld/tmnt/ram.py.
+
+local MAILBOX_PASSES = 0x0388
+local MAILBOX_LOAD_COUNTER = 0x0389
+local MAILBOX_ACK = 0x038A
+local MAILBOX_MAGIC = 0x038B
+local MAGIC_VALUE = 0xA7
+local CURRENT_AREA = 0x0048  -- 0-based: Area N = value + 1
+local GAME_PHASE = 0x001B
+local PHASE_AREA_LOAD = 3
+local CONTINUES = 0x0046     -- changes at every game over (0 wraps to 255; the game never runs out)
+local TURTLE_HP = { 0x0077, 0x0078, 0x0079, 0x007A }
+local FULL_HP_VALUE = 0x80
+local AREAS = 6
+-- The client polls about every 0.5 s; it must see the area byte move before the counter does.
+local BOSS_ADVANCE_DELAY = 120
+local MESSAGE_FRAMES = 120
+
+local SCRIPT_DIR = debug.getinfo(1, "S").source:sub(2):match("^(.*[/\\])") or ""
+local M = { state_dir = SCRIPT_DIR .. "..\\savestates\\" }
+
+local function read(address) return memory.readbyte(address, "RAM") end
+local function write(address, value) memory.writebyte(address, value, "RAM") end
+
+local function next_counter(counter)
+  return counter % 255 + 1  -- 1..255, never 0: 0 means "nothing loaded yet" to the client
+end
+
+local menu_open, forced, cursor = false, false, 1
+local message, message_left = nil, 0
+local held = {}
+local last_area, advanced_at = nil, nil
+local last_phase, last_continues, continued = nil, nil, false
+
+local function say(text)
+  message, message_left = text, MESSAGE_FRAMES
+end
+
+local function unlocked(area)
+  return (read(MAILBOX_PASSES) & (1 << (area - 1))) ~= 0
+end
+
+local function load_area(area)
+  local passes, counter, ack = read(MAILBOX_PASSES), read(MAILBOX_LOAD_COUNTER), read(MAILBOX_ACK)
+  savestate.load(M.state_dir .. "area" .. area .. ".State")
+  -- The state overwrote RAM, mailbox included: put the client's values back and count the load.
+  write(MAILBOX_PASSES, passes)
+  write(MAILBOX_ACK, ack)
+  write(MAILBOX_LOAD_COUNTER, next_counter(counter))
+  write(MAILBOX_MAGIC, MAGIC_VALUE)
+  last_area, advanced_at = read(CURRENT_AREA), nil
+  last_phase, last_continues, continued = read(GAME_PHASE), read(CONTINUES), false
+end
+
+local function count_load()
+  write(MAILBOX_LOAD_COUNTER, next_counter(read(MAILBOX_LOAD_COUNTER)))
+end
+
+local function force_menu(text)
+  menu_open, forced, cursor = true, true, 1
+  say(text)
+end
+
+local function all_full_hp()
+  for _, address in ipairs(TURTLE_HP) do
+    if read(address) ~= FULL_HP_VALUE then return false end
+  end
+  return true
+end
+
+local function watch_continue_and_new_game()
+  local phase, continues = read(GAME_PHASE), read(CONTINUES)
+  if last_continues ~= nil and continues ~= last_continues and read(MAILBOX_LOAD_COUNTER) ~= 0 then
+    continued = true
+  end
+  if continued and all_full_hp() then
+    continued = false
+    count_load()
+  end
+  if last_phase ~= nil and phase == PHASE_AREA_LOAD and last_phase ~= PHASE_AREA_LOAD
+      and read(MAILBOX_MAGIC) == MAGIC_VALUE then
+    force_menu("Välj area")
+  end
+  last_phase, last_continues = phase, continues
+end
+
+local function watch_area()
+  local area = read(CURRENT_AREA)
+  if last_area ~= nil and area == last_area + 1 and read(MAILBOX_LOAD_COUNTER) ~= 0 then
+    advanced_at = emu.framecount()
+  end
+  last_area = area
+  if advanced_at and emu.framecount() - advanced_at >= BOSS_ADVANCE_DELAY then
+    advanced_at = nil
+    if unlocked(area + 1) then
+      count_load()
+    else
+      force_menu("Area " .. (area + 1) .. " är låst")
+    end
+  end
+end
+
+local function pressed(buttons, name)
+  return buttons[name] and not held[name]
+end
+
+local function draw()
+  gui.cleartext()
+  gui.clearGraphics()
+  if menu_open then
+    gui.drawBox(56, 40, 204, 70 + AREAS * 12, 0xFFFFFFFF, 0xE0000000)
+    gui.drawText(64, 46, "VÄLJ AREA", 0xFFFFFF00)
+    for area = 1, AREAS do
+      local mark = area == cursor and ">" or " "
+      local lock = unlocked(area) and "" or "  (låst)"
+      gui.drawText(64, 52 + area * 12, mark .. " Area " .. area .. lock, unlocked(area) and 0xFFFFFFFF or 0xFF808080)
+    end
+  end
+  if message_left > 0 then
+    gui.drawText(64, 24, message, 0xFFFF4040, 0xE0000000)
+    message_left = message_left - 1
+  end
+end
+
+-- One frame of the script. buttons: P1 buttons held this frame, e.g. { Select = true, Up = true }.
+function M.frame(buttons)
+  local connected = read(MAILBOX_MAGIC) == MAGIC_VALUE
+  watch_area()
+  watch_continue_and_new_game()
+
+  if not menu_open then
+    if buttons.Select and pressed(buttons, "Up") then
+      if connected then
+        menu_open, cursor = true, 1
+      else
+        say("Anslut AP-klienten")
+      end
+    end
+  else
+    if pressed(buttons, "Up") and not buttons.Select then cursor = (cursor - 2) % AREAS + 1 end
+    if pressed(buttons, "Down") and not buttons.Select then cursor = cursor % AREAS + 1 end
+    if not forced and (pressed(buttons, "B") or (buttons.Select and pressed(buttons, "Down"))) then
+      menu_open = false
+    elseif pressed(buttons, "A") then
+      if unlocked(cursor) then
+        load_area(cursor)
+        menu_open, forced = false, false
+      else
+        say("Låst")
+      end
+    end
+    joypad.set({ Up = false, Down = false, Left = false, Right = false, A = false, B = false, Select = false,
+                 Start = false }, 1)
+  end
+
+  held = {}
+  for name, down in pairs(buttons) do held[name] = down end
+  draw()
+end
+
+function M.is_open() return menu_open end
+function M.is_forced() return forced end
+function M.message() return message_left > 0 and message or nil end
+
+-- Physical P1 buttons; the keys may come with or without a "P1 " prefix.
+local function read_pad()
+  local buttons = {}
+  for name, down in pairs(joypad.getimmediate(1) or {}) do
+    if down == true then buttons[(name:gsub("^P1 ", ""))] = true end
+  end
+  return buttons
+end
+
+if TMNT_AREA_SELECT_LIBRARY then return M end
+
+console.log("TMNT area select ready: Select+Up opens the menu")
+while true do
+  M.frame(read_pad())
+  emu.frameadvance()
+end
