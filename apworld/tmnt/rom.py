@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 BASE_ROM_MD5 = "c14e760c4d5a086e4186d2e1fc9b7743"  # TMNT_NA, from tmnt_rando's tables/master.txt
 INES_HEADER_SIZE = 0x10
 ROM_TAG = b"TMNTAP"
-AUTH_LENGTH = 16  # Archipelago slot names are at most 16 characters
+AUTH_LENGTH = 64  # slot names are at most 16 characters, i.e. at most 64 bytes of UTF-8
 
 
 def tag_file_offset() -> int:
@@ -36,7 +36,7 @@ class TMNTProcedurePatch(APProcedurePatch, APTokenMixin):
 
 
 def write_patch(world: "TMNTWorld", patch: TMNTProcedurePatch) -> None:
-    slot_name = world.multiworld.player_name[world.player].encode("utf-8")[:AUTH_LENGTH]
+    slot_name = world.multiworld.player_name[world.player].encode("utf-8")
     patch.write_token(APTokenTypes.WRITE, tag_file_offset(), ROM_TAG + slot_name.ljust(AUTH_LENGTH, b"\x00"))
     patch.write_file("token_data.bin", patch.get_token_binary())
 

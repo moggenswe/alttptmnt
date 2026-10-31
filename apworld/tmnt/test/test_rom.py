@@ -31,3 +31,11 @@ class TestRomPatch(TMNTTestBase):
         auth = data[len(ROM_TAG):]
         self.assertEqual(len(auth), AUTH_LENGTH)
         self.assertEqual(auth.rstrip(b"\x00").decode("utf-8"), self.multiworld.player_name[self.player])
+
+    def test_non_ascii_slot_name_round_trips(self):
+        name = "Åsa Brännström"  # 14 characters, 17 bytes in UTF-8
+        self.multiworld.player_name[self.player] = name
+        patch = TMNTProcedurePatch(player=self.player, player_name=name)
+        write_patch(self.world, patch)
+        data = {offset: data for _, offset, data in parse_tokens(patch.get_token_binary())}[tag_file_offset()]
+        self.assertEqual(data[len(ROM_TAG):].rstrip(b"\x00").decode("utf-8"), name)

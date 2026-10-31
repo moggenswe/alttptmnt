@@ -70,20 +70,29 @@ def incremental_writes(old: Inventory, new: Inventory, ram_now: dict[int, int]) 
     return writes
 
 
-def needs_full_sync(counter: int, ack: int) -> bool:
-    return counter != ack
+def needs_full_sync(counter: int, ack: int, magic_ok: bool, expected_ack: int | None) -> bool:
+    """True after an area load (counter moved), a power cycle (magic gone), a restored older savestate
+    (ack is not the one we last wrote) or on the client's first tick."""
+    return not magic_ok or expected_ack is None or counter != ack or ack != expected_ack
 
 
-class BossDebouncer:
-    """Reports an area's boss as defeated once its signal has been seen on two updates in a row."""
+MIN_SIGNAL_SECONDS = 0.2
+
+
+class SignalDebouncer:
+    """Reports a key once its signal has stayed on for MIN_SIGNAL_SECONDS across consecutive updates.
+
+    Measured in time, not updates: the watcher also wakes on server packets, so two updates can be
+    milliseconds apart. Each key is reported at most once.
+    """
 
     def __init__(self) -> None:
-        self._seen_once: set[int] = set()
+        self._on_since: dict[int, float] = {}
         self._reported: set[int] = set()
 
-    def update(self, area_signals: dict[int, bool]) -> set[int]:
-        confirmed = {area for area, on in area_signals.items()
-                     if on and area in self._seen_once and area not in self._reported}
-        self._seen_once = {area for area, on in area_signals.items() if on}
+    def update(self, signals: dict[int, bool], now: float) -> set[int]:
+        self._on_since = {key: self._on_since.get(key, now) for key, on in signals.items() if on}
+        confirmed = {key for key, since in self._on_since.items()
+                     if now - since >= MIN_SIGNAL_SECONDS and key not in self._reported}
         self._reported |= confirmed
         return confirmed

@@ -1,7 +1,7 @@
 import unittest
 
 from .. import ram
-from ..client_logic import (BossDebouncer, Inventory, area6_unlocked, full_sync_writes, incremental_writes,
+from ..client_logic import (Inventory, SignalDebouncer, area6_unlocked, full_sync_writes, incremental_writes,
                             inventory_from_items, needs_full_sync, pass_bitmask)
 
 
@@ -62,20 +62,40 @@ class TestWrites(unittest.TestCase):
         ram_now = {ram.MISSILE_COUNT: ram.MISSILE_REFILL + 3}
         self.assertEqual(incremental_writes(old, new, ram_now), [(ram.MISSILE_COUNT, [ram.MISSILE_REFILL + 3])])
 
-    def test_resync_after_reset(self):
-        self.assertTrue(needs_full_sync(counter=5, ack=0))
-        self.assertFalse(needs_full_sync(counter=5, ack=5))
 
 
-class TestBossDebouncer(unittest.TestCase):
+class TestSignalDebouncer(unittest.TestCase):
     def test_boss_flag_debounce(self):
-        debouncer = BossDebouncer()
-        self.assertEqual(debouncer.update({1: True}), set())
-        self.assertEqual(debouncer.update({1: True}), {1})
-        self.assertEqual(debouncer.update({1: True}), set())
+        debouncer = SignalDebouncer()
+        self.assertEqual(debouncer.update({1: True}, now=0.0), set())
+        self.assertEqual(debouncer.update({1: True}, now=0.5), {1})
+        self.assertEqual(debouncer.update({1: True}, now=1.0), set())
 
     def test_flicker_does_not_count(self):
-        debouncer = BossDebouncer()
-        debouncer.update({2: True})
-        debouncer.update({2: False})
-        self.assertEqual(debouncer.update({2: True}), set())
+        debouncer = SignalDebouncer()
+        debouncer.update({2: True}, now=0.0)
+        debouncer.update({2: False}, now=0.5)
+        self.assertEqual(debouncer.update({2: True}, now=1.0), set())
+
+    def test_two_quick_reads_do_not_count(self):
+        debouncer = SignalDebouncer()
+        debouncer.update({3: True}, now=0.0)
+        self.assertEqual(debouncer.update({3: True}, now=0.01), set())
+        self.assertEqual(debouncer.update({3: True}, now=0.3), {3})
+
+
+class TestNeedsFullSync(unittest.TestCase):
+    def test_steady_state(self):
+        self.assertFalse(needs_full_sync(counter=5, ack=5, magic_ok=True, expected_ack=5))
+
+    def test_new_area_load(self):
+        self.assertTrue(needs_full_sync(counter=6, ack=5, magic_ok=True, expected_ack=5))
+
+    def test_power_cycle(self):
+        self.assertTrue(needs_full_sync(counter=0, ack=0, magic_ok=False, expected_ack=5))
+
+    def test_restored_older_state(self):
+        self.assertTrue(needs_full_sync(counter=2, ack=2, magic_ok=True, expected_ack=5))
+
+    def test_first_tick(self):
+        self.assertTrue(needs_full_sync(counter=0, ack=0, magic_ok=True, expected_ack=None))
