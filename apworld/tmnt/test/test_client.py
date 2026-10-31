@@ -153,24 +153,44 @@ class TestGoal(ClientTestCase):
 
 
 class TestEntrances(ClientTestCase):
+    """The game stores Area N as N - 1 (Area 1 reads 0, confirmed in BizHawk)."""
+
+    def enter(self, area: int, loads: int = 1) -> None:
+        self.ram.bytes[ram.CURRENT_AREA] = area - 1
+        self.ram.bytes[ram.MAILBOX_LOAD_COUNTER] = loads
+
     def test_entrance_needs_pass(self):
         self.give("Raphael", "Sewer Pass: Area 1")
-        self.ram.bytes[ram.CURRENT_AREA] = 4
+        self.enter(4)
         self.tick()
         self.tick()
         self.assertNotIn(location_table[ENTRANCE_LOCATIONS[4]], self.sent_locations())
 
     def test_entrance_flicker_not_sent(self):
-        self.give("Raphael", "Sewer Pass: Area 1")
-        self.ram.bytes[ram.CURRENT_AREA] = 1
+        self.give("Raphael", "Sewer Pass: Area 1", "Sewer Pass: Area 4")
+        self.enter(1)
         self.tick()
-        self.ram.bytes[ram.CURRENT_AREA] = 0
+        self.enter(4)
         self.tick()
         self.assertNotIn(location_table[ENTRANCE_LOCATIONS[1]], self.sent_locations())
 
     def test_entrance_sent_when_sustained(self):
         self.give("Raphael", "Sewer Pass: Area 1")
-        self.ram.bytes[ram.CURRENT_AREA] = 1
+        self.enter(1)
         self.tick()
         self.tick()
         self.assertIn(location_table[ENTRANCE_LOCATIONS[1]], self.sent_locations())
+
+    def test_area_value_is_zero_based(self):
+        self.give("Raphael", "Sewer Pass: Area 4")
+        self.enter(4)
+        self.tick()
+        self.tick()
+        self.assertIn(location_table[ENTRANCE_LOCATIONS[4]], self.sent_locations())
+
+    def test_no_entrance_before_first_area_load(self):
+        self.give("Raphael", "Sewer Pass: Area 1")
+        self.enter(1, loads=0)  # power-on / title screen: area byte is 0 but nothing was loaded
+        self.tick()
+        self.tick()
+        self.assertNotIn(location_table[ENTRANCE_LOCATIONS[1]], self.sent_locations())

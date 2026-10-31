@@ -339,6 +339,7 @@ Regler (från specens avsnitt 3.1 och 3.4):
   - Select+Upp/Ned öppnar och stänger en meny som ritas med `gui.text`. Den listar Area 1–6 och markerar låsta areas.
   - Menyn öppnas inte om magic-byten (`MAILBOX+3`) saknas, alltså om klienten inte är ansluten. Då visas texten "Anslut AP-klienten".
   - A väljer en area. Om dess bit i pass-bitmasken (`MAILBOX+0`) är satt laddas savestaten. Därefter räknas `MAILBOX+1` upp och magic-byten skrivs tillbaka (savestaten skriver över RAM).
+  - Räknaren får aldrig bli 0 (255 → 1). Klienten tolkar 0 som "ingen area laddad än", eftersom areabyten `$0048` också är 0 vid uppstart.
 - [ ] **Steg 3:** Gör ett manuellt test med en ansluten klient som har passen 1 och 3, men utan Missile Pack och Rope Pack.
   Förväntat: bara Area 1 kan väljas.
 - [ ] **Steg 4 (Review Focus 3):** Försök välja Area 3.

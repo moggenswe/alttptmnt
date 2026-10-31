@@ -8,7 +8,8 @@ BizHawk; "guess" = nothing documented. Flip VERIFIED to True only after docs/res
 VERIFIED = False
 
 # Domain "RAM" (NES internal 2 KiB) unless noted.
-CURRENT_AREA = 0x0048            # doc: "world number"; whether Area 1 reads 0 or 1 is unchecked
+CURRENT_AREA = 0x0048            # doc: "world number"; confirmed: reads 0 in Area 1
+AREA_NUMBER_OFFSET = 1           # Area N = value + 1
 GAME_PHASE = 0x001B              # doc: "where in the game", 5 = ending credits
 ACTIVE_TURTLE = 0x0067           # doc: 0=Leo, 1=Raph, 2=Mike, 3=Don
 TURTLE_HP: dict[str, int] = {    # doc: 128 max, 16 per bar. Order follows the turtle ID (Leo, Raph, Mike, Don):

@@ -96,8 +96,10 @@ class TMNTClient(BizHawkClient):
     async def _send_checks(self, ctx: "BizHawkClientContext", values: dict[int, int], passes: int,
                            now: float) -> None:
         bosses = {area: values[address] == value for area, (address, value) in ram.BOSS_DEFEATED_SIGNAL.items()}
-        area = values[ram.CURRENT_AREA]
-        entrances = {area: area in ENTRANCE_LOCATIONS and bool(passes & (1 << (area - 1)))}
+        area = values[ram.CURRENT_AREA] + ram.AREA_NUMBER_OFFSET
+        # Before the area select has loaded anything (power-on, title screen) the area byte reads 0 = Area 1.
+        area_loaded = values[ram.MAILBOX_LOAD_COUNTER] != 0
+        entrances = {area: area_loaded and area in ENTRANCE_LOCATIONS and bool(passes & (1 << (area - 1)))}
 
         found = {location_table[BOSS_LOCATIONS[a]] for a in self.bosses.update(bosses, now)}
         found |= {location_table[ENTRANCE_LOCATIONS[a]] for a in self.entrances.update(entrances, now)}
