@@ -179,7 +179,7 @@ SPRITES = {
 }
 
 
-def render(rows: list[str], swap: dict[str, str] | None = None) -> Image.Image:
+def render(rows: list[str], swap: dict[str, str] | None = None, scale: int = SCALE) -> Image.Image:
     assert all(len(row) == len(rows[0]) for row in rows), "ragged grid"
     image = Image.new("RGBA", (len(rows[0]), len(rows)), (0, 0, 0, 0))
     for y, row in enumerate(rows):
@@ -187,12 +187,13 @@ def render(rows: list[str], swap: dict[str, str] | None = None) -> Image.Image:
             colour = PALETTE.get((swap or {}).get(pixel, pixel))
             if colour:
                 image.putpixel((x, y), tuple(int(colour[i:i + 2], 16) for i in (1, 3, 5)) + (255,))
-    return image.resize((image.width * SCALE, image.height * SCALE), Image.NEAREST)
+    return image.resize((image.width * scale, image.height * scale), Image.NEAREST)
 
 
-def all_sprites() -> dict[str, Image.Image]:
-    sprites = {name: render(TURTLE_HEAD, {"X": colours[0], "x": colours[1]}) for name, colours in BANDANAS.items()}
-    sprites |= {name: render(rows) for name, rows in SPRITES.items()}
+def all_sprites(scale: int = SCALE) -> dict[str, Image.Image]:
+    sprites = {name: render(TURTLE_HEAD, {"X": colours[0], "x": colours[1]}, scale)
+               for name, colours in BANDANAS.items()}
+    sprites |= {name: render(rows, scale=scale) for name, rows in SPRITES.items()}
     return sprites
 
 

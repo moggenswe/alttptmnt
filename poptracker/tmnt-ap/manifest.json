@@ -1,0 +1,17 @@
+{
+  "name": "TMNT (NES) Archipelago",
+  "game_name": "Teenage Mutant Ninja Turtles",
+  "package_version": "0.1.0",
+  "package_uid": "tmnt_ap",
+  "platform": "nes",
+  "author": "tmntalttp",
+  "min_poptracker_version": "0.25.0",
+  "variants": {
+    "Item Tracker - AP": {
+      "display_name": "Item Tracker via AP",
+      "flags": [
+        "ap"
+      ]
+    }
+  }
+}

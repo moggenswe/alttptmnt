@@ -1,0 +1,104 @@
+[
+  {
+    "name": "Leonardo",
+    "type": "toggle",
+    "img": "images/leonardo.png",
+    "codes": "leonardo"
+  },
+  {
+    "name": "Michelangelo",
+    "type": "toggle",
+    "img": "images/michelangelo.png",
+    "codes": "michelangelo"
+  },
+  {
+    "name": "Donatello",
+    "type": "toggle",
+    "img": "images/donatello.png",
+    "codes": "donatello"
+  },
+  {
+    "name": "Raphael",
+    "type": "toggle",
+    "img": "images/raphael.png",
+    "codes": "raphael"
+  },
+  {
+    "name": "Missile Pack",
+    "type": "toggle",
+    "img": "images/missile.png",
+    "codes": "missile"
+  },
+  {
+    "name": "Rope Pack",
+    "type": "toggle",
+    "img": "images/rope.png",
+    "codes": "rope"
+  },
+  {
+    "name": "Zora's Scuba Kit",
+    "type": "toggle",
+    "img": "images/scuba.png",
+    "codes": "scuba"
+  },
+  {
+    "name": "Sewer Pass: Area 1",
+    "type": "toggle",
+    "img": "images/pass1.png",
+    "codes": "pass1"
+  },
+  {
+    "name": "Sewer Pass: Area 2",
+    "type": "toggle",
+    "img": "images/pass2.png",
+    "codes": "pass2"
+  },
+  {
+    "name": "Sewer Pass: Area 3",
+    "type": "toggle",
+    "img": "images/pass3.png",
+    "codes": "pass3"
+  },
+  {
+    "name": "Sewer Pass: Area 4",
+    "type": "toggle",
+    "img": "images/pass4.png",
+    "codes": "pass4"
+  },
+  {
+    "name": "Sewer Pass: Area 5",
+    "type": "toggle",
+    "img": "images/pass5.png",
+    "codes": "pass5"
+  },
+  {
+    "name": "Area 1 - Boss",
+    "type": "toggle",
+    "img": "images/boss1.png",
+    "codes": "boss1"
+  },
+  {
+    "name": "Area 2 - Boss",
+    "type": "toggle",
+    "img": "images/boss2.png",
+    "codes": "boss2"
+  },
+  {
+    "name": "Area 3 - Boss",
+    "type": "toggle",
+    "img": "images/boss3.png",
+    "codes": "boss3"
+  },
+  {
+    "name": "Area 4 - Boss",
+    "type": "toggle",
+    "img": "images/boss4.png",
+    "codes": "boss4"
+  },
+  {
+    "name": "Area 5 - Boss",
+    "type": "toggle",
+    "img": "images/boss5.png",
+    "codes": "boss5"
+  }
+]
