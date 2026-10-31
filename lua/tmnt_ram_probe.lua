@@ -8,6 +8,7 @@
 --   Decreased keep candidates whose value went down since the last step.
 --   Increased keep candidates whose value went up since the last step.
 --   Same      keep candidates whose value did not change since the last step.
+--   Changed   keep candidates whose value changed in either direction since the last step.
 --   Undo      go back one step.
 --   Print     list all candidates in the Lua console's Output.
 -- Snapshot / Diff: Snapshot remembers all RAM; Diff prints every byte changed since then.
@@ -112,12 +113,13 @@ local function print_diff()
   set_status(string.format("Diff: %d byte(s) changed", lines))
 end
 
-local form = forms.newform(260, 230, "TMNT RAM probe")
+local form = forms.newform(260, 262, "TMNT RAM probe")
 local buttons = {
   { "New",       new_search },
   { "Decreased", function() narrow("Decreased", function(old, new) return new < old end) end },
   { "Increased", function() narrow("Increased", function(old, new) return new > old end) end },
   { "Same",      function() narrow("Same", function(old, new) return new == old end) end },
+  { "Changed",   function() narrow("Changed", function(old, new) return new ~= old end) end },
   { "Undo",      undo },
   { "Print",     print_candidates },
   { "Snapshot",  take_snapshot },
@@ -127,7 +129,7 @@ for i, button in ipairs(buttons) do
   local column, row = (i - 1) % 2, math.floor((i - 1) / 2)
   forms.button(form, button[1], button[2], 10 + column * 120, 10 + row * 32, 110, 28)
 end
-status_label = forms.label(form, "Press New to start", 10, 145, 230, 40)
+status_label = forms.label(form, "Press New to start", 10, 177, 230, 40)
 
 while true do
   for i, entry in ipairs(WATCH) do
