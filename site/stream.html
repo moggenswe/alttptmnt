@@ -32,8 +32,8 @@
     <table>
       <tr><th>Scene</th><th>Shows</th></tr>
       <tr><td>Hyrule</td><td>The ALttP BizHawk window, the ALttP PopTracker, the go mode panel.</td></tr>
-      <tr><td>Kloak (övergång)</td><td>A sewer-green interlude with the caption "Into the sewers...", the panel and both
-        trackers. Use it between the games.</td></tr>
+      <tr><td>Kloak (övergång)</td><td>A sewer-green interlude with the caption "Into the sewers...", a bigger panel
+        and both trackers. Use it between the games.</td></tr>
       <tr><td>New York</td><td>The TMNT BizHawk window, the TMNT PopTracker, the go mode panel.</td></tr>
     </table>
     <div class="figs">
@@ -54,7 +54,8 @@
     scene of the host's own are left alone. To switch scenes by hand only, start with <code>-NoObsSwitch</code>.</p>
     <figure><img src="img/obs-live-newyork.png" alt="New York scene from OBS"><figcaption>OBS's own picture of New York
       after a swap (OBS 32.2.2, 2026-10-31): game, tracker and panel live. The window capture is ready 0.3 s after the
-      switch, before the pizza-wipe uncovers it. White here is the transparent background.</figcaption></figure>
+      switch, before the pizza-wipe uncovers it. White here is the transparent background. (Taken with the earlier,
+      blurrier panel; the panel below is the current one.)</figcaption></figure>
 
     <h2 id="panel">Go mode panel</h2>
     <figure><img src="img/panel.png" alt="Go mode panel"><figcaption>Demo data: six Hyrule dungeon bosses down, TMNT in go mode.</figcaption></figure>
@@ -69,9 +70,15 @@
         (needs a wider source)</td></tr>
       <tr><td><code>demo</code></td><td>off</td><td><code>demo=1</code> shows fake data without a server</td></tr>
     </table>
-    <p>The scene collection shows the panel at its own size, 670×290, at 1:1: a browser source that OBS has to scale
-    gets blurry text and uneven pixel icons. If you move it, keep its size (or set the source's width and height to
-    the new size).</p>
+    <div class="warn"><b>Changing the panel's size</b>The panel is vector (text and SVG icons) and redraws itself
+      sharp at whatever size its browser source has. So change the size in the <b>source</b>, not on the canvas:
+      <ol>
+        <li>Right-click the panel → <b>Properties</b> → set <b>Width</b> and <b>Height</b> (keep about 670:290, e.g.
+          1005×435 for 1.5×, 1340×580 for 2×; <code>layout=row</code> is 1330:175) → OK.</li>
+        <li>Right-click it again → <b>Transform → Reset Transform</b>, so OBS shows it at 1:1.</li>
+      </ol>
+      Dragging the red frame's corners instead makes OBS stretch a finished picture, and the panel gets blurry
+      again. The collection uses 670×290 in Hyrule and New York and its own 1005×435 panel in Kloak.</div>
     <p><b>Hyrule</b> shows the ten dungeon bosses as hearts and "DONE ✔" once Ganon is beaten. <b>New York</b> shows the
     turtles, packs, passes, the Area bosses (3 needed) and "GO MODE" when the Technodrome is in logic. ALttP's crystals
     are not counted: they are shuffled between dungeons and have no item IDs.</p>

@@ -102,7 +102,8 @@ pre code { background: none; border: 0; padding: 0; }
 }
 .warn { border-left-color: var(--sauce); }
 .ok { border-left-color: var(--turtle); }
-.note b:first-child, .warn b:first-child, .ok b:first-child { display: block; margin-bottom: 2px; }
+.note > b:first-child, .warn > b:first-child, .ok > b:first-child { display: block; margin-bottom: 2px; }
+.note ol, .warn ol { margin: 6px 0; padding-left: 22px; }
 
 ol.steps { counter-reset: step; list-style: none; padding-left: 0; }
 ol.steps > li { counter-increment: step; position: relative; padding-left: 44px; margin: 14px 0; }

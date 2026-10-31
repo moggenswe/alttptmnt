@@ -33,7 +33,13 @@ file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&
 - **All text som syns på streamen är engelsk:** panelen, BizHawk-menyn (SELECT AREA, Locked, Connect the AP client), meddelandena ("Got X from Y", "Found X") och OBS-texten "Into the sewers...". Dokumentationen är fortfarande svensk.
 - Den ansluter som en skrivskyddad Tracker-klient och påverkar inte spelet.
 - Med `&demo=1` visas påhittade värden utan server, och `&layout=row` lägger korten bredvid varandra.
-- Panelen ritas i 670×290 och visas i 1:1 i scenerna. Tidigare ritades den i 900×240 och pressades ihop till 670 px med filtret "point", vilket gjorde texten suddig och hackig (påpekat av Oscar 2026-10-31). Ikonerna, som är 64 px, visas nu i exakt 32 px. Trackrarna skalas med "bicubic", spelen fortfarande med "point".
+- **Panelen är vektorbaserad:** texten är HTML, och ikonerna är SVG från `tools/sprites.py`, där varje pixel är en ruta. Sidan skalar sig själv med CSS `zoom` till källans storlek. Grundmåttet är 670×290, och 1330×175 med `layout=row`. Provat i OBS 32.2.2 i 670×290, 1005×435 och 1340×580, och den var skarp i alla.
+- **Ändra storlek i källan, inte på duken:**
+  1. Högerklicka på panelen → Properties → Width/Height.
+  2. Högerklicka igen → Transform → Reset Transform, så att den visas i 1:1.
+
+  Drar man i ramens hörn sträcker OBS ut en färdig bild, och då blir panelen suddig. Det var orsaken till att den var suddig förut: den ritades i 900×240 och pressades ihop till 670 px med filtret "point" (påpekat av Oscar 2026-10-31).
+- **Storlekar i samlingen:** Hyrule och New York har 670×290. Kloak har en egen källa i 1005×435. Trackrarna skalas med "bicubic", spelen fortfarande med "point".
 - ALttP:s kristaller syns inte i panelen. De är logikhändelser utan ID och slumpas mellan dungeons. Runnern ser dem på kartan i spelet.
 - Testad 2026-10-31 mot en lokal MultiServer, både med ett TMNT-seed (`/send` och `/send_location` gav live-uppdatering till GO MODE) och med ett helt ALttP+TMNT-seed. Inte testad i OBS.
 

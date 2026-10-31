@@ -6,7 +6,7 @@ Scene Collection -> Import).
 
 Scenes (1920x1080):
   Hyrule            the ALttP BizHawk window, the ALttP PopTracker and the go mode panel
-  Kloak (övergång)  a sewer-green backdrop, a caption, the go mode panel and both trackers
+  Kloak (övergång)  a sewer-green backdrop, a caption, a bigger go mode panel and both trackers
   New York          the TMNT BizHawk window, the TMNT PopTracker and the go mode panel
 and the pizza-wipe stinger (tools/make_stinger.py) as the default transition. The window captures match the
 fixed titles tools/start_stream.ps1 gives the windows. Paths are absolute for this checkout; rerun the script
@@ -23,7 +23,10 @@ NAME = "TMNT x ALttP"
 WIDTH, HEIGHT = 1920, 1080
 BIZHAWK_CLASS = "WindowsForms10.Window.8.app.0.3297317_r6_ad1"  # BizHawk 2.11.1's main form, seen 2026-10-31
 TRANSITION_POINT_MS = 500  # tools/make_stinger.py
-PANEL = (670, 290)  # go mode panel, shown at 1:1; tools/obs/go-mode.html is laid out for this size
+# Go mode panel sizes, each shown at 1:1. tools/obs/go-mode.html scales itself to its source's size (vector text
+# and icons), so a bigger panel is a bigger source, never a stretched one.
+PANEL = (670, 290)
+PANEL_KLOAK = (1005, 435)  # 1.5x
 
 # BizHawk's window has a menu bar and a status bar around the game picture (2x zoom, client area).
 BIZHAWK_CROP = {"crop_top": 21, "crop_bottom": 22, "crop_left": 0, "crop_right": 0}
@@ -70,10 +73,12 @@ def build(server: str, alttp: str, tmnt: str) -> dict:
     tmnt_tracker = window("TMNT-tracker (PopTracker)",
                           "PopTracker - Teenage Mutant Ninja Turtles-Item Tracker via AP", "SDL_app", "poptracker.exe")
     panel_url = (OBS_DIR / "go-mode.html").as_uri() + f"?server={server}&alttp={alttp}&tmnt={tmnt}"
-    # The panel is drawn at the size it is shown (1:1, PANEL): scaling a browser source blurs its text.
-    panel = source("browser_source", "Go mode-panel", {"is_local_file": False, "url": panel_url, "width": PANEL[0],
-                                                       "height": PANEL[1], "fps_custom": False, "shutdown": False,
-                                                       "restart_when_active": False})
+    # The panel is drawn at the size it is shown (1:1): OBS stretching a browser source blurs its text.
+    panel, panel_kloak = (
+        source("browser_source", name, {"is_local_file": False, "url": panel_url, "width": size[0],
+                                        "height": size[1], "fps_custom": False, "shutdown": False,
+                                        "restart_when_active": False})
+        for name, size in (("Go mode-panel", PANEL), ("Go mode-panel (Kloak)", PANEL_KLOAK)))
     sewer = source("color_source_v3", "Kloak-bakgrund", {"color": 0xFF1F2A1B, "width": WIDTH, "height": HEIGHT})
     caption = source("text_gdiplus_v3", "Kloak-text", {
         "text": "Into the sewers...", "font": {"face": "Segoe UI", "size": 96, "style": "Bold", "flags": 1},
@@ -90,8 +95,8 @@ def build(server: str, alttp: str, tmnt: str) -> dict:
                                   item(tmnt_tracker, 2, *tracker_box, scale_filter="bicubic"),
                                   item(panel, 3, *panel_box)])
     sewer_scene = scene("Kloak (övergång)", [item(sewer, 1, 0, 0, WIDTH, HEIGHT),
-                                             item(caption, 2, 160, 120, 1600, 200),
-                                             item(panel, 3, (WIDTH - PANEL[0]) / 2, 400, *PANEL),
+                                             item(caption, 2, 160, 90, 1600, 180),
+                                             item(panel_kloak, 3, (WIDTH - PANEL_KLOAK[0]) // 2, 290, *PANEL_KLOAK),
                                              item(alttp_tracker, 4, 40, 740, 560, 320, scale_filter="bicubic"),
                                              item(tmnt_tracker, 5, 1320, 740, 560, 320, scale_filter="bicubic")])
 
@@ -102,7 +107,8 @@ def build(server: str, alttp: str, tmnt: str) -> dict:
     scenes = [hyrule, sewer_scene, new_york]
     return {"name": NAME, "current_scene": "Hyrule", "current_program_scene": "Hyrule",
             "scene_order": [{"name": s["name"]} for s in scenes],
-            "sources": [alttp_game, tmnt_game, alttp_tracker, tmnt_tracker, panel, sewer, caption, *scenes],
+            "sources": [alttp_game, tmnt_game, alttp_tracker, tmnt_tracker, panel, panel_kloak, sewer, caption,
+                        *scenes],
             "groups": [], "transitions": [stinger], "current_transition": "Pizza-wipe", "transition_duration": 300,
             "quick_transitions": [], "saved_projectors": [], "modules": {}, "preview_locked": False,
             "scaling_enabled": False, "scaling_level": 0, "scaling_off_x": 0.0, "scaling_off_y": 0.0}

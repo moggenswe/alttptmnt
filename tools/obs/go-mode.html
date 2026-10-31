@@ -12,8 +12,10 @@
   Parameters: server (ws:// address), alttp and tmnt (slot names), password, demo=1 (fake data, no server),
   layout=column|row.
 
-  Size: the cards are laid out for a 670x290 source shown at 1:1 (tools/make_obs_collection.py), so OBS never
-  rescales the text; the 64 px sprites are drawn at exactly 32 px. Scaling the source in OBS blurs it.
+  Size: the panel scales itself to fill the browser source (the design is 670x290; layout=row is 1330x175), and
+  text and icons (SVG, tools/sprites.py) are vector, so it stays sharp at any size. Set the size in the source's
+  properties (Width, Height) and show the source at 1:1. Dragging the source bigger or smaller in the OBS canvas
+  instead makes OBS stretch a finished picture, which blurs it.
 
   It connects twice to the Archipelago server as a "Tracker" client (one connection per slot, read only)
   and reads what any tracker can read:
@@ -36,10 +38,11 @@
     --done: #6fd36f;
     --bad: #ff7b7b;
   }
-  html, body { margin: 0; background: var(--bg); color: var(--text);
+  html, body { margin: 0; background: var(--bg); color: var(--text); overflow: hidden;
     font: 700 20px/1.2 "Segoe UI", system-ui, sans-serif; text-shadow: 0 1px 2px #000; }
   .panel { display: flex; flex-direction: column; gap: 8px; padding: 8px; width: 654px; }
-  .panel.row { flex-direction: row; width: auto; }
+  .panel.row { flex-direction: row; width: 1314px; }
+  .panel.row .card { flex: 1; }
   .card { background: var(--card); border-radius: 10px; padding: 8px 14px; border-left: 6px solid var(--title); }
   .card.hyrule { border-left-color: var(--hyrule); }
   .card.newyork { border-left-color: var(--newyork); }
@@ -53,8 +56,7 @@
   .state.off { color: var(--bad); font-size: 22px; }
   .icons { display: flex; gap: 4px; align-items: center; margin: 2px 0; height: 32px; }
   .icons .gap { width: 14px; }
-  /* 64 px sprites at exactly half size: every sprite pixel stays a sharp 2x2 block. */
-  .icon { width: 32px; height: 32px; image-rendering: pixelated; transition: opacity 0.4s, filter 0.4s; }
+  .icon { width: 32px; height: 32px; transition: opacity 0.4s, filter 0.4s; }
   .icon.off { opacity: 0.38; filter: grayscale(1) brightness(1.3); }
 </style>
 </head>
@@ -78,7 +80,17 @@ const params = new URLSearchParams(location.search);
 const SERVER = params.get("server") || "ws://localhost:38281";
 const PASSWORD = params.get("password") || "";
 const CLIENT_GOAL = 30;
-if (params.get("layout") === "row") document.getElementById("panel").classList.add("row");
+const ROW = params.get("layout") === "row";
+if (ROW) document.getElementById("panel").classList.add("row");
+
+// Fill the browser source whatever its size: CSS zoom lays the panel out again at the new size, so text and the
+// SVG icons are drawn sharp (unlike OBS stretching the finished picture).
+const DESIGN = ROW ? [1330, 175] : [670, 290];
+function fit() {
+  document.getElementById("panel").style.zoom = Math.min(innerWidth / DESIGN[0], innerHeight / DESIGN[1]);
+}
+addEventListener("resize", fit);
+fit();
 
 const ALTTP = "A Link to the Past";
 const TMNT = "Teenage Mutant Ninja Turtles";
@@ -92,7 +104,7 @@ const $ = id => document.getElementById(id);
 
 // Our own pixel icons, drawn for this project by tools/sprites.py (no game sprites, no fan art).
 function icon(sprite, title) {
-  return Object.assign(document.createElement("img"), { src: `sprites/${sprite}.png`, title, alt: title,
+  return Object.assign(document.createElement("img"), { src: `sprites/${sprite}.svg`, title, alt: title,
     className: "icon off" });
 }
 const gap = () => Object.assign(document.createElement("span"), { className: "gap" });

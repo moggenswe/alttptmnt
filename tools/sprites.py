@@ -2,7 +2,8 @@
 
     .venv/Scripts/python.exe tools/sprites.py
 
-Writes tools/obs/sprites/<name>.png at 4x (64x64, nearest neighbour). All art here is drawn for this project:
+Writes tools/obs/sprites/<name>.png at 4x (64x64, nearest neighbour) and <name>.svg, the same pixels as vector
+squares, which the go mode panel uses so it stays sharp at any size. All art here is drawn for this project:
 no game sprites and no fan art, since free TMNT fan art does not exist (the characters belong to Nickelodeon).
 Each grid row is one line of pixels; each letter is a colour from PALETTE, "." is transparent.
 """
@@ -190,11 +191,33 @@ def render(rows: list[str], swap: dict[str, str] | None = None, scale: int = SCA
     return image.resize((image.width * scale, image.height * scale), Image.NEAREST)
 
 
+def svg(rows: list[str], swap: dict[str, str] | None = None) -> str:
+    """The grid as an SVG with one square per pixel (runs of one colour in a row merged), crisp at any size."""
+    assert all(len(row) == len(rows[0]) for row in rows), "ragged grid"
+    rects = []
+    for y, row in enumerate(rows):
+        x = 0
+        while x < len(row):
+            colour = PALETTE.get((swap or {}).get(row[x], row[x]))
+            run = 1
+            while x + run < len(row) and PALETTE.get((swap or {}).get(row[x + run], row[x + run])) == colour:
+                run += 1
+            if colour:
+                rects.append(f'<rect x="{x}" y="{y}" width="{run}" height="1" fill="{colour}"/>')
+            x += run
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {len(rows[0])} {len(rows)}" '
+            f'shape-rendering="crispEdges">{"".join(rects)}</svg>\n')
+
+
+def all_grids() -> dict[str, tuple[list[str], dict[str, str] | None]]:
+    """name -> (grid, colour swap) for every sprite."""
+    grids = {name: (TURTLE_HEAD, {"X": colours[0], "x": colours[1]}) for name, colours in BANDANAS.items()}
+    grids |= {name: (rows, None) for name, rows in SPRITES.items()}
+    return grids
+
+
 def all_sprites(scale: int = SCALE) -> dict[str, Image.Image]:
-    sprites = {name: render(TURTLE_HEAD, {"X": colours[0], "x": colours[1]}, scale)
-               for name, colours in BANDANAS.items()}
-    sprites |= {name: render(rows, scale=scale) for name, rows in SPRITES.items()}
-    return sprites
+    return {name: render(rows, swap, scale) for name, (rows, swap) in all_grids().items()}
 
 
 def main() -> None:
@@ -202,6 +225,8 @@ def main() -> None:
     sprites = all_sprites()
     for name, image in sprites.items():
         image.save(OUT / f"{name}.png")
+    for name, (rows, swap) in all_grids().items():
+        (OUT / f"{name}.svg").write_text(svg(rows, swap), encoding="utf-8")
     sheet = Image.new("RGBA", (len(sprites) * 72, 72), (32, 48, 64, 255))
     for i, image in enumerate(sprites.values()):
         sheet.alpha_composite(image, (i * 72 + 4, 4))
