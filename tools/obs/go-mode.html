@@ -48,16 +48,23 @@
   .state.off { color: var(--bad); font-size: 20px; }
   .rows { display: flex; gap: 18px; flex-wrap: wrap; font-size: 20px; }
   .rows b { color: var(--go); }
-  .dots { letter-spacing: 0.15em; }
+  .icons { display: flex; gap: 4px; align-items: center; margin: 4px 0; }
+  .icons .gap { width: 10px; }
+  .icon { width: 30px; height: 30px; image-rendering: pixelated; transition: opacity 0.4s, filter 0.4s; }
+  .icon.small { width: 22px; height: 22px; }
+  .icon.off { opacity: 0.22; filter: grayscale(1); }
 </style>
 </head>
 <body>
 <div class="panel" id="panel">
   <div class="card hyrule"><div class="title">Hyrule · Ganon</div>
     <div class="state" id="alttp-state">Ansluter…</div>
+    <div class="icons" id="alttp-hearts"></div>
     <div class="rows"><span>Bossar <b id="alttp-bosses">–</b></span></div></div>
   <div class="card newyork"><div class="title">New York · Shredder</div>
     <div class="state" id="tmnt-state">Ansluter…</div>
+    <div class="icons" id="tmnt-turtle-icons"></div>
+    <div class="icons" id="tmnt-gear-icons"></div>
     <div class="rows"><span>Sköldpaddor <b id="tmnt-turtles">–</b></span>
       <span>Bossar <b id="tmnt-bosses">–</b></span></div></div>
 </div>
@@ -79,8 +86,70 @@ const CLEARS_FOR_TECHNODROME = 3;  // apworld/tmnt/rules.py
 
 const $ = id => document.getElementById(id);
 
+// Our own pixel icons (no game sprites): each row of a grid is one line of pixels, each letter a colour.
+const PALETTE = { G: "#3fa34d", g: "#2b7a36", K: "#101010", W: "#f4f4f4", S: "#9aa3ad", s: "#5c6670",
+  R: "#e04040", O: "#f29a2e", Y: "#ffd84a", N: "#9a6a3a", n: "#6b4523", L: "#5ec8ff", P: "#9b5de5",
+  B: "#3a6fe0", H: "#ff4d6d", h: "#b3203d" };
+const TURTLE_HEAD = [
+  "....GGGG....", "..GGGGGGGG..", ".GGGGGGGGGG.", ".XXXXXXXXXX.", "XXWKXXXXWKXX", ".XXXXXXXXXX.",
+  ".GGGGGGGGGG.", ".GGGGGGGGGG.", "..GGGggGGG..", "..GGGGGGGG..", "...GGGGGG...", "....GGGG...."];
+const ICONS = {
+  missile: ["............", "............", "..SS........", "..SSs.......", ".SSSSSSSSR..", "SSSSSSSSSSRR",
+            "SSSSSSSSSSRR", ".SSSSSSSSR..", "..SSs.......", "..SS........", "............", "............"],
+  rope: ["......SSS...", ".....S...S..", "......S.S...", ".......S....", "....nNNNn...", "..nNNNNNNNn.",
+         ".nNn....nNn.", ".nN......Nn.", ".nNn....nNn.", "..nNNNNNNNn.", "....nNNNn...", "............"],
+  scuba: ["............", "..KKKKKKKK.Y", ".KLLLKKLLLKY", ".KLWLKKLWLKY", ".KLLLKKLLLKY", "..KKKKKKKK.Y",
+          "...K....K..Y", "...KKKKKK..Y", "..........YY", "............", "............", "............"],
+  pass: ["....ssss....", "..ssSSSSss..", ".sSSKSSKSSs.", ".sSKSSSSKSs.", "sSSSSKKSSSSs", "sSKSKSSKSKSs",
+         "sSKSKSSKSKSs", "sSSSSKKSSSSs", ".sSKSSSSKSs.", ".sSSKSSKSSs.", "..ssSSSSss..", "....ssss...."],
+  boss: ["....RRRR....", "..RRRRRRRR..", ".RRRRRRRRRR.", ".RRSSRRSSRR.", "RRRSKRRKSRRR", "RRRRRRRRRRRR",
+         "RRRRRRRRRRRR", ".RRRKKKKRRR.", ".RRRRRRRRRR.", "..RRRRRRRR..", "...RRRRRR...", "............"],
+  heart: ["............", "..HHH..HHH..", ".HWHHHHHHHH.", ".HWHHHHHHHh.", ".HHHHHHHHHh.", "..HHHHHHHh..",
+          "...HHHHHh...", "....HHHh....", ".....Hh.....", "............", "............", "............"],
+};
+const BANDANAS = { Leonardo: "B", Raphael: "R", Michelangelo: "O", Donatello: "P" };
+
+function pixelIcon(rows, title, small = false, swap = {}) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${rows[0].length} ${rows.length}`);
+  svg.setAttribute("shape-rendering", "crispEdges");
+  svg.setAttribute("class", small ? "icon small off" : "icon off");
+  const label = document.createElementNS(svg.namespaceURI, "title");
+  label.textContent = title;
+  svg.appendChild(label);
+  rows.forEach((row, y) => [...row].forEach((pixel, x) => {
+    const colour = PALETTE[swap[pixel] || pixel];
+    if (!colour) return;
+    const rect = document.createElementNS(svg.namespaceURI, "rect");
+    Object.entries({ x, y, width: 1, height: 1, fill: colour }).forEach(([k, v]) => rect.setAttribute(k, v));
+    svg.appendChild(rect);
+  }));
+  return svg;
+}
+
+const gap = () => Object.assign(document.createElement("span"), { className: "gap" });
+const iconsFor = {};  // item or location name -> its icon
+for (const turtle of TURTLES) {
+  $("tmnt-turtle-icons").appendChild(iconsFor[turtle] = pixelIcon(TURTLE_HEAD, turtle, false, { X: BANDANAS[turtle] }));
+}
+$("tmnt-turtle-icons").appendChild(gap());
+TMNT_BOSSES.forEach(boss => $("tmnt-turtle-icons").appendChild(iconsFor[boss] = pixelIcon(ICONS.boss, boss, true)));
+[["Missile Pack", ICONS.missile], ["Rope Pack", ICONS.rope], ["Zora's Scuba Kit", ICONS.scuba]].forEach(
+  ([name, rows]) => $("tmnt-gear-icons").appendChild(iconsFor[name] = pixelIcon(rows, name)));
+$("tmnt-gear-icons").appendChild(gap());
+[1, 2, 3, 4, 5].forEach(n => $("tmnt-gear-icons").appendChild(
+  iconsFor[`Sewer Pass: Area ${n}`] = pixelIcon(ICONS.pass, `Sewer Pass: Area ${n}`, true)));
+ALTTP_BOSSES.forEach(boss => $("alttp-hearts").appendChild(iconsFor[boss] = pixelIcon(ICONS.heart, boss, true)));
+
+function light(names, has) {
+  for (const name of names) iconsFor[name].classList.toggle("off", !has(name));
+}
+
 function renderTmnt(s) {
   if (s.error) { $("tmnt-state").className = "state off"; $("tmnt-state").textContent = s.error; return; }
+  const gear = ["Missile Pack", "Rope Pack", "Zora's Scuba Kit", ...[1, 2, 3, 4, 5].map(n => `Sewer Pass: Area ${n}`)];
+  light([...TURTLES, ...gear], name => s.items.has(name));
+  light(TMNT_BOSSES, name => s.checked.has(name));
   const turtles = TURTLES.filter(t => s.items.has(t)).length;
   const bosses = TMNT_BOSSES.filter(l => s.checked.has(l)).length;
   $("tmnt-turtles").textContent = `${turtles}/4`;
@@ -93,6 +162,7 @@ function renderTmnt(s) {
 
 function renderAlttp(s) {
   if (s.error) { $("alttp-state").className = "state off"; $("alttp-state").textContent = s.error; return; }
+  light(ALTTP_BOSSES, name => s.checked.has(name));
   const bosses = ALTTP_BOSSES.filter(l => s.checked.has(l)).length;
   $("alttp-bosses").textContent = `${bosses}/10`;
   const state = s.goal ? ["done", "KLART ✔"] : ["", "Inte än"];
@@ -150,7 +220,9 @@ function track(slot, game, render) {
 
 if (params.get("demo")) {
   renderAlttp({ items: new Set(), checked: new Set(ALTTP_BOSSES.slice(0, 6)), goal: false });
-  renderTmnt({ items: new Set(TURTLES), checked: new Set(TMNT_BOSSES.slice(0, 3)), goal: false });
+  renderTmnt({ items: new Set([...TURTLES, "Rope Pack", "Zora's Scuba Kit", "Sewer Pass: Area 1",
+                               "Sewer Pass: Area 2", "Sewer Pass: Area 4"]),
+               checked: new Set(TMNT_BOSSES.slice(0, 3)), goal: false });
 } else {
   track(params.get("alttp"), ALTTP, renderAlttp);
   track(params.get("tmnt"), TMNT, renderTmnt);
