@@ -32,7 +32,8 @@ file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&
 - TMNT-ikonerna och hjärtana är egen pixelgrafik från `tools/sprites.py`, inga spelspritar. Det man har lyser, och det som saknas är grått och dämpat.
 - **All text som syns på streamen är engelsk:** panelen, BizHawk-menyn (SELECT AREA, Locked, Connect the AP client), meddelandena ("Got X from Y", "Found X") och OBS-texten "Into the sewers...". Dokumentationen är fortfarande svensk.
 - Den ansluter som en skrivskyddad Tracker-klient och påverkar inte spelet.
-- Med `&demo=1` visas påhittade värden utan server, och `&layout=column` lägger korten under varandra.
+- Med `&demo=1` visas påhittade värden utan server, och `&layout=row` lägger korten bredvid varandra.
+- Panelen ritas i 670×290 och visas i 1:1 i scenerna. Tidigare ritades den i 900×240 och pressades ihop till 670 px med filtret "point", vilket gjorde texten suddig och hackig (påpekat av Oscar 2026-10-31). Ikonerna, som är 64 px, visas nu i exakt 32 px. Trackrarna skalas med "bicubic", spelen fortfarande med "point".
 - ALttP:s kristaller syns inte i panelen. De är logikhändelser utan ID och slumpas mellan dungeons. Runnern ser dem på kartan i spelet.
 - Testad 2026-10-31 mot en lokal MultiServer, både med ett TMNT-seed (`/send` och `/send_location` gav live-uppdatering till GO MODE) och med ett helt ALttP+TMNT-seed. Inte testad i OBS.
 

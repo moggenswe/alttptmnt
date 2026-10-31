@@ -23,6 +23,7 @@ NAME = "TMNT x ALttP"
 WIDTH, HEIGHT = 1920, 1080
 BIZHAWK_CLASS = "WindowsForms10.Window.8.app.0.3297317_r6_ad1"  # BizHawk 2.11.1's main form, seen 2026-10-31
 TRANSITION_POINT_MS = 500  # tools/make_stinger.py
+PANEL = (670, 290)  # go mode panel, shown at 1:1; tools/obs/go-mode.html is laid out for this size
 
 # BizHawk's window has a menu bar and a status bar around the game picture (2x zoom, client area).
 BIZHAWK_CROP = {"crop_top": 21, "crop_bottom": 22, "crop_left": 0, "crop_right": 0}
@@ -42,13 +43,15 @@ def window(name: str, title: str, window_class: str, exe: str) -> dict:
                                           "cursor": False, "client_area": True, "priority": 1})
 
 
-def item(src: dict, item_id: int, x: float, y: float, width: float, height: float, crop: dict | None = None) -> dict:
-    """A scene item scaled to fit inside the box (x, y, width, height), keeping its aspect ratio."""
+def item(src: dict, item_id: int, x: float, y: float, width: float, height: float, crop: dict | None = None,
+         scale_filter: str = "point") -> dict:
+    """A scene item scaled to fit inside the box (x, y, width, height), keeping its aspect ratio. "point" keeps the
+    games' pixels sharp; text-heavy windows read better with "bicubic"."""
     return {"name": src["name"], "source_uuid": src["uuid"], "visible": True, "locked": False, "rot": 0.0,
             "align": 5, "bounds_type": 2, "bounds_align": 0, "bounds_crop": False,
             **(crop or {"crop_left": 0, "crop_top": 0, "crop_right": 0, "crop_bottom": 0}),
             "id": item_id, "group_item_backup": False, "pos": {"x": x, "y": y}, "scale": {"x": 1.0, "y": 1.0},
-            "bounds": {"x": width, "y": height}, "scale_filter": "point", "blend_method": "default",
+            "bounds": {"x": width, "y": height}, "scale_filter": scale_filter, "blend_method": "default",
             "blend_type": "normal", "show_transition": {"duration": 0}, "hide_transition": {"duration": 0},
             "private_settings": {}}
 
@@ -67,8 +70,9 @@ def build(server: str, alttp: str, tmnt: str) -> dict:
     tmnt_tracker = window("TMNT-tracker (PopTracker)",
                           "PopTracker - Teenage Mutant Ninja Turtles-Item Tracker via AP", "SDL_app", "poptracker.exe")
     panel_url = (OBS_DIR / "go-mode.html").as_uri() + f"?server={server}&alttp={alttp}&tmnt={tmnt}"
-    panel = source("browser_source", "Go mode-panel", {"is_local_file": False, "url": panel_url, "width": 900,
-                                                       "height": 240, "fps_custom": False, "shutdown": False,
+    # The panel is drawn at the size it is shown (1:1, PANEL): scaling a browser source blurs its text.
+    panel = source("browser_source", "Go mode-panel", {"is_local_file": False, "url": panel_url, "width": PANEL[0],
+                                                       "height": PANEL[1], "fps_custom": False, "shutdown": False,
                                                        "restart_when_active": False})
     sewer = source("color_source_v3", "Kloak-bakgrund", {"color": 0xFF1F2A1B, "width": WIDTH, "height": HEIGHT})
     caption = source("text_gdiplus_v3", "Kloak-text", {
@@ -76,15 +80,20 @@ def build(server: str, alttp: str, tmnt: str) -> dict:
         "color": 0xFF4AD8FF, "align": "center", "outline": True, "outline_size": 6, "outline_color": 0xFF101418})
 
     game_box = (0, 0, 1240, 1080)  # 256x224 games at 2x keep their shape inside this
+    side_x = WIDTH - PANEL[0]
+    tracker_box = (side_x, 0, PANEL[0], HEIGHT - PANEL[1] - 10)
+    panel_box = (side_x, HEIGHT - PANEL[1], *PANEL)
     hyrule = scene("Hyrule", [item(alttp_game, 1, *game_box, BIZHAWK_CROP),
-                              item(alttp_tracker, 2, 1250, 0, 670, 800), item(panel, 3, 1250, 830, 670, 250)])
+                              item(alttp_tracker, 2, *tracker_box, scale_filter="bicubic"),
+                              item(panel, 3, *panel_box)])
     new_york = scene("New York", [item(tmnt_game, 1, *game_box, BIZHAWK_CROP),
-                                  item(tmnt_tracker, 2, 1250, 0, 670, 800), item(panel, 3, 1250, 830, 670, 250)])
+                                  item(tmnt_tracker, 2, *tracker_box, scale_filter="bicubic"),
+                                  item(panel, 3, *panel_box)])
     sewer_scene = scene("Kloak (övergång)", [item(sewer, 1, 0, 0, WIDTH, HEIGHT),
                                              item(caption, 2, 160, 120, 1600, 200),
-                                             item(panel, 3, 360, 380, 1200, 330),
-                                             item(alttp_tracker, 4, 40, 740, 560, 320),
-                                             item(tmnt_tracker, 5, 1320, 740, 560, 320)])
+                                             item(panel, 3, (WIDTH - PANEL[0]) / 2, 400, *PANEL),
+                                             item(alttp_tracker, 4, 40, 740, 560, 320, scale_filter="bicubic"),
+                                             item(tmnt_tracker, 5, 1320, 740, 560, 320, scale_filter="bicubic")])
 
     stinger = {"name": "Pizza-wipe", "uuid": str(uuid.uuid4()), "id": "obs_stinger_transition",
                "versioned_id": "obs_stinger_transition",

@@ -16,7 +16,7 @@
     "sources": [
         {
             "name": "ALttP (BizHawk)",
-            "uuid": "db362bb1-83ac-4282-b0e1-df27bc57fd00",
+            "uuid": "ec6e7bcc-29f7-4693-9656-959b8b8eced2",
             "id": "window_capture",
             "versioned_id": "window_capture",
             "settings": {
@@ -45,7 +45,7 @@
         },
         {
             "name": "TMNT (BizHawk)",
-            "uuid": "3ceaa88a-fb12-41fa-adf1-d50f20144e3f",
+            "uuid": "7011c3ae-b82b-4914-b19c-53555266a265",
             "id": "window_capture",
             "versioned_id": "window_capture",
             "settings": {
@@ -74,7 +74,7 @@
         },
         {
             "name": "ALttP-tracker (PopTracker)",
-            "uuid": "549ded1f-84eb-45ec-a869-4eee8f039647",
+            "uuid": "fed1df0f-912d-407d-8f83-5d813a006f25",
             "id": "window_capture",
             "versioned_id": "window_capture",
             "settings": {
@@ -103,7 +103,7 @@
         },
         {
             "name": "TMNT-tracker (PopTracker)",
-            "uuid": "e3381c7a-d160-410e-b94a-98e44ddbcfe3",
+            "uuid": "c0ba4284-4872-4cf6-a212-5558c24b1b9e",
             "id": "window_capture",
             "versioned_id": "window_capture",
             "settings": {
@@ -132,14 +132,14 @@
         },
         {
             "name": "Go mode-panel",
-            "uuid": "20d4e737-86c7-48b5-9336-2e0bd5b3dbf5",
+            "uuid": "c939be2f-d865-47d6-bbc9-6461532a3e5f",
             "id": "browser_source",
             "versioned_id": "browser_source",
             "settings": {
                 "is_local_file": false,
                 "url": "file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&alttp=Link&tmnt=Turtles",
-                "width": 900,
-                "height": 240,
+                "width": 670,
+                "height": 290,
                 "fps_custom": false,
                 "shutdown": false,
                 "restart_when_active": false
@@ -163,7 +163,7 @@
         },
         {
             "name": "Kloak-bakgrund",
-            "uuid": "b9aee632-8688-4e3f-b1c3-13919c367b4c",
+            "uuid": "a36588d6-e292-4960-aee9-af6d96df2d82",
             "id": "color_source_v3",
             "versioned_id": "color_source_v3",
             "settings": {
@@ -190,7 +190,7 @@
         },
         {
             "name": "Kloak-text",
-            "uuid": "2b6c1fdc-f521-478d-b6f9-21b5c684fa0e",
+            "uuid": "597fbb51-cf79-4cfc-a34c-be21bfcb2513",
             "id": "text_gdiplus_v3",
             "versioned_id": "text_gdiplus_v3",
             "settings": {
@@ -226,7 +226,7 @@
         },
         {
             "name": "Hyrule",
-            "uuid": "e2ab0980-30d3-4b4b-b15f-6b086d37c591",
+            "uuid": "a7d2b881-3a53-43e5-b45a-fa75945542ef",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
@@ -235,7 +235,7 @@
                 "items": [
                     {
                         "name": "ALttP (BizHawk)",
-                        "source_uuid": "db362bb1-83ac-4282-b0e1-df27bc57fd00",
+                        "source_uuid": "ec6e7bcc-29f7-4693-9656-959b8b8eced2",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -274,7 +274,7 @@
                     },
                     {
                         "name": "ALttP-tracker (PopTracker)",
-                        "source_uuid": "549ded1f-84eb-45ec-a869-4eee8f039647",
+                        "source_uuid": "fed1df0f-912d-407d-8f83-5d813a006f25",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -298,9 +298,9 @@
                         },
                         "bounds": {
                             "x": 670,
-                            "y": 800
+                            "y": 780
                         },
-                        "scale_filter": "point",
+                        "scale_filter": "bicubic",
                         "blend_method": "default",
                         "blend_type": "normal",
                         "show_transition": {
@@ -313,7 +313,7 @@
                     },
                     {
                         "name": "Go mode-panel",
-                        "source_uuid": "20d4e737-86c7-48b5-9336-2e0bd5b3dbf5",
+                        "source_uuid": "c939be2f-d865-47d6-bbc9-6461532a3e5f",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -329,7 +329,7 @@
                         "group_item_backup": false,
                         "pos": {
                             "x": 1250,
-                            "y": 830
+                            "y": 790
                         },
                         "scale": {
                             "x": 1.0,
@@ -337,7 +337,7 @@
                         },
                         "bounds": {
                             "x": 670,
-                            "y": 250
+                            "y": 290
                         },
                         "scale_filter": "point",
                         "blend_method": "default",
@@ -373,7 +373,7 @@
         },
         {
             "name": "Kloak (övergång)",
-            "uuid": "dc8eb2fa-e41f-492f-8b4a-c83f1addc34d",
+            "uuid": "20714cf8-8a6a-43e9-a4ef-9168bdbb621b",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
@@ -382,7 +382,7 @@
                 "items": [
                     {
                         "name": "Kloak-bakgrund",
-                        "source_uuid": "b9aee632-8688-4e3f-b1c3-13919c367b4c",
+                        "source_uuid": "a36588d6-e292-4960-aee9-af6d96df2d82",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -421,7 +421,7 @@
                     },
                     {
                         "name": "Kloak-text",
-                        "source_uuid": "2b6c1fdc-f521-478d-b6f9-21b5c684fa0e",
+                        "source_uuid": "597fbb51-cf79-4cfc-a34c-be21bfcb2513",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -460,7 +460,7 @@
                     },
                     {
                         "name": "Go mode-panel",
-                        "source_uuid": "20d4e737-86c7-48b5-9336-2e0bd5b3dbf5",
+                        "source_uuid": "c939be2f-d865-47d6-bbc9-6461532a3e5f",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -475,16 +475,16 @@
                         "id": 3,
                         "group_item_backup": false,
                         "pos": {
-                            "x": 360,
-                            "y": 380
+                            "x": 625.0,
+                            "y": 400
                         },
                         "scale": {
                             "x": 1.0,
                             "y": 1.0
                         },
                         "bounds": {
-                            "x": 1200,
-                            "y": 330
+                            "x": 670,
+                            "y": 290
                         },
                         "scale_filter": "point",
                         "blend_method": "default",
@@ -499,7 +499,7 @@
                     },
                     {
                         "name": "ALttP-tracker (PopTracker)",
-                        "source_uuid": "549ded1f-84eb-45ec-a869-4eee8f039647",
+                        "source_uuid": "fed1df0f-912d-407d-8f83-5d813a006f25",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -525,7 +525,7 @@
                             "x": 560,
                             "y": 320
                         },
-                        "scale_filter": "point",
+                        "scale_filter": "bicubic",
                         "blend_method": "default",
                         "blend_type": "normal",
                         "show_transition": {
@@ -538,7 +538,7 @@
                     },
                     {
                         "name": "TMNT-tracker (PopTracker)",
-                        "source_uuid": "e3381c7a-d160-410e-b94a-98e44ddbcfe3",
+                        "source_uuid": "c0ba4284-4872-4cf6-a212-5558c24b1b9e",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -564,7 +564,7 @@
                             "x": 560,
                             "y": 320
                         },
-                        "scale_filter": "point",
+                        "scale_filter": "bicubic",
                         "blend_method": "default",
                         "blend_type": "normal",
                         "show_transition": {
@@ -598,7 +598,7 @@
         },
         {
             "name": "New York",
-            "uuid": "1ddc2a5f-30fd-4ad0-ae66-60b0d8f2a530",
+            "uuid": "89dbf6b2-bfa1-4534-a691-8c95627deeb8",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
@@ -607,7 +607,7 @@
                 "items": [
                     {
                         "name": "TMNT (BizHawk)",
-                        "source_uuid": "3ceaa88a-fb12-41fa-adf1-d50f20144e3f",
+                        "source_uuid": "7011c3ae-b82b-4914-b19c-53555266a265",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -646,7 +646,7 @@
                     },
                     {
                         "name": "TMNT-tracker (PopTracker)",
-                        "source_uuid": "e3381c7a-d160-410e-b94a-98e44ddbcfe3",
+                        "source_uuid": "c0ba4284-4872-4cf6-a212-5558c24b1b9e",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -670,9 +670,9 @@
                         },
                         "bounds": {
                             "x": 670,
-                            "y": 800
+                            "y": 780
                         },
-                        "scale_filter": "point",
+                        "scale_filter": "bicubic",
                         "blend_method": "default",
                         "blend_type": "normal",
                         "show_transition": {
@@ -685,7 +685,7 @@
                     },
                     {
                         "name": "Go mode-panel",
-                        "source_uuid": "20d4e737-86c7-48b5-9336-2e0bd5b3dbf5",
+                        "source_uuid": "c939be2f-d865-47d6-bbc9-6461532a3e5f",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -701,7 +701,7 @@
                         "group_item_backup": false,
                         "pos": {
                             "x": 1250,
-                            "y": 830
+                            "y": 790
                         },
                         "scale": {
                             "x": 1.0,
@@ -709,7 +709,7 @@
                         },
                         "bounds": {
                             "x": 670,
-                            "y": 250
+                            "y": 290
                         },
                         "scale_filter": "point",
                         "blend_method": "default",
@@ -748,7 +748,7 @@
     "transitions": [
         {
             "name": "Pizza-wipe",
-            "uuid": "3f101fc6-d8df-424b-ab1f-f254a1b0216e",
+            "uuid": "a7dd652c-ed6a-44c5-ba6e-df684a62483c",
             "id": "obs_stinger_transition",
             "versioned_id": "obs_stinger_transition",
             "settings": {
