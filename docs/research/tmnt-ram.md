@@ -46,3 +46,29 @@ Minsta antal som räcker i Area 3:   → värde (+50 %):
 
 - `$001B` (var i spelet) = 4 på pausskärmen i Area 1.
 - RAM-kartan (TMNT.xls) har Raph och Mike omkastade för hälsan. Rätt ordning följer sköldpaddsnumret.
+
+## Area-savestates (Task 7 steg 1)
+
+Gjorda 2026-10-31 i BizHawk 2.11.1 med `lua/tmnt_make_area_states.lua`. Resultatet hamnar i `savestates/area1.State` … `area6.State`, med en skärmdump bredvid varje fil. Mappen ligger inte i git.
+
+- **Metod:** vid ett nytt spel sätts `$0048` till 0 på den frame där `$001B` blir 3. Arean laddas några frames senare. Om N−1 skrivs till `$0048` på den framen och de två följande laddar spelet Area N i stället. Skärmdumparna visar rätt area för alla sex: startön, dammen, staden med Party Wagon, Area 4, Area 5 och insidan av Technodrome. Varje state sparas 120 frames efter laddningen.
+- **Utgångsläge:** statesen kommer från ett nytt spel. Alla fyra sköldpaddor har full HP, Leo är aktiv och inga vapen finns.
+- **Öppen risk till Task 7:** om spelaren inte har Leo skriver klienten `00` till hans HP vid full sync, och han är då aktiv. Enligt R1 utlöser det dödsanimationen. Lösningen är antingen att byta aktiv sköldpadda (`$0067`) före HP-skrivningen eller att göra states per startsköldpadda.
+- **Inte testat:** att varje area går att spela klart från en sådan state, till exempel om något sätts först när föregående boss besegras.
+- **Versioner:** statesen fungerar bara i den BizHawk-version som skapade dem. 2.11.1 vägrar ladda states från 2.6.1 ("doesn't contain sync settings … Loadstate cancelled"). Gör dem därför om i den version som används på streamen.
+
+## TAS 4543M (DreamYao, BizHawk 2.6.1) som referens
+
+TASVideos-publikationen 4543M ligger i `tas/4543M/` (inte i git). Den synkar bara i BizHawk 2.6.1, som ligger i `Downloads\BizHawk-2.6.1-win-x64`. I 2.11.1 kör den fast i Area 1. Filmens ROM-sha1 är `89adf2d9…` för hela .nes-filen, samma som vår ROM.
+
+`lua/tmnt_tas_states.lua` (körs med `--movie`) loggade när `$0048` räknas upp. Det sker när Aprils genomgång inför nästa area börjar:
+
+| Frame | `$0048` blir | Area som börjar |
+|---|---|---|
+| 5499 | 1 | Area 2 |
+| 18596 | 2 | Area 3 |
+| 30041 | 3 | Area 4 |
+| 46072 | 4 | Area 5 |
+| 49799 | 5 | Area 6 |
+
+Bossvinsterna ligger strax före dessa frames. Det gör filmen användbar för att hitta en bossflagga: ta en RAM-ögonblicksbild före och efter bossens sista träff och jämför. Filmen slutar med `$001B` = 4, alltså före eftertexterna.

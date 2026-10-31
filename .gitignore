@@ -7,3 +7,5 @@ output/
 .venv/
 .superpowers/
 __pycache__/
+savestates/
+tas/
