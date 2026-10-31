@@ -1,7 +1,8 @@
 import unittest
 
 from .. import ram
-from ..client_logic import (Inventory, SignalDebouncer, area6_unlocked, boss_defeated, full_sync_writes,
+from ..client_logic import (Inventory, SignalDebouncer, area6_unlocked, beaten_from_mailbox, boss_defeated,
+                            capture_writes, full_sync_writes,
                             incremental_writes,
                             inventory_from_items, needs_full_sync, pass_bitmask)
 
@@ -154,3 +155,34 @@ class TestBossDefeated(unittest.TestCase):
         self.assertIsNone(boss_defeated(prev_area=0, area=2, prev_counter=3, counter=3))
         self.assertIsNone(boss_defeated(prev_area=2, area=2, prev_counter=3, counter=3))
         self.assertIsNone(boss_defeated(prev_area=5, area=6, prev_counter=3, counter=3))  # no Area 6 boss location
+
+
+class TestCaptureWrites(unittest.TestCase):
+    """The game frees unowned turtles at a continue, a new game and its own rescue; the client recaptures."""
+
+    def hp(self, **values: int) -> dict[int, int]:
+        return {ram.TURTLE_HP[name]: value for name, value in values.items()}
+
+    def test_freed_unowned_turtle_is_captured(self):
+        ram_now = self.hp(Raphael=0x80, Leonardo=0x80)
+        self.assertEqual(capture_writes(inv("Raphael"), "Raphael", ram_now),
+                         [(ram.TURTLE_HP["Leonardo"], [ram.CAPTURED_HP_VALUE])])
+
+    def test_captured_ones_are_left_alone(self):
+        self.assertEqual(capture_writes(inv("Raphael"), "Raphael", self.hp(Raphael=0x80)), [])
+
+    def test_freed_turtle_on_screen_is_switched_out_first(self):
+        ram_now = self.hp(Raphael=0x80, Leonardo=0x60)
+        writes = capture_writes(inv("Raphael"), "Leonardo", ram_now)
+        self.assertEqual(writes, [(ram.ACTIVE_TURTLE, [ram.TURTLE_BY_ID.index("Raphael")]),
+                                  (ram.TURTLE_HP["Leonardo"], [ram.CAPTURED_HP_VALUE])])
+
+    def test_no_switch_to_a_captured_owned_turtle(self):
+        # Raph (owned) was caught by the game; Leo (unowned, rescued) is the only one left on screen.
+        ram_now = self.hp(Raphael=0, Leonardo=0x60)
+        self.assertEqual(capture_writes(inv("Raphael"), "Leonardo", ram_now), [])
+
+
+class TestBeatenMailbox(unittest.TestCase):
+    def test_bits_to_areas(self):
+        self.assertEqual(beaten_from_mailbox(0b100101), {1, 3})  # bit 5 is Shredder, not an area

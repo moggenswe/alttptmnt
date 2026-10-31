@@ -37,6 +37,11 @@ MAGIC_VALUE = 0xA7
 # Read only by the Lua HUD (lua/tmnt_area_select.lua): what the player owns and which bosses are beaten.
 MAILBOX_INVENTORY = MAILBOX_BASE + 4  # bit 0-3 turtles by ID (TURTLE_BY_ID), 4 Missile Pack, 5 Rope Pack, 6 Scuba Kit
 MAILBOX_CLEARED = MAILBOX_BASE + 5    # bit N-1 = Area N's boss beaten (N = 1..5)
+# Written by the Lua area select, which sees every frame: bit N-1 = it saw Area N's boss beaten (the area byte
+# moving N-1 -> N without a load), bit 5 = it saw Shredder's ending. The client sends these too, so a win
+# while the client was disconnected is not lost.
+MAILBOX_BEATEN = MAILBOX_BASE + 6
+SHREDDER_BEATEN_BIT = 1 << 5
 
 MISSILE_REFILL = 15              # the TAS uses all 10 missiles it finds in Area 3; 15 gives room for misses
 ROPE_REFILL = 5                  # guess: the TAS skips ropes (damage boost), so play Area 3 to set this

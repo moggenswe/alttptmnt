@@ -97,6 +97,28 @@ def full_sync_writes(inv: Inventory, active: str | None, ram_now: dict[int, int]
     return writes
 
 
+def capture_writes(inv: Inventory, active: str | None, ram_now: dict[int, int]) -> list[Write]:
+    """Unowned turtles the game has freed are captured again at once. The game frees them at a continue, at a
+    new game and through its own rescue (one captured turtle per area from Area 3 on). If the freed one is on
+    screen, an owned turtle that is not captured becomes active first, as in full_sync_writes."""
+    loose = [turtle for turtle in ram.TURTLE_BY_ID
+             if turtle not in inv.turtles and ram_now.get(ram.TURTLE_HP[turtle], 0) != ram.CAPTURED_HP_VALUE]
+    writes = []
+    if active in loose:
+        playable = [turtle for turtle in ram.TURTLE_BY_ID if turtle in inv.turtles
+                    and ram_now.get(ram.TURTLE_HP[turtle], 0) != ram.CAPTURED_HP_VALUE]
+        if not playable:
+            loose.remove(active)  # nobody to switch to: leave her until the next full sync
+        else:
+            writes.append((ram.ACTIVE_TURTLE, [ram.TURTLE_BY_ID.index(playable[0])]))
+    return writes + [(ram.TURTLE_HP[turtle], [ram.CAPTURED_HP_VALUE]) for turtle in loose]
+
+
+def beaten_from_mailbox(value: int) -> set[int]:
+    """Areas (1..5) whose boss the Lua area select saw beaten (ram.MAILBOX_BEATEN)."""
+    return {area for area in BOSS_AREAS if value & (1 << (area - 1))}
+
+
 def incremental_writes(old: Inventory, new: Inventory, ram_now: dict[int, int]) -> list[Write]:
     """Newly received turtles get full HP. A pack refills when it arrives and again whenever its count is
     at 0 (shot empty, or reset by the game at a continue), so owning a pack never leaves the player stuck."""

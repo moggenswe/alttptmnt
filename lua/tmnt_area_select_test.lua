@@ -12,6 +12,7 @@ TMNT_AREA_SELECT_LIBRARY = true
 local select = dofile(SCRIPT_DIR .. "tmnt_area_select.lua")
 
 local PASSES, COUNTER, ACK, MAGIC = 0x0388, 0x0389, 0x038A, 0x038B
+local BEATEN = 0x038E
 local AREA, ACTIVE = 0x0048, 0x0067
 local HP = { 0x0077, 0x0078, 0x0079, 0x007A }
 
@@ -107,6 +108,7 @@ step({}, 10)
 write(AREA, 1)
 step({}, 60)
 check(not select.is_open() and read(COUNTER) == 1, "nothing happens before the client has seen the boss win")
+check(read(BEATEN) == 0x01, "the boss win is recorded in MAILBOX_BEATEN (bit 0 = Area 1)")
 step({}, 70)
 check(select.is_open() and select.is_forced(), "a locked next area forces the menu open")
 press({ B = true })
@@ -114,6 +116,7 @@ check(select.is_open(), "B cannot close a forced menu")
 press({ A = true })
 check(not select.is_open() and not select.is_forced(), "loading an area ends the forced menu")
 check(read(AREA) == 0 and read(COUNTER) == 2, "the forced menu loaded Area 1")
+check(read(BEATEN) == 0x01, "a load keeps MAILBOX_BEATEN")
 
 -- Boss beaten, next area unlocked: counted as a load after the delay, no menu.
 write(PASSES, 0x03)
@@ -177,6 +180,19 @@ press({ A = true })
 -- so the counter may be past 8. Any count is fine as long as it moved.
 check(read(AREA) == 0 and read(COUNTER) >= 8 and not select.is_open(), string.format(
   "the forced menu then loads Area 1 (area byte %d, counter %d, magic %02X)", read(AREA), read(COUNTER), read(MAGIC)))
+
+-- A second copy of the selector pointed at a folder without states: nothing loads, the menu says so.
+TMNT_AREA_SELECT_STATE_DIR = OUT .. "no_states\\"
+local empty = dofile(SCRIPT_DIR .. "tmnt_area_select.lua")
+TMNT_AREA_SELECT_STATE_DIR = nil
+local counter = read(COUNTER)
+write(PASSES, 0x3F)
+for _, buttons in ipairs({ { Select = true }, { Select = true, Up = true }, {}, { A = true }, {} }) do
+  empty.frame(buttons)
+  emu.frameadvance()
+end
+check(empty.is_open() and read(COUNTER) == counter, "a missing state loads nothing and keeps the menu open")
+check(empty.message() == "State saknas för Area 1", "a missing state says so (" .. tostring(empty.message()) .. ")")
 
 log:write(failures == 0 and "ALL PASS\n" or string.format("%d FAILED\n", failures))
 log:write("done\n")

@@ -20,6 +20,11 @@
 -- bosses beaten (x/3 needed for the Technodrome) and GO MODE once Shredder is in logic. Select+Left hides
 -- or shows it.
 --
+-- The script also records what it sees in MAILBOX_BEATEN: a boss win (area byte N-1 -> N without a load)
+-- and Shredder's ending ($001B = 5). The client sends those even if it was disconnected at the time.
+--
+-- A missing or unreadable area state is shown as "(saknas)" in the menu and never half-loaded.
+--
 -- Mailbox and addresses: keep in step with apworld/tmnt/ram.py.
 
 local MAILBOX_PASSES = 0x0388
@@ -27,7 +32,11 @@ local MAILBOX_LOAD_COUNTER = 0x0389
 local MAILBOX_ACK = 0x038A
 local MAILBOX_MAGIC = 0x038B
 local MAILBOX_INVENTORY = 0x038C  -- bit 0-3 turtles (Leo, Raph, Mike, Don), 4 Missile Pack, 5 Rope Pack, 6 Scuba
-local MAILBOX_CLEARED = 0x038D    -- bit N-1 = Area N's boss beaten
+local MAILBOX_CLEARED = 0x038D    -- bit N-1 = Area N's boss beaten (from the server, via the client)
+local MAILBOX_BEATEN = 0x038E     -- written here: bit N-1 = saw Area N's boss beaten, bit 5 = saw the ending
+local MAILBOX_FIRST, MAILBOX_LAST = 0x0388, 0x038E
+local SHREDDER_BEATEN_BIT = 0x20
+local PHASE_ENDING = 5
 local CLEARS_FOR_TECHNODROME = 3  -- apworld/tmnt/rules.py
 local AREA6_BIT = 0x20
 local MAGIC_VALUE = 0xA7
@@ -43,7 +52,7 @@ local BOSS_ADVANCE_DELAY = 120
 local MESSAGE_FRAMES = 120
 
 local SCRIPT_DIR = debug.getinfo(1, "S").source:sub(2):match("^(.*[/\\])") or ""
-local M = { state_dir = SCRIPT_DIR .. "..\\savestates\\" }
+local M = { state_dir = TMNT_AREA_SELECT_STATE_DIR or (SCRIPT_DIR .. "..\\savestates\\") }
 
 local function read(address) return memory.readbyte(address, "RAM") end
 local function write(address, value) memory.writebyte(address, value, "RAM") end
@@ -67,16 +76,49 @@ local function unlocked(area)
   return (read(MAILBOX_PASSES) & (1 << (area - 1))) ~= 0
 end
 
+local function state_path(area)
+  return M.state_dir .. "area" .. area .. ".State"
+end
+
+local function state_exists(area)
+  local file = io.open(state_path(area), "rb")
+  if file then file:close() end
+  return file ~= nil
+end
+
+local missing = {}
+for area = 1, AREAS do
+  if not state_exists(area) then
+    missing[area] = true
+    console.log("TMNT area select: missing " .. state_path(area))
+  end
+end
+
+-- Returns false if the state could not be loaded; RAM is then untouched.
 local function load_area(area)
-  local passes, counter, ack = read(MAILBOX_PASSES), read(MAILBOX_LOAD_COUNTER), read(MAILBOX_ACK)
-  savestate.load(M.state_dir .. "area" .. area .. ".State")
-  -- The state overwrote RAM, mailbox included: put the client's values back and count the load.
-  write(MAILBOX_PASSES, passes)
-  write(MAILBOX_ACK, ack)
-  write(MAILBOX_LOAD_COUNTER, next_counter(counter))
+  if missing[area] then
+    say("State saknas för Area " .. area)
+    return false
+  end
+  local mailbox = {}
+  for address = MAILBOX_FIRST, MAILBOX_LAST do mailbox[address] = read(address) end
+  -- BizHawk returns false when a state does not load (e.g. one made in another BizHawk version).
+  if savestate.load(state_path(area)) == false then
+    say("Kunde inte ladda Area " .. area)
+    return false
+  end
+  -- The state overwrote RAM, mailbox included: put the values back and count the load.
+  for address = MAILBOX_FIRST, MAILBOX_LAST do write(address, mailbox[address]) end
+  write(MAILBOX_LOAD_COUNTER, next_counter(mailbox[MAILBOX_LOAD_COUNTER]))
   write(MAILBOX_MAGIC, MAGIC_VALUE)
+  if read(CURRENT_AREA) ~= area - 1 then say("Fel state för Area " .. area) end
   last_area, advanced_at = read(CURRENT_AREA), nil
   last_phase, last_continues, continued = read(GAME_PHASE), read(CONTINUES), false
+  return true
+end
+
+local function record_beaten(bit)
+  write(MAILBOX_BEATEN, read(MAILBOX_BEATEN) | bit)
 end
 
 local function count_load()
@@ -104,6 +146,7 @@ local function watch_continue_and_new_game()
     continued = false
     count_load()
   end
+  if phase == PHASE_ENDING and read(MAILBOX_LOAD_COUNTER) ~= 0 then record_beaten(SHREDDER_BEATEN_BIT) end
   if last_phase ~= nil and phase == PHASE_AREA_LOAD and last_phase ~= PHASE_AREA_LOAD
       and read(MAILBOX_MAGIC) == MAGIC_VALUE then
     force_menu("Välj area")
@@ -115,6 +158,7 @@ local function watch_area()
   local area = read(CURRENT_AREA)
   if last_area ~= nil and area == last_area + 1 and read(MAILBOX_LOAD_COUNTER) ~= 0 then
     advanced_at = emu.framecount()
+    if area <= 5 then record_beaten(1 << (area - 1)) end  -- byte N = Area N's boss was just beaten
   end
   last_area = area
   if advanced_at and emu.framecount() - advanced_at >= BOSS_ADVANCE_DELAY then
@@ -170,7 +214,7 @@ local function draw()
     gui.drawText(64, 46, "VÄLJ AREA", 0xFFFFFF00)
     for area = 1, AREAS do
       local mark = area == cursor and ">" or " "
-      local lock = unlocked(area) and "" or "  (låst)"
+      local lock = missing[area] and "  (saknas)" or unlocked(area) and "" or "  (låst)"
       gui.drawText(64, 52 + area * 12, mark .. " Area " .. area .. lock, unlocked(area) and 0xFFFFFFFF or 0xFF808080)
     end
   end
@@ -202,8 +246,7 @@ function M.frame(buttons)
       menu_open = false
     elseif pressed(buttons, "A") then
       if unlocked(cursor) then
-        load_area(cursor)
-        menu_open, forced = false, false
+        if load_area(cursor) then menu_open, forced = false, false end
       else
         say("Låst")
       end

@@ -7,9 +7,9 @@ from worlds._bizhawk import RequestFailedError, display_message, read, write
 from worlds._bizhawk.client import BizHawkClient
 
 from . import ram
-from .client_logic import (AREA6_BIT, Inventory, SignalDebouncer, boss_defeated, cleared_byte, full_sync_writes,
-                           incremental_writes, inventory_byte, inventory_from_items, needs_full_sync,
-                           pass_bitmask, received_message)
+from .client_logic import (AREA6_BIT, Inventory, SignalDebouncer, beaten_from_mailbox, boss_defeated,
+                           capture_writes, cleared_byte, full_sync_writes, incremental_writes, inventory_byte,
+                           inventory_from_items, needs_full_sync, pass_bitmask, received_message)
 from .items import GAME_NAME
 from .locations import BOSS_LOCATIONS, ENTRANCE_LOCATIONS, START_LOCATIONS, location_table
 from .rom import AUTH_LENGTH, ROM_TAG
@@ -63,8 +63,9 @@ class TMNTClient(BizHawkClient):
             pass  # BizHawk does not catch errors from game_watcher; the next tick retries
 
     async def _tick(self, ctx: "BizHawkClientContext") -> None:
-        addresses = [ram.MAILBOX_MAGIC, ram.MAILBOX_LOAD_COUNTER, ram.MAILBOX_ACK, ram.CURRENT_AREA, ram.ACTIVE_TURTLE,
-                     ram.MISSILE_COUNT, ram.ROPE_COUNT, ram.SHREDDER_DEFEATED[0]]
+        addresses = [ram.MAILBOX_MAGIC, ram.MAILBOX_LOAD_COUNTER, ram.MAILBOX_ACK, ram.MAILBOX_BEATEN, ram.CURRENT_AREA,
+                     ram.ACTIVE_TURTLE, ram.MISSILE_COUNT, ram.ROPE_COUNT, ram.SHREDDER_DEFEATED[0],
+                     *ram.TURTLE_HP.values()]
         values = dict(zip(addresses, (b[0] for b in await read(
             ctx.bizhawk_ctx, [(address, 1, "RAM") for address in addresses]))))
         now = monotonic()
@@ -82,20 +83,22 @@ class TMNTClient(BizHawkClient):
                   (ram.MAILBOX_CLEARED, [cleared_byte(cleared)])]
         counter, ack = values[ram.MAILBOX_LOAD_COUNTER], values[ram.MAILBOX_ACK]
         magic_ok = values[ram.MAILBOX_MAGIC] == ram.MAGIC_VALUE
+        active_id = values[ram.ACTIVE_TURTLE]
+        active = ram.TURTLE_BY_ID[active_id] if active_id < len(ram.TURTLE_BY_ID) else None
         if self.last_inventory is None or needs_full_sync(counter, ack, magic_ok, self.expected_ack):
-            active_id = values[ram.ACTIVE_TURTLE]
-            active = ram.TURTLE_BY_ID[active_id] if active_id < len(ram.TURTLE_BY_ID) else None
             writes += full_sync_writes(inventory, active, values)
             writes.append((ram.MAILBOX_ACK, [counter]))
             new_ack = counter
         else:
             writes += incremental_writes(self.last_inventory, inventory, values)
+            writes += capture_writes(inventory, active, values)
             new_ack = ack
         await write(ctx.bizhawk_ctx, [(address, data, "RAM") for address, data in writes])
         self.last_inventory, self.expected_ack = inventory, new_ack  # only once the write landed
 
         shredder_address, shredder_value = ram.SHREDDER_DEFEATED
-        shredder = values[shredder_address] == shredder_value and bool(passes & AREA6_BIT)
+        seen_by_lua = bool(magic_ok and values[ram.MAILBOX_BEATEN] & ram.SHREDDER_BEATEN_BIT)
+        shredder = (values[shredder_address] == shredder_value or seen_by_lua) and bool(passes & AREA6_BIT)
         if not ctx.finished_game and self.goal.update({SHREDDER_KEY: shredder}, now):
             await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
             ctx.finished_game = True
@@ -123,6 +126,10 @@ class TMNTClient(BizHawkClient):
         beaten = boss_defeated(self.prev_area, values[ram.CURRENT_AREA], self.prev_counter, counter)
         self.prev_area, self.prev_counter = values[ram.CURRENT_AREA], counter
         found = {location_table[BOSS_LOCATIONS[beaten]]} if beaten else set()
+        # Bosses the Lua area select saw beaten, e.g. while this client was disconnected.
+        if values[ram.MAILBOX_MAGIC] == ram.MAGIC_VALUE:
+            found |= {location_table[BOSS_LOCATIONS[area]]
+                      for area in beaten_from_mailbox(values[ram.MAILBOX_BEATEN])}
         found |= {location_table[ENTRANCE_LOCATIONS[a]] for a in self.entrances.update(entrances, now)}
         found |= {location_table[name] for name in START_LOCATIONS}  # free gifts, sent on connect
         new = found - ctx.checked_locations

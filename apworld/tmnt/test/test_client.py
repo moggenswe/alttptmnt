@@ -66,8 +66,8 @@ class ClientTestCase(unittest.TestCase):
     def give(self, *names: str, sender: int = 1) -> None:
         """Replaces the received items; the new ones come from slot `sender` (1 = this TMNT slot)."""
         old = {item.item: item for item in self.ctx.items_received}
-        self.ctx.items_received = [old.get(item_table[name][0]) or SimpleNamespace(item=item_table[name][0], player=sender)
-                                   for name in names]
+        self.ctx.items_received = [old.get(item_table[name][0])
+                                   or SimpleNamespace(item=item_table[name][0], player=sender) for name in names]
 
     def tick(self, seconds: float = 0.5) -> None:
         self.now += seconds
@@ -190,6 +190,16 @@ class TestGoal(ClientTestCase):
         self.tick()
         self.assertFalse(self.goal_sent())
 
+    def test_goal_from_the_lua_bit_after_a_missed_ending(self):
+        # The ending ($001B = 5) passed while the client was disconnected; the area select kept the bit.
+        self.give(*self.ALL)
+        self.ctx.checked_locations = {location_table[f"Area {n} - Boss"] for n in (1, 2, 4)}
+        self.ram.bytes[ram.MAILBOX_MAGIC] = ram.MAGIC_VALUE
+        self.ram.bytes[ram.MAILBOX_BEATEN] = ram.SHREDDER_BEATEN_BIT
+        self.tick()
+        self.tick()
+        self.assertTrue(self.goal_sent())
+
     def test_goal_sent_when_sustained_and_unlocked(self):
         self.give(*self.ALL)
         self.ctx.checked_locations = {location_table[f"Area {n} - Boss"] for n in (1, 2, 4)}
@@ -290,3 +300,34 @@ class TestAnnounce(ClientTestCase):
         self.give("Raphael", "Sewer Pass: Area 1", "Rope Pack", "Leonardo")
         self.tick()
         self.assertEqual(self.messages, ["Fick Rope Pack från Link", "Hittade Leonardo"])
+
+
+class TestRecapture(ClientTestCase):
+    def test_turtle_freed_by_the_game_is_captured_again(self):
+        self.give("Raphael", "Sewer Pass: Area 1")
+        self.ram.bytes[ram.MAILBOX_LOAD_COUNTER] = 1
+        self.tick()
+        self.ram.bytes[ram.TURTLE_HP["Michelangelo"]] = ram.FULL_HP_VALUE  # e.g. the game's own rescue
+        self.tick()
+        self.assertEqual(self.hp("Michelangelo"), ram.CAPTURED_HP_VALUE)
+
+
+class TestLuaSeenWins(ClientTestCase):
+    """The area select records wins in MAILBOX_BEATEN, so they count even if this client missed them live."""
+
+    def test_boss_from_mailbox_is_sent(self):
+        self.give("Raphael", "Sewer Pass: Area 1")
+        self.ram.bytes[ram.MAILBOX_LOAD_COUNTER] = 1
+        self.tick()
+        self.ram.bytes[ram.MAILBOX_BEATEN] = 0b00010
+        self.tick()
+        self.assertIn(location_table["Area 2 - Boss"], self.sent_locations())
+
+    def test_mailbox_ignored_without_magic(self):
+        self.ram.bytes[ram.MAILBOX_BEATEN] = 0b00010  # power-on garbage before the client wrote its magic
+        self.give("Raphael", "Sewer Pass: Area 1")
+        self.client.prev_area = None
+        asyncio.run(self.client._send_checks(self.ctx, {ram.CURRENT_AREA: 0, ram.MAILBOX_LOAD_COUNTER: 0,
+                                                       ram.MAILBOX_MAGIC: 0, ram.MAILBOX_BEATEN: 0b00010},
+                                             0b1, 0.0))
+        self.assertNotIn(location_table["Area 2 - Boss"], self.sent_locations())
