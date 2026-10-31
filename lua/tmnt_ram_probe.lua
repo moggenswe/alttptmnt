@@ -11,9 +11,9 @@
 --   Changed   keep candidates whose value changed in either direction since the last step.
 --   Undo      go back one step.
 --   Print     list all candidates in the Lua console's Output.
--- Snapshot / Diff: Snapshot remembers all RAM; Diff prints bytes changed since then (first 60).
+-- Snapshot / Diff: Snapshot remembers all RAM; Diff writes changed bytes to docs/research/diff.txt.
 -- Track unused / Print unused: drops every byte that changes on any frame; what is left after a long
--- play session is a mailbox candidate. Print lists runs of 4+ never-changed bytes.
+-- play session is a mailbox candidate. Print writes runs of 4+ to docs/research/unused_ram.txt.
 --
 -- The WATCH addresses and the first 15 candidates are drawn on the game screen.
 -- Edit WATCH as addresses are found; the values feed apworld/tmnt/ram.py.
@@ -37,6 +37,9 @@ local WATCH = {
 
 local RAM_SIZE = 0x800
 local DIFF_PRINT_LIMIT = 60  -- BizHawk's Lua console stops printing ("Flood warning") above ~100 lines
+-- Results go to docs/research/ next to this script's lua/ folder.
+local SCRIPT_DIR = debug.getinfo(1, "S").source:sub(2):match("^(.*[/\\])") or ""
+local OUTPUT_DIR = SCRIPT_DIR .. "..\\docs\\research\\"
 
 local candidates = nil
 local history = {}
@@ -118,17 +121,23 @@ local function print_diff()
     set_status("Take a Snapshot first")
     return
   end
-  local lines = 0
+  local lines = {}
   for address = 0, RAM_SIZE - 1 do
     local old, new = snapshot[address], read(address)
     if old ~= new then
-      if lines < DIFF_PRINT_LIMIT then
-        console.log(string.format("$%04X: %02X -> %02X (%+d)", address, old, new, new - old))
-      end
-      lines = lines + 1
+      lines[#lines + 1] = string.format("$%04X: %02X -> %02X (%+d)", address, old, new, new - old)
     end
   end
-  set_status(string.format("Diff: %d byte(s) changed (printed %d)", lines, math.min(lines, DIFF_PRINT_LIMIT)))
+  local file = io.open(OUTPUT_DIR .. "diff.txt", "w")
+  if file ~= nil then
+    file:write(table.concat(lines, "\n") .. "\n")
+    file:close()
+    set_status(string.format("Diff: %d byte(s) changed -> docs/research/diff.txt", #lines))
+  else
+    for i = 1, math.min(#lines, DIFF_PRINT_LIMIT) do console.log(lines[i]) end
+    set_status(string.format("Diff: %d byte(s) changed (first %d in Output)", #lines,
+                             math.min(#lines, DIFF_PRINT_LIMIT)))
+  end
 end
 
 -- Unused-byte tracking: every frame, any address whose value differs from its value at the start is
@@ -167,21 +176,29 @@ local function print_unused()
     set_status("Press Track unused first")
     return
   end
-  local runs, start = 0, nil
+  local lines, start = {}, nil
   for address = 0, RAM_SIZE do
     local free = address < RAM_SIZE and untouched[address]
     if free and start == nil then start = address end
     if not free and start ~= nil then
-      if address - start >= 4 and runs < DIFF_PRINT_LIMIT then
-        console.log(string.format("$%04X-$%04X (%d bytes, value %02X)", start, address - 1, address - start,
-                                  untouched_start[start]))
-        runs = runs + 1
+      if address - start >= 4 then
+        lines[#lines + 1] = string.format("$%04X-$%04X (%d bytes, value %02X)", start, address - 1,
+                                          address - start, untouched_start[start])
       end
       start = nil
     end
   end
-  set_status(string.format("%d untouched bytes after %d frames; %d runs of 4+ printed",
-                           count(untouched), tracked_frames, runs))
+  local summary = string.format("%d untouched bytes after %d frames; %d runs of 4+",
+                                count(untouched), tracked_frames, #lines)
+  local file = io.open(OUTPUT_DIR .. "unused_ram.txt", "w")
+  if file ~= nil then
+    file:write(summary .. "\n" .. table.concat(lines, "\n") .. "\n")
+    file:close()
+    set_status(summary .. " -> docs/research/unused_ram.txt")
+  else
+    for i = 1, math.min(#lines, DIFF_PRINT_LIMIT) do console.log(lines[i]) end
+    set_status(summary .. " (could not write file; first lines in Output)")
+  end
 end
 
 local form = forms.newform(260, 326, "TMNT RAM probe")
