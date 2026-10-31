@@ -102,6 +102,30 @@ class TestActiveTurtle(ClientTestCase):
         self.assertEqual(self.hp("Michelangelo"), ram.CAPTURED_HP_VALUE)
 
 
+class TestBosses(ClientTestCase):
+    def boss_sent(self, area: int) -> bool:
+        return location_table[f"Area {area} - Boss"] in self.sent_locations()
+
+    def test_area_advance_sends_boss(self):
+        self.give("Raphael", "Sewer Pass: Area 1")
+        self.ram.bytes[ram.MAILBOX_LOAD_COUNTER] = 1
+        self.ram.bytes[ram.CURRENT_AREA] = 0
+        self.tick()
+        self.ram.bytes[ram.CURRENT_AREA] = 1  # April's briefing for Area 2 starts
+        self.tick()
+        self.assertTrue(self.boss_sent(1))
+
+    def test_area_select_load_is_not_a_boss(self):
+        self.give("Raphael", "Sewer Pass: Area 1", "Sewer Pass: Area 4")
+        self.ram.bytes[ram.MAILBOX_LOAD_COUNTER] = 1
+        self.ram.bytes[ram.CURRENT_AREA] = 2
+        self.tick()
+        self.ram.bytes[ram.MAILBOX_LOAD_COUNTER] = 2  # the selector loaded Area 4
+        self.ram.bytes[ram.CURRENT_AREA] = 3
+        self.tick()
+        self.assertFalse(self.boss_sent(3))
+
+
 class TestRobustness(ClientTestCase):
     def test_request_failure_does_not_raise(self):
         self.give("Raphael", "Sewer Pass: Area 1")

@@ -340,7 +340,9 @@ Regler (från specens avsnitt 3.1 och 3.4):
   - Menyn öppnas inte om magic-byten (`MAILBOX+3`) saknas, alltså om klienten inte är ansluten. Då visas texten "Anslut AP-klienten".
   - A väljer en area. Om dess bit i pass-bitmasken (`MAILBOX+0`) är satt laddas savestaten. Därefter räknas `MAILBOX+1` upp och magic-byten skrivs tillbaka (savestaten skriver över RAM).
   - Alla area-states har Leo aktiv. Klienten fångar aldrig den aktiva sköldpaddan, eftersom HP 0 på henne startar dödsanimationen. En sköldpadda man inte äger kan alltså spelas tills man byter bort henne. Lös det här: antingen states per aktiv sköldpadda, där väljaren laddar en state med en ägd sköldpadda aktiv, eller testa i BizHawk om det är säkert att skriva `$0067` innan HP skrivs.
-  - Räknaren får aldrig bli 0 (255 → 1). Klienten tolkar 0 som "ingen area laddad än", eftersom areabyten `$0048` också är 0 vid uppstart.
+  - Räknaren får aldrig bli 0 (255 → 1).
+  - Efter en bossvinst går spelet själv vidare till nästa area (`$0048` N−1 → N), även utan dess pass. Väljaren måste upptäcka det (areabyten ändras utan att räknaren ändrats) och skicka spelaren tillbaka till menyn, efter att klienten hunnit se bossvinsten (minst en klient-tick, cirka 1 s).
+  - Brevlådan ligger på `$0388–$038B` (TAS-bekräftad). Håll Lua-konstanterna i takt med `ram.py`. Klienten tolkar 0 som "ingen area laddad än", eftersom areabyten `$0048` också är 0 vid uppstart.
 - [ ] **Steg 3:** Gör ett manuellt test med en ansluten klient som har passen 1 och 3, men utan Missile Pack och Rope Pack.
   Förväntat: bara Area 1 kan väljas.
 - [ ] **Steg 4 (Review Focus 3):** Försök välja Area 3.

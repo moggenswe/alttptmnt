@@ -79,6 +79,22 @@ def needs_full_sync(counter: int, ack: int, magic_ok: bool, expected_ack: int | 
     return not magic_ok or expected_ack is None or counter != ack or ack != expected_ack
 
 
+BOSS_AREAS = range(1, 6)
+
+
+def boss_defeated(prev_area: int | None, area: int, prev_counter: int | None, counter: int) -> int | None:
+    """The 1-based area whose boss was just beaten, or None.
+
+    TMNT has no boss flag: after a boss the game itself moves the 0-based area byte from N-1 to N when
+    April's briefing for the next area starts (TAS 4543M, once per boss). An area select load also moves
+    the byte, but it bumps the load counter too, and nothing counts before the first load (counter 0).
+    """
+    if prev_area is None or prev_counter is None or counter == 0 or counter != prev_counter:
+        return None
+    beaten = area  # 0-based byte N is the 1-based number of the area that was just finished
+    return beaten if area == prev_area + 1 and beaten in BOSS_AREAS else None
+
+
 MIN_SIGNAL_SECONDS = 0.2
 
 

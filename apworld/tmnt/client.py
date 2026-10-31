@@ -7,7 +7,8 @@ from worlds._bizhawk import RequestFailedError, read, write
 from worlds._bizhawk.client import BizHawkClient
 
 from . import ram
-from .client_logic import (AREA6_BIT, Inventory, SignalDebouncer, full_sync_writes, incremental_writes,
+from .client_logic import (AREA6_BIT, Inventory, SignalDebouncer, boss_defeated, full_sync_writes,
+                           incremental_writes,
                            inventory_from_items, needs_full_sync, pass_bitmask)
 from .items import GAME_NAME
 from .locations import BOSS_LOCATIONS, ENTRANCE_LOCATIONS, START_LOCATIONS, location_table
@@ -28,7 +29,8 @@ class TMNTClient(BizHawkClient):
 
     def __init__(self) -> None:
         super().__init__()
-        self.bosses = SignalDebouncer()
+        self.prev_area: int | None = None
+        self.prev_counter: int | None = None
         self.entrances = SignalDebouncer()
         self.goal = SignalDebouncer()
         self.last_inventory: Inventory | None = None
@@ -61,8 +63,7 @@ class TMNTClient(BizHawkClient):
 
     async def _tick(self, ctx: "BizHawkClientContext") -> None:
         addresses = [ram.MAILBOX_MAGIC, ram.MAILBOX_LOAD_COUNTER, ram.MAILBOX_ACK, ram.CURRENT_AREA, ram.ACTIVE_TURTLE,
-                     ram.MISSILE_COUNT, ram.ROPE_COUNT, ram.SHREDDER_DEFEATED[0],
-                     *(address for address, _ in ram.BOSS_DEFEATED_SIGNAL.values())]
+                     ram.MISSILE_COUNT, ram.ROPE_COUNT, ram.SHREDDER_DEFEATED[0]]
         values = dict(zip(addresses, (b[0] for b in await read(
             ctx.bizhawk_ctx, [(address, 1, "RAM") for address in addresses]))))
         now = monotonic()
@@ -97,13 +98,15 @@ class TMNTClient(BizHawkClient):
 
     async def _send_checks(self, ctx: "BizHawkClientContext", values: dict[int, int], passes: int,
                            now: float) -> None:
-        bosses = {area: values[address] == value for area, (address, value) in ram.BOSS_DEFEATED_SIGNAL.items()}
         area = values[ram.CURRENT_AREA] + ram.AREA_NUMBER_OFFSET
         # Before the area select has loaded anything (power-on, title screen) the area byte reads 0 = Area 1.
         area_loaded = values[ram.MAILBOX_LOAD_COUNTER] != 0
         entrances = {area: area_loaded and area in ENTRANCE_LOCATIONS and bool(passes & (1 << (area - 1)))}
 
-        found = {location_table[BOSS_LOCATIONS[a]] for a in self.bosses.update(bosses, now)}
+        counter = values[ram.MAILBOX_LOAD_COUNTER]
+        beaten = boss_defeated(self.prev_area, values[ram.CURRENT_AREA], self.prev_counter, counter)
+        self.prev_area, self.prev_counter = values[ram.CURRENT_AREA], counter
+        found = {location_table[BOSS_LOCATIONS[beaten]]} if beaten else set()
         found |= {location_table[ENTRANCE_LOCATIONS[a]] for a in self.entrances.update(entrances, now)}
         found |= {location_table[name] for name in START_LOCATIONS}  # free gifts, sent on connect
         new = found - ctx.checked_locations

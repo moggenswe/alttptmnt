@@ -1,7 +1,8 @@
 import unittest
 
 from .. import ram
-from ..client_logic import (Inventory, SignalDebouncer, area6_unlocked, full_sync_writes, incremental_writes,
+from ..client_logic import (Inventory, SignalDebouncer, area6_unlocked, boss_defeated, full_sync_writes,
+                            incremental_writes,
                             inventory_from_items, needs_full_sync, pass_bitmask)
 
 
@@ -106,3 +107,25 @@ class TestNeedsFullSync(unittest.TestCase):
 
     def test_first_tick(self):
         self.assertTrue(needs_full_sync(counter=0, ack=0, magic_ok=True, expected_ack=None))
+
+
+class TestBossDefeated(unittest.TestCase):
+    """A boss win shows up as the area byte ($0048, 0-based) going N-1 -> N without a savestate load."""
+
+    def test_area_byte_increment_is_a_boss_win(self):
+        self.assertEqual(boss_defeated(prev_area=0, area=1, prev_counter=3, counter=3), 1)
+        self.assertEqual(boss_defeated(prev_area=4, area=5, prev_counter=3, counter=3), 5)
+
+    def test_savestate_load_is_not_a_boss_win(self):
+        self.assertIsNone(boss_defeated(prev_area=0, area=1, prev_counter=3, counter=4))
+
+    def test_nothing_loaded_yet(self):
+        self.assertIsNone(boss_defeated(prev_area=0, area=1, prev_counter=0, counter=0))
+
+    def test_first_tick(self):
+        self.assertIsNone(boss_defeated(prev_area=None, area=1, prev_counter=None, counter=3))
+
+    def test_jumps_and_steady_state(self):
+        self.assertIsNone(boss_defeated(prev_area=0, area=2, prev_counter=3, counter=3))
+        self.assertIsNone(boss_defeated(prev_area=2, area=2, prev_counter=3, counter=3))
+        self.assertIsNone(boss_defeated(prev_area=5, area=6, prev_counter=3, counter=3))  # no Area 6 boss location

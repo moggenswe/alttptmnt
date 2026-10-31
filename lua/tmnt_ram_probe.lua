@@ -29,10 +29,10 @@ local WATCH = {
   { "hp don",    0x007A },
   { "missiles",  0x00BF },
   { "ropes",     0x00A7 },
-  { "mbox $7F0", 0x07F0 },
-  { "mbox $7F1", 0x07F1 },
-  { "mbox $7F2", 0x07F2 },
-  { "mbox $7F3", 0x07F3 },
+  { "mbox $388", 0x0388 },
+  { "mbox $389", 0x0389 },
+  { "mbox $38A", 0x038A },
+  { "mbox $38B", 0x038B },
 }
 
 local RAM_SIZE = 0x800

@@ -23,19 +23,20 @@ CAPTURED_HP_VALUE = 0x00         # confirmed: 0 = captured; writing 0x80 back fr
 FULL_HP_VALUE = 0x80             # doc: 128
 MISSILE_COUNT = 0x00BF           # doc: "# of missles"
 ROPE_COUNT = 0x00A7              # doc: "# ropes"
-BOSS_DEFEATED_SIGNAL: dict[int, tuple[int, int]] = {area: (0x00A0, area) for area in range(1, 6)}  # guess
+# Boss wins have no flag of their own: see client_logic.boss_defeated (area byte N-1 -> N, TAS-confirmed).
 SHREDDER_DEFEATED: tuple[int, int] = (GAME_PHASE, 5)  # doc: phase 5 = ending credits
 
 # Mailbox shared with lua/tmnt_area_select.lua (keep the Lua constants in sync).
-MAILBOX_BASE = 0x07F0            # WRONG: the game wrote 0x44 here in Area 1; to be moved (probe: Track unused)
+MAILBOX_BASE = 0x0388            # TAS-confirmed: $0388-$03AF never written; markers there kept the TAS in sync to Area 6
+                                 # ($07F0 was rejected: the game wrote 0x44 there in Area 1)
 MAILBOX_PASSES = MAILBOX_BASE + 0
 MAILBOX_LOAD_COUNTER = MAILBOX_BASE + 1
 MAILBOX_ACK = MAILBOX_BASE + 2
 MAILBOX_MAGIC = MAILBOX_BASE + 3
 MAGIC_VALUE = 0xA7
 
-MISSILE_REFILL = 10              # guess: set after playing Area 3
-ROPE_REFILL = 5                  # guess: set after playing Area 3
+MISSILE_REFILL = 15              # the TAS uses all 10 missiles it finds in Area 3; 15 gives room for misses
+ROPE_REFILL = 5                  # guess: the TAS skips ropes (damage boost), so play Area 3 to set this
 PICKUPS_PERSISTENT = False       # confirmed: a pizza respawns after leaving the room (risk R2: no)
 
 # Domain "PRG ROM": free bytes for the AP tag written by rom.py. VERIFIED from the ROM file:
