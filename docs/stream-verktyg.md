@@ -26,6 +26,7 @@ file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&
 ```
 
 - Panelen visar Hyrule (dungeon-bossar x/10, KLART när Ganon är besegrad) och New York (sköldpaddor x/4, bossar x/3, GO MODE, KLART när Shredder är besegrad).
+- Ikonerna är egenritad pixelgrafik direkt i filen, inga spelspritar: fyra sköldpaddshuvuden i pannbandsfärgerna, fem boss-markeringar, Missile Pack, Rope Pack, Scuba Kit, fem kloaklock för passen och tio hjärtbehållare för Hyrules dungeon-bossar. Det man har lyser, och det som saknas är grått och dämpat.
 - Den ansluter som en skrivskyddad Tracker-klient och påverkar inte spelet.
 - Med `&demo=1` visas påhittade värden utan server, och `&layout=column` lägger korten under varandra.
 - ALttP:s kristaller syns inte i panelen. De är logikhändelser utan ID och slumpas mellan dungeons. Runnern ser dem på kartan i spelet.
@@ -37,6 +38,16 @@ file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&
 - Båda spelarfilerna har `progression_balancing: 75`.
 - Värden kan under streamen köra `/hint Turtles <föremål>` från serverkonsolen, till exempel som donationsmål. `/send` fungerar som nödutgång.
 - Spoilerloggen (host.yaml `spoiler: 3`) innehåller playthrough och hör hemma hos produktionen, utanför bild.
+
+## Starta allt med ett kommando
+
+```
+powershell -ExecutionPolicy Bypass -File tools\start_stream.ps1 -Seed output\<mapp>\AP_<seed>.zip
+```
+
+Skriptet patchar ROM:arna om de saknas. Sedan startar det MultiServer i ett eget konsolfönster, där `/send` och `/hint` skrivs, följt av SNI, BizHawk med ALttP och SNI:s Lua-connector, BizHawk med TMNT och `lua/tmnt_stream.luases`, SNI Client, BizHawk Client och PopTracker för Link. Till sist skriver det ut panelens adress för OBS. Det provades 2026-10-31 med ett nytt seed: Link och Turtles anslöt som spelare och PopTracker som tracker. Med `-NoTracker` hoppar skriptet över PopTracker.
+
+**På streamdatorn:** BizHawk 2.11 visar en egen rad i fönstret, "Click the blue silhouette below for onboarding". Den syns i fönsterfångsten, så klicka bort den en gång innan streamen.
 
 ## Installation (gjord och provad 2026-10-31 på Oscars dator)
 
