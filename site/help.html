@@ -86,6 +86,9 @@
     <tr><td>The panel says "No server"</td><td>The server is not running, or the URL's <code>server=</code> is wrong.
       It reconnects by itself every 5 seconds.</td></tr>
     <tr><td>The panel says "Game not in this seed"</td><td>The slot name in the URL does not match the seed.</td></tr>
+    <tr><td>PopTracker asks "Check for PopTracker updates on start?" and does not connect</td>
+      <td>PopTracker broke its own settings file when it last closed. Answer No, or stop and start the session with
+        <code>start.cmd</code>: the start repairs the file ("repaired PopTracker's settings file").</td></tr>
     <tr><td>OBS does not follow the game</td>
       <td>The game swap window says why. "OBS not reachable": turn on Tools → WebSocket Server Settings → Enable
         WebSocket server. "left as it is": OBS shows a scene other than Hyrule or New York, which the swap never

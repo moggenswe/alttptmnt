@@ -94,7 +94,13 @@ Provat live 2026-10-31: en kontroll på servern gav "Zelda got Bombs (3)" i TMNT
   - Enhetstester mot en låtsas-OBS med lösenord.
   - Lua-test i BizHawk för NES och SNES.
   - Helhetskörning med båda stream-sessionerna, SNI, hjälpprogrammet och låtsas-OBS: Select+Start i båda riktningarna, snabbtangenten, OBS som följer med, en värdscen som lämnas orörd och stängda spel som märks. Allt gick igenom.
-  - Riktig OBS är inte provad, eftersom WebSocket-servern är avslagen här.
+  - Riktig OBS 32.2.2 (WebSocket 5.7.4), provad samma kväll med en session startad via `start.cmd`:
+    - Lösenordet lästes automatiskt ur OBS:s inställningar.
+    - Select+Start åt båda hållen och snabbtangenten fick OBS att växla mellan Hyrule och New York.
+    - Med Kloak uppe gick sex byten i rad rätt, och OBS stannade på Kloak.
+    - Fönsterfångsten i den nya scenen var klar 0,3 sekunder efter bytet.
+    - Kontrollen före sändning gav "All set".
+  - **PopTracker:** PopTracker skriver sin inställningsfil när den stängs, och ibland blir slutet av en äldre fil kvar efter JSON:en. Då frågar PopTracker om uppdateringar och ansluter inte. Det hände två gånger. `tools/poptracker_config.py`, som startskriptet kör, lagar filen.
 
 **På streamdatorn:** BizHawk 2.11 visar en egen rad i fönstret, "Click the blue silhouette below for onboarding". Den syns i fönsterfångsten, så klicka bort den en gång innan streamen.
 

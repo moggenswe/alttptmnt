@@ -96,9 +96,12 @@ function Stop-Session {
     if (-not $game.WaitForExit(15000)) { Write-Host "  BizHawk did not close; forcing it"; $game.Kill() }
   }
   if ($games.Count) { Write-Host "  BizHawk closed ($($games.Count))" }
+  # One PopTracker at a time, as each writes the settings file when it closes (start_stream.ps1 repairs that file).
   $trackers = @(Get-Process poptracker -ErrorAction SilentlyContinue)
-  foreach ($tracker in $trackers) { [void]$tracker.CloseMainWindow() }
-  foreach ($tracker in $trackers) { if (-not $tracker.WaitForExit(5000)) { $tracker.Kill() } }
+  foreach ($tracker in $trackers) {
+    [void]$tracker.CloseMainWindow()
+    if (-not $tracker.WaitForExit(5000)) { $tracker.Kill() }
+  }
   if ($trackers.Count) { Write-Host "  PopTracker closed ($($trackers.Count))" }
   # The server, the two clients and the game swap: Python processes running these scripts with this repo's Python.
   # The venv's python.exe starts the real interpreter as a child, so a process counts when it or its parent runs

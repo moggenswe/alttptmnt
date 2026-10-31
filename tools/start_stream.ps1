@@ -131,6 +131,8 @@ Start-Process $Python -WorkingDirectory $AP -ArgumentList @("BizHawkClient.py", 
 if (-not $NoTracker) {
   Write-Host "7/7 PopTracker for $AlttpSlot and $TmntSlot (one window each)"
   Need $PopTracker "PopTracker 0.36.0"
+  # PopTracker can break its own settings file when it closes; then it asks questions instead of connecting.
+  & $Python (Join-Path $Repo "tools\poptracker_config.py")
   Start-Process $PopTracker -ArgumentList @("--load-pack", "ap_alltp", "--pack-variant", "`"Map Tracker - AP`"",
                                             "--ap-host", $Server, "--ap-slot", $AlttpSlot)
   Start-Sleep 3
