@@ -14,8 +14,8 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 | Var i spelet | `$001B` | 5 = eftertexter | Dok |
 | Aktiv sköldpadda | `$0067` | 0 = Leo, 1 = Raph, 2 = Mike, 3 = Don | Dok |
 | HP Leonardo | `$0077` | max 128 (`$80`), 16 per streck; fångad = ? | Dok |
-| HP Michelangelo | `$0078` | som ovan | Dok |
-| HP Raphael | `$0079` | som ovan | Dok |
+| HP Raphael | `$0078` | som ovan | Dok (rättad: kartan säger Mike) |
+| HP Michelangelo | `$0079` | som ovan; full = `$80` | **Bekräftat**: `00` här tömde Mikes mätare |
 | HP Donatello | `$007A` | som ovan | Dok |
 | Antal missiles | `$00BF` | | Dok |
 | Antal rep | `$00A7` | | Dok |
