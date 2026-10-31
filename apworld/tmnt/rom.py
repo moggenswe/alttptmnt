@@ -12,7 +12,7 @@ from .items import GAME_NAME
 if TYPE_CHECKING:
     from . import TMNTWorld
 
-BASE_ROM_MD5 = "c14e760c4d5a086e4186d2e1fc9b7743"  # TMNT_NA, from tmnt_rando's tables/master.txt
+BASE_ROM_MD5 = "5e24ccd733d15e42d847274e7add0a76"  # TMNT (USA), clean iNES header, 262160 bytes
 INES_HEADER_SIZE = 0x10
 ROM_TAG = b"TMNTAP"
 AUTH_LENGTH = 64  # slot names are at most 16 characters, i.e. at most 64 bytes of UTF-8

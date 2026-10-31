@@ -33,5 +33,6 @@ MISSILE_REFILL = 10
 ROPE_REFILL = 5
 PICKUPS_PERSISTENT = False
 
-# Domain "PRG ROM": free bytes for the AP tag written by rom.py.
-ROM_TAG_OFFSET = 0x1FF00
+# Domain "PRG ROM": free bytes for the AP tag written by rom.py. VERIFIED from the ROM file:
+# PRG $1BD92-$1BFD7 is 582 bytes of 0xFF (bank 6); the old guess 0x1FF00 was live code.
+ROM_TAG_OFFSET = 0x1BE00

@@ -14,7 +14,7 @@
 
 - Python `>= 3.12.10, < 3.14` på Windows (Archipelagos `ModuleUpdate.py` vägrar annat).
 - Archipelago körs från källkod. Den tagg som checkas ut i Task 0 skrivs i `docs/archipelago-version.txt` och byts inte under projektet.
-- TMNT-ROM: NES, nordamerikansk, md5 `c14e760c4d5a086e4186d2e1fc9b7743` (identiteten `TMNT_NA` i tmnt_rando).
+- TMNT-ROM: NES, nordamerikansk, md5 `5e24ccd733d15e42d847274e7add0a76` (ren iNES-header, 262 160 byte; tmnt_randos `c14e760c…` kommer från en äldre dump med samma speldata).
 - Ingen ROM, savestate eller patchad ROM får hamna i git (`.gitignore`: `*.nes`, `*.sfc`, `*.State`, `*.aptmnt`, `Archipelago/`, `output/`).
 - Spelnamnet i Archipelago är exakt `"Teenage Mutant Ninja Turtles"`. Item- och location-ID:n börjar på `8_870_000`.
 - Kod och identifierare skrivs på engelska. Dokumentation och runbook skrivs på svenska.
