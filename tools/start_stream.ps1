@@ -18,7 +18,7 @@ and prints the URL for the go mode panel to paste into OBS.
 Before BizHawk starts, tools\bizhawk_saves.py turns on BizHawk's autosave, recovers A Link to the Past's save after
 a crash and gives every seed its own save. The patched ROMs are made next to the seed's patch files if they are not
 there yet. Slot names come from
-players\*.yaml (Link, Turtles). Tested 2026-10-31; see docs\stream-verktyg.md.
+players\*.yaml (Link, Turtles). Tested 2026-10-31; see docs\stream-tools.md.
 #>
 param(
   [Parameter(Mandatory = $true)][string]$Seed,
@@ -52,7 +52,7 @@ $SeedDir = Split-Path -Parent $SeedPath
 $Server = "localhost:$Port"
 
 function Need($path, $what) {
-  if (-not (Test-Path $path)) { throw "Missing $what at $path (see docs\stream-verktyg.md)" }
+  if (-not (Test-Path $path)) { throw "Missing $what at $path (see docs\stream-tools.md)" }
 }
 Need $Python "the Python venv"
 Need $EmuHawk "BizHawk 2.11.1"

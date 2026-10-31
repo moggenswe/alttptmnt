@@ -13,7 +13,7 @@ AREA_TOOL_REQUIREMENTS: dict[int, tuple[str, ...]] = {
     2: ("Zora's Scuba Kit",),
     3: ("Missile Pack", "Rope Pack"),
     # Area 4's rooftop crossing needs ropes and the area has one vanilla rope pickup (3 ropes); ropeless is
-    # a damage boost no charity runner should need (docs/research/tmnt-ammo-och-tracker.md).
+    # a damage boost no charity runner should need (docs/research/tmnt-ammo-and-trackers.md).
     4: ("Rope Pack",),
 }
 BOSS_TURTLE_REQUIREMENTS: dict[int, str] = {5: "Donatello"}  # Don's bo reach (spec 3.1)

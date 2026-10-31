@@ -15,7 +15,7 @@ ACTIVE_TURTLE = 0x0067           # confirmed: 0=Leo, 1=Raph, 2=Mike, 3=Don
 TURTLE_BY_ID = ("Leonardo", "Raphael", "Michelangelo", "Donatello")
 TURTLE_HP: dict[str, int] = {    # doc: 128 max, 16 per bar. Order follows the turtle ID (Leo, Raph, Mike, Don):
     "Leonardo": 0x0077,          # the xls labels $78 Mike / $79 Raph, but zeroing $79 in BizHawk emptied
-    "Raphael": 0x0078,           # Mike's health bar (Oscar, 2026-10-31), matching the ID order used by
+    "Raphael": 0x0078,           # Mike's health bar (seen by the owner, 2026-10-31), matching the ID order used by
     "Michelangelo": 0x0079,      # $0067 and the throwing weapon counts $A8-$AB.
     "Donatello": 0x007A,
 }

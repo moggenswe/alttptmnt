@@ -24,7 +24,7 @@ BIZHAWK_DIRS = (REPO / "apps" / "BizHawk-2.11.1", Path.home() / "Downloads" / "B
 POPTRACKER_PACKS = (REPO / "apps" / "PopTracker-0.36.0" / "packs", Path.home() / "Downloads" / "PopTracker-0.36.0" / "packs")
 SNI_LUA_PORT = 65398          # Archipelago\SNI\lua\Connector.lua
 BIZHAWK_CONNECTOR_PORT = 43055  # Archipelago\data\lua\connector_bizhawk_generic.lua (first of a few)
-COLLECTION, SCENES, TRANSITION = "TMNT x ALttP", ("Hyrule", "Kloak (övergång)", "New York"), "Pizza-wipe"
+COLLECTION, SCENES, TRANSITION = "TMNT x ALttP", ("Hyrule", "Sewers (transition)", "New York"), "Pizza-wipe"
 TITLES = {"SNES": "alttp-stream [SNES]", "NES": "tmnt-stream [NES]"}  # tools/start_stream.ps1, the OBS captures
 
 COLOURS = {"OK": "\033[32m", "WARN": "\033[33m", "FAIL": "\033[31m"}
@@ -172,7 +172,7 @@ def main() -> int:
                              f"OBS: Scene Collection -> {COLLECTION} (import tools\\obs\\tmnt-alttp-scenes.json first)")
                 scenes = {s.get("sceneName") for s in (obs.request("GetSceneList") or {}).get("scenes", [])}
                 missing = [s for s in SCENES if s not in scenes]
-                report.check(not missing, "scenes Hyrule, Kloak and New York", f"missing: {', '.join(missing)}")
+                report.check(not missing, "scenes Hyrule, Sewers and New York", f"missing: {', '.join(missing)}")
                 transition = (obs.request("GetCurrentSceneTransition") or {}).get("transitionName")
                 report.check(transition == TRANSITION, f"transition is the {TRANSITION}",
                              f"OBS: Scene Transitions -> {TRANSITION} (now: {transition})", "WARN")

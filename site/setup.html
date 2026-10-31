@@ -29,10 +29,13 @@
     the installer takes care of everything else.</p>
 
     <h2 id="install">Install in one go</h2>
+    <div class="download" hidden>
+      <a class="button" href="downloads/tmnt-alttp.zip" download>Download TMNT × ALttP</a>
+      <span class="download-meta"></span>
+    </div>
     <ol class="steps">
-      <li>Get this repo: <b>Code → Download ZIP</b> on <a href="https://github.com/moggenswe/alttptmnt">GitHub</a> and
-        unzip it (for example to <code>C:\tmntalttp</code>), or <code>git clone</code> it. A short path without spaces
-        is best.</li>
+      <li>Download the zip and unzip it (for example to <code>C:\tmntalttp</code>; a short path without spaces is
+        best). The source is also on <a href="https://github.com/moggenswe/alttptmnt">GitHub</a>.</li>
       <li>Double-click <code>install.cmd</code>. It asks for your two ROMs in a file dialog (see <a href="#roms">ROMs</a>)
         and checks them.</li>
       <li>It lists what it needs to download, with sizes and sources (about 290 MB on a new PC), and asks
@@ -42,7 +45,7 @@
       <li>Answer <b>Y</b> to add the scene collection to OBS (OBS must be closed for that). Then double-click
         <code>start.cmd</code> to create a seed and start a session (<a href="play.html#menu-start">Play</a>).</li>
     </ol>
-    <p>What it installs, all inside the repo folder (nothing system-wide, and no admin rights unless Windows lacks the
+    <p>What it installs, all inside the install folder (nothing system-wide, and no admin rights unless Windows lacks the
     Visual C++ runtime):</p>
     <table>
       <tr><th>What</th><th>Version</th><th>Where</th></tr>
@@ -97,7 +100,7 @@
       <tr><td>Python</td><td>3.12 (3.12.10 to 3.13)</td><td>installed; a venv in <code>.venv</code></td>
         <td><a href="https://www.python.org/downloads/">python.org</a></td></tr>
       <tr><td>Git</td><td>any</td><td>installed</td><td><a href="https://git-scm.com/">git-scm.com</a></td></tr>
-      <tr><td>Archipelago (source)</td><td>tag <code>0.6.8</code></td><td><code>Archipelago\</code> in the repo</td>
+      <tr><td>Archipelago (source)</td><td>tag <code>0.6.8</code></td><td><code>Archipelago\</code> in the install folder</td>
         <td><a href="https://github.com/ArchipelagoMW/Archipelago">GitHub</a></td></tr>
       <tr><td>BizHawk</td><td>2.11.1</td><td><code>apps\BizHawk-2.11.1\</code></td>
         <td><a href="https://github.com/TASEmulators/BizHawk/releases">GitHub</a></td></tr>
@@ -114,7 +117,7 @@
 
     <h3 id="code">Code and Archipelago</h3>
     <ol class="steps">
-      <li>Clone this repo and Archipelago at the pinned tag:
+      <li>Get the source (the zip above, or clone it as here) and clone Archipelago at the pinned tag into it:
 <pre><code>git clone https://github.com/moggenswe/alttptmnt.git C:\Project\tmntalttp
 cd C:\Project\tmntalttp
 git clone https://github.com/ArchipelagoMW/Archipelago.git Archipelago
@@ -177,7 +180,10 @@ cd ..
 </main></div>
 
 <footer><div class="wrap">
-  TMNT × ALttP Archipelago randomizer · <a href="https://github.com/moggenswe/alttptmnt">github.com/moggenswe/alttptmnt</a>
+  TMNT × ALttP Archipelago randomizer · created by Mogswe<br>
+  A Link to the Past is shown with the community PopTracker pack. Teenage Mutant Ninja Turtles and The Legend of Zelda
+  belong to their owners; this is a fan project for charity.
 </div></footer>
+<script src="download.js"></script>
 </body>
 </html>

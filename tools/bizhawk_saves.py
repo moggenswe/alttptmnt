@@ -10,7 +10,7 @@
    names the save after the ROM. The save of the seed played before is parked as alttp-stream.<seed>.SaveRAM and
    this seed's own save, if any, is put back. alttp-stream.seed says whose save alttp-stream.SaveRAM is.
 
-All three behaviours of BizHawk 2.11.1 were checked by hand on 2026-10-31 (docs/stream-verktyg.md).
+All three behaviours of BizHawk 2.11.1 were checked by hand on 2026-10-31 (docs/stream-tools.md).
 """
 from __future__ import annotations
 

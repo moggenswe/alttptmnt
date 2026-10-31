@@ -12,3 +12,4 @@ tas/
 *.smc
 apps/
 .cache/
+public/

@@ -1,10 +1,10 @@
-# TMNT × ALttP – meme-randomizer
+# TMNT × ALttP – meme randomizer
 
-Archipelago-stöd för *Teenage Mutant Ninja Turtles* (NES), att spela tillsammans med *A Link to the Past* i en och samma solo-seed till ett välgörenhetsmaraton.
+Archipelago support for *Teenage Mutant Ninja Turtles* (NES), to be played together with *A Link to the Past* in a single solo seed for a charity marathon.
 
-- **Installation:** dubbelklicka på `install.cmd`. Den frågar efter de två ROM-filerna, visar vad den behöver ladda ner och frågar innan den gör det, och installerar resten (Python, Archipelago, BizHawk, SNI, PopTracker med packs, savestates, OBS-scener) i repomappen.
-- **Spela och streama:** dubbelklicka på `start.cmd`. Menyn skapar seed, startar sessionen, kollar allt före sändning och stoppar sessionen. Ingen PowerShell behövs.
-- **Webbsida med all dokumentation (engelska):** öppna `site/index.html` – setup, spelregler, stream och felsökning
+- **Installation:** double-click `install.cmd`. It asks for the two ROM files, shows what it needs to download and asks before doing so, and installs the rest (Python, Archipelago, BizHawk, SNI, PopTracker with packs, savestates, OBS scenes) in the repo folder.
+- **Play and stream:** double-click `start.cmd`. The menu creates a seed, starts the session, checks everything before going live and stops the session. No PowerShell needed.
+- **Web page with all documentation (English):** open `site/index.html` – setup, game rules, stream and troubleshooting
 - Design: `docs/superpowers/specs/2026-10-31-tmnt-alttp-randomizer-design.md`
-- Implementationsplan: `docs/superpowers/plans/2026-10-31-tmnt-alttp-mvp.md`
-- Archipelago-version: se `docs/archipelago-version.txt` (källkod klonas till `Archipelago/`, ingår inte i git)
+- Implementation plan: `docs/superpowers/plans/2026-10-31-tmnt-alttp-mvp.md`
+- Archipelago version: see `docs/archipelago-version.txt` (source code is cloned into `Archipelago/`, not included in git)

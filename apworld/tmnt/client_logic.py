@@ -88,7 +88,7 @@ def full_sync_writes(inv: Inventory, active: str | None, ram_now: dict[int, int]
                if turtle in inv.turtles or turtle != active or switch_to]
     # Owned packs are topped up to their refill (more from vanilla pickups is kept); unowned ones emptied.
     # Vanilla pickups stay usable as bonus ammo: the area select keeps the player out of areas whose packs
-    # are missing, and missiles and ropes only lie in Areas 3 and 4 (docs/research/tmnt-ammo-och-tracker.md).
+    # are missing, and missiles and ropes only lie in Areas 3 and 4 (docs/research/tmnt-ammo-and-trackers.md).
     for has, address, refill in _packs(inv):
         now = (ram_now or {}).get(address, 0)
         if not has:

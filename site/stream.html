@@ -32,7 +32,7 @@
     <table>
       <tr><th>Scene</th><th>Shows</th></tr>
       <tr><td>Hyrule</td><td>The ALttP BizHawk window, the ALttP PopTracker, the go mode panel.</td></tr>
-      <tr><td>Kloak (övergång)</td><td>A sewer-green interlude with the caption "Into the sewers...", a bigger panel
+      <tr><td>Sewers (transition)</td><td>A sewer-green interlude with the caption "Into the sewers...", a bigger panel
         and both trackers. Use it between the games.</td></tr>
       <tr><td>New York</td><td>The TMNT BizHawk window, the TMNT PopTracker, the go mode panel.</td></tr>
     </table>
@@ -50,7 +50,7 @@
     game's window comes to the front, after a Select+Start swap, Ctrl+Shift+Space, Alt+Tab or a click
     (<a href="play.html#swap">Play</a>). It talks to OBS's WebSocket server, which is off until you turn it on once:
     <b>Tools → WebSocket Server Settings → Enable WebSocket server</b>. The port and password are read from OBS's settings
-    on the same PC, so there is nothing to copy. It only switches while OBS shows Hyrule or New York; Kloak and any
+    on the same PC, so there is nothing to copy. It only switches while OBS shows Hyrule or New York; Sewers and any
     scene of the host's own are left alone. To switch scenes by hand only, start with <code>-NoObsSwitch</code>.</p>
     <figure><img src="img/obs-live-newyork.png" alt="New York scene from OBS"><figcaption>OBS's own picture of New York
       after a swap (OBS 32.2.2, 2026-10-31): game, tracker and panel live. The window capture is ready 0.3 s after the
@@ -78,7 +78,7 @@
         <li>Right-click it again → <b>Transform → Reset Transform</b>, so OBS shows it at 1:1.</li>
       </ol>
       Dragging the red frame's corners instead makes OBS stretch a finished picture, and the panel gets blurry
-      again. The collection uses 670×290 in Hyrule and New York and its own 1005×435 panel in Kloak.</div>
+      again. The collection uses 670×290 in Hyrule and New York and its own 1005×435 panel in Sewers.</div>
     <p><b>Hyrule</b> shows the ten dungeon bosses as hearts and "DONE ✔" once Ganon is beaten. <b>New York</b> shows the
     turtles, packs, passes, the Area bosses (3 needed) and "GO MODE" when the Technodrome is in logic. ALttP's crystals
     are not counted: they are shuffled between dungeons and have no item IDs.</p>
@@ -106,7 +106,7 @@
       <li>In OBS pick the <b>TMNT x ALttP</b> collection and check that both games and both trackers show.</li>
       <li>Close BizHawk's "Click the blue silhouette below for onboarding" line once; it shows in the capture.</li>
       <li>Check that both trackers and the panel say they are connected (no "No server").</li>
-      <li>Switch Hyrule → Kloak → New York once to see the pizza-wipe.</li>
+      <li>Switch Hyrule → Sewers → New York once to see the pizza-wipe.</li>
       <li>Press Select+Start in each game: the other game comes to the front and OBS follows. The game swap window says
         "connected to OBS".</li>
       <li>Keep the server console window handy for <code>/hint</code> and <code>/send</code>.</li>
@@ -122,7 +122,9 @@
 </main></div>
 
 <footer><div class="wrap">
-  TMNT × ALttP Archipelago randomizer · <a href="https://github.com/moggenswe/alttptmnt">github.com/moggenswe/alttptmnt</a>
+  TMNT × ALttP Archipelago randomizer · created by Mogswe<br>
+  A Link to the Past is shown with the community PopTracker pack. Teenage Mutant Ninja Turtles and The Legend of Zelda
+  belong to their owners; this is a fan project for charity.
 </div></footer>
 </body>
 </html>

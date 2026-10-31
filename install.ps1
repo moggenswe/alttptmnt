@@ -178,6 +178,12 @@ function Confirm([string]$Question) {
 
 Write-Host "TMNT x A Link to the Past - installer" -ForegroundColor Yellow
 Write-Host "Installs into $Repo"
+# Archipelago's Python packages have deep paths; past Windows' 260-character limit pip fails half-way
+# (WinError 206, seen 2026-10-31 from a 125-character folder). Stop before anything is downloaded.
+$longPaths = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -ErrorAction SilentlyContinue).LongPathsEnabled
+if ($Repo.Length -gt 80 -and $longPaths -ne 1) {
+  Fail "This folder's path is too long for Windows ($($Repo.Length) characters). Move the folder to a short path such as C:\tmntalttp and run install.cmd there."
+}
 
 # --- 1. ROMs ---------------------------------------------------------------------------------------------
 Step "Your ROMs"

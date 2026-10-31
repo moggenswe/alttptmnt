@@ -1,224 +1,224 @@
-# TMNT × A Link to the Past – meme-randomizer för speedrun-maraton
+# TMNT × A Link to the Past – meme randomizer for a speedrun marathon
 
-Designspec och genomförandeplan. Status: **utkast för granskning** (2026-10-31).
-
----
-
-## 0. Förståelse av uppdraget
-
-**Det Oscar har sagt**
-- Ett "meme"-projekt för ett välgörenhetsmaraton för speedrun. Det ska vara **roligt att titta på och spela**, inte perfekt.
-- Spelen är *A Link to the Past* (SNES) och *Teenage Mutant Ninja Turtles* (troligen NES-ettan).
-- Förebilden är SMZ3: två spel, en delad item-pool och övergångar mellan spelen.
-- TMNT måste få någon form av gating och kopplas ihop med ALttP.
-
-**Antaganden (rätta gärna)**
-- Maratonet körs på **PC-emulator** och streamas via OBS. Det krävs ingen riktig SNES- eller FXPak-hårdvara.
-- En person spelar båda spelen i ett och samma race eller showcase. Det är alltså en solo-körning, inte multiworld mellan flera spelare.
-- Målet är att körningen tar ungefär **1,5–2,5 timmar**, vilket passar ett maraton-schema.
-- Det finns några veckors kvällstid till förfogande, inte flera månader.
-
-**Lyckat resultat:** en seed som går att slutföra hela vägen, där publiken *ser* korsningarna mellan spelen (portaler, sköldpaddor som dyker upp i Hyrule, Link-items som låser upp TMNT-nivåer), och där inget softlock sabbar sändningen.
+Design spec and implementation plan. Status: **draft for review** (2026-10-31).
 
 ---
 
-## 1. Researchresultat
+## 0. Understanding the brief
 
-### 1.1 tmnt_rando gäller NES-versionen
-- `randomizer.py` anropar `run_interface(ALL_OBJECTS, snes=False)`, och `tables/master.txt` identifierar ROM:en som `TMNT_NA` med md5 `c14e760c4d5a086e4186d2e1fc9b7743`. Det är **NES-originalet** (Konami/Ultra, 1989, MMC1).
-- Repot har funnits sedan 2018 och består av cirka 300 rader Python ovanpå abyssonyms `randomtools`. Det har tre flaggor:
-  - `i` slumpar items (pizza, shuriken, bumerang, scroll, invincibility, **Missile 0x0C, Rope 0x0D**),
-  - `m` slumpar fiender,
-  - `e` slumpar ingångar, men bara inom en stage, och READMEn kallar det själv "unsafe".
-- Det som är värt att ta med sig: **ROM-adresserna för alla 243 item-placeringar** (`tables/item_pointers.txt`) och ingångstabellerna. Det är en färdig lista med "locations" för TMNT. Koden i övrigt är inte värd att bygga vidare på.
-  - *Obs:* tmnt_rando ändrar bara *vad* som ligger på en plats i ROM:en. Den säger ingenting om huruvida spelet kommer ihåg att en pickup är upplockad (se risk R2).
-- Missiles och ropes är redan **naturliga nycklar** i spelet. I Area 3 behöver Party Wagon missiles för att spränga vägspärrar och rep för att ta sig över luckor. tmnt_rando garanterar till och med att båda finns i Area 1 när ingångar slumpas.
+**What the owner has said**
+- A "meme" project for a charity speedrun marathon. It should be **fun to watch and to play**, not perfect.
+- The games are *A Link to the Past* (SNES) and *Teenage Mutant Ninja Turtles* (probably the first NES game).
+- The model is SMZ3: two games, a shared item pool and transitions between the games.
+- TMNT needs some form of gating and has to be tied to ALttP.
 
-### 1.2 Finns det en SNES-version?
-- **Officiellt nej.** TMNT 1 släpptes aldrig till SNES. *Turtles in Time* (SNES) är ett helt annat spel, ett beat-'em-up utan någon struktur som går att gate:a.
-- **Inofficiellt ja.** Infidelity släppte en *native* NES→SNES-port av TMNT 1 i oktober 2025, med dolda MSU-1-funktioner för ljud och video (intro, tecknad serie) och byte av sköldpadda med X ([Time Extension, okt 2025](https://www.timeextension.com/news/2025/10/teenage-mutant-ninja-turtles-is-the-next-nes-classic-to-get-a-native-snes-port), nedladdning via archive.org). Det betyder att idén om **en enda SNES-ROM i princip håller**.
-  - *Inte verifierat:* hur porten distribueras (patch eller ROM), om källkoden är öppen och vilken ROM-layout den har. Det avgör hela spår B nedan.
+**Assumptions (please correct)**
+- The marathon runs on a **PC emulator** and is streamed through OBS. No real SNES or FXPak hardware is needed.
+- One person plays both games in a single race or showcase. So it is a solo run, not a multiworld between several players.
+- The goal is a run of roughly **1.5–2.5 hours**, which fits a marathon schedule.
+- There are a few weeks of evenings available, not several months.
 
-### 1.3 Så får SMZ3 in två spel i samma ROM
-Från `tewtal/alttp_sm_combo_randomizer_rom` (`banks.txt`, `src/main.asm`, `src/sm/transition.asm`):
-1. **ExHiROM-sammanslagning.** ALttP:s banker läggs på `$00–$1F`, SM:s på `$80+`, och randomizer-tabeller, extra grafik och fritt utrymme på `$40–$5F`. Varje spel får en `hirom.asm`-patch som flyttar dess pekare.
-2. **Delad SRAM.** Båda spelen sparar sitt inventarie i SRAM. När ett spel får ett item från det andra spelet skrivs det till det andra spelets SRAM-område ("foreign items").
-3. **Övergången** (`transition_to_sm`): stäng av IRQ/NMI/HDMA, slå på forced blank, återställ SPC:n så att ljudmotorn kan laddas om, **DMA:a in en färdig "mall" av VRAM och WRAM för målspelet från ROM**, ladda målspelets sparfil och hoppa in via en dörr eller portal i målspelet.
-4. **Logik och generering** sker i C# (`Randomizer.SMZ3`). Varje portal har en egen åtkomstregel, till exempel `CanAccessMiseryMirePortal` och `CanAccessNorfairLowerPortal`, och fyllningen är en vanlig assumed fill över båda världarna.
-5. **MSU-1** stöds via `sm/msu.asm` och `spc.asm`. SA-1 används inte alls.
+**Success:** a seed that can be completed all the way, where the audience *sees* the crossovers between the games (portals, turtles turning up in Hyrule, Link items unlocking TMNT levels), and where no softlock ruins the broadcast.
+
+---
+
+## 1. Research findings
+
+### 1.1 tmnt_rando targets the NES version
+- `randomizer.py` calls `run_interface(ALL_OBJECTS, snes=False)`, and `tables/master.txt` identifies the ROM as `TMNT_NA` with md5 `c14e760c4d5a086e4186d2e1fc9b7743`. That is the **NES original** (Konami/Ultra, 1989, MMC1).
+- The repo has existed since 2018 and is about 300 lines of Python on top of abyssonym's `randomtools`. It has three flags:
+  - `i` randomizes items (pizza, shuriken, boomerang, scroll, invincibility, **Missile 0x0C, Rope 0x0D**),
+  - `m` randomizes enemies,
+  - `e` randomizes entrances, but only within a stage, and the README itself calls it "unsafe".
+- What is worth taking from it: **the ROM addresses of all 243 item placements** (`tables/item_pointers.txt`) and the entrance tables. That is a ready-made list of "locations" for TMNT. The rest of the code is not worth building on.
+  - *Note:* tmnt_rando only changes *what* sits at a location in the ROM. It says nothing about whether the game remembers that a pickup has been collected (see risk R2).
+- Missiles and ropes are already **natural keys** in the game. In Area 3 the Party Wagon needs missiles to blow up roadblocks and rope to get across gaps. tmnt_rando even guarantees that both are in Area 1 when entrances are randomized.
+
+### 1.2 Is there a SNES version?
+- **Officially, no.** TMNT 1 was never released on the SNES. *Turtles in Time* (SNES) is a completely different game, a beat-'em-up with no structure that can be gated.
+- **Unofficially, yes.** Infidelity released a *native* NES→SNES port of TMNT 1 in October 2025, with hidden MSU-1 features for audio and video (intro, cartoon) and turtle switching with X ([Time Extension, Oct 2025](https://www.timeextension.com/news/2025/10/teenage-mutant-ninja-turtles-is-the-next-nes-classic-to-get-a-native-snes-port), download via archive.org). That means the idea of **a single SNES ROM basically holds up**.
+  - *Not verified:* how the port is distributed (patch or ROM), whether the source code is open and what its ROM layout is. That decides all of track B below.
+
+### 1.3 How SMZ3 fits two games into one ROM
+From `tewtal/alttp_sm_combo_randomizer_rom` (`banks.txt`, `src/main.asm`, `src/sm/transition.asm`):
+1. **ExHiROM merge.** ALttP's banks go at `$00–$1F`, SM's at `$80+`, and randomizer tables, extra graphics and free space at `$40–$5F`. Each game gets a `hirom.asm` patch that moves its pointers.
+2. **Shared SRAM.** Both games keep their inventory in SRAM. When one game receives an item from the other game, it is written to the other game's SRAM area ("foreign items").
+3. **The transition** (`transition_to_sm`): turn off IRQ/NMI/HDMA, turn on forced blank, reset the SPC so the sound engine can be reloaded, **DMA a ready-made "template" of VRAM and WRAM for the target game from ROM**, load the target game's save file and enter through a door or portal in the target game.
+4. **Logic and generation** are done in C# (`Randomizer.SMZ3`). Each portal has its own access rule, for example `CanAccessMiseryMirePortal` and `CanAccessNorfairLowerPortal`, and the fill is an ordinary assumed fill over both worlds.
+5. **MSU-1** is supported through `sm/msu.asm` and `spc.asm`. SA-1 is not used at all.
 
 ### 1.4 ALttPDoorRandomizer
-Det här är en Python-fork av den klassiska ER/Berserker-randomizern, med regioner, regler, fill och ROM-patch via `base2current.bps`. Den är värdefull som **referens för ALttP-logik**, men tillför inget som just det här projektet behöver: dörrslumpning gör det bara svårare för både publik och spelare. Den har en egen multiworld som **inte** är Archipelago-kompatibel. Rekommendationen är att *inte* bygga på den.
+This is a Python fork of the classic ER/Berserker randomizer, with regions, rules, fill and ROM patching via `base2current.bps`. It is valuable as a **reference for ALttP logic**, but adds nothing this particular project needs: door shuffling only makes things harder for both the audience and the player. It has its own multiworld that is **not** Archipelago-compatible. The recommendation is *not* to build on it.
 
-### 1.5 Hårdvarufrågan i korthet
-| Fråga | Svar |
+### 1.5 The hardware question in brief
+| Question | Answer |
 |---|---|
-| Kan SNES köra NES-kod? | 65816 har ett 6502-läge, men PPU, APU och MMC1-mappern skiljer sig helt. Realtidsemulering av NES på SNES fungerar inte i praktiken. Därför behövs en **port**. |
-| Emulering eller portning? | Med två ROM:ar kör man två emulatorer på PC, vilket är trivialt. Med en ROM krävs en port, och den finns nu (Infidelity). |
-| MSU-1? | Kul men valfritt. Porten har redan MSU-1-hooks och SMZ3 har MSU-1-stöd. Emulatorer som snes9x, bsnes och BizHawk kör MSU-1. Fint för showcasen men behövs inte. |
-| SA-1? | **Behövs inte.** Inget av spelen använder det, och att lägga till SA-1 skulle bara krångla till minnesmappningen. |
+| Can a SNES run NES code? | The 65816 has a 6502 mode, but the PPU, APU and MMC1 mapper are completely different. Real-time NES emulation on a SNES does not work in practice. That is why a **port** is needed. |
+| Emulation or porting? | With two ROMs you run two emulators on the PC, which is trivial. With one ROM you need a port, and one now exists (Infidelity). |
+| MSU-1? | Fun but optional. The port already has MSU-1 hooks and SMZ3 has MSU-1 support. Emulators such as snes9x, bsnes and BizHawk run MSU-1. Nice for the showcase but not needed. |
+| SA-1? | **Not needed.** Neither game uses it, and adding SA-1 would only complicate the memory mapping. |
 
 ---
 
-## 2. Designalternativ
+## 2. Design options
 
-### A. "Sewer Bridge" – två emulatorer och Archipelago ⭐ rekommenderas
-ALttP körs i en SNES-emulator och TMNT (NES) i BizHawk, som båda ansluter till en lokal Archipelago-server. Spelaren har två "slots" i samma seed (Archipelagos standardläge för solo-multiworld).
-- **Gratis:** ALttP-världen finns redan i Archipelago med logik, fill, spoiler, tracker och item-leverans via SNI.
-- **Att bygga:** en `tmnt.apworld` (locations, items och regler) och en BizHawk-klient som läser och skriver TMNT-RAM.
-- **Portaler:** ett litet orkestreringsskript och OBS. När Link går ner i en "kloak" byter streamen scen till TMNT med en pizza-wipe som övergång, och tvärtom.
-- **För:** realistiskt på några veckor, låg risk, och generering och logik blir rätt från början.
-- **Emot:** inte en enda ROM. Övergången är ett scenbyte i OBS, inte en riktig dörr i spelet. Items kan bara ha mening i *ett* av spelen (se 3.3).
+### A. "Sewer Bridge" – two emulators and Archipelago ⭐ recommended
+ALttP runs in a SNES emulator and TMNT (NES) in BizHawk, and both connect to a local Archipelago server. The player has two "slots" in the same seed (Archipelago's standard mode for a solo multiworld).
+- **For free:** the ALttP world already exists in Archipelago with logic, fill, spoiler, tracker and item delivery via SNI.
+- **To build:** a `tmnt.apworld` (locations, items and rules) and a BizHawk client that reads and writes TMNT RAM.
+- **Portals:** a small orchestration script and OBS. When Link goes down into a "sewer", the stream switches scene to TMNT with a pizza-wipe as the transition, and the other way round.
+- **Pros:** realistic in a few weeks, low risk, and generation and logic are right from the start.
+- **Cons:** not a single ROM. The transition is a scene switch in OBS, not a real door in the game. Items can only have meaning in *one* of the games (see 3.3).
 
-### B. "SMZ3-klonen" – en SNES-ROM
-Infidelitys SNES-port av TMNT och ALttP slås ihop i en ExHiROM med SMZ3:s transition-teknik: SRAM-handoff, SPC-reset och DMA av WRAM/VRAM-mallar. Det kräver en egen generator, till exempel en fork av SMZ3:s C#.
-- **För:** den riktiga "wow"-känslan. Mottagna TMNT-items syns direkt i ALttP:s meny och portalen är en riktig dörr i spelet.
-- **Emot:** kräver portens källkod eller en egen disassembly, flytt av båda spelen, RAM-konflikter, ljudmotorbyte och item-grafik i båda spelen. Det är **3–6+ månader** av assemblerarbete på hobbynivå. Det finns stor risk att det inte blir klart, och porten är inte vår kod (licensen och tillåtelse från Infidelity behöver lösas).
+### B. "The SMZ3 clone" – one SNES ROM
+Infidelity's SNES port of TMNT and ALttP are merged into one ExHiROM using SMZ3's transition technique: SRAM handoff, SPC reset and DMA of WRAM/VRAM templates. It needs its own generator, for example a fork of SMZ3's C#.
+- **Pros:** the real "wow" feeling. Received TMNT items show up directly in ALttP's menu and the portal is a real door in the game.
+- **Cons:** needs the port's source code or our own disassembly, relocation of both games, RAM conflicts, swapping sound engines and item graphics in both games. That is **3–6+ months** of hobby-level assembly work. There is a big risk it never gets finished, and the port is not our code (the licence and permission from Infidelity need to be sorted out).
 
-### C. "Stafett" – noll kod
-En vanlig ALttP-randomizer och tmnt_rando körs separat. Regeln är att när du klarar en ALttP-dungeon spelar du nästa TMNT-area, och OBS växlar.
-- **För:** klart på en kväll.
-- **Emot:** ingen delad item-pool, och det är bara två spel efter varandra. Det duger bara som nödlösning.
+### C. "Relay" – zero code
+A regular ALttP randomizer and tmnt_rando run separately. The rule is that when you clear an ALttP dungeon you play the next TMNT area, and OBS switches.
+- **Pros:** done in one evening.
+- **Cons:** no shared item pool, and it is just two games one after the other. It is only good enough as an emergency fallback.
 
-**Rekommendation:** Bygg **A** till maratonet. Se **B** som ett efterhandsprojekt om A blir en hit och Infidelity är med på det. Ha **C** som plan B om tiden tar slut.
+**Recommendation:** Build **A** for the marathon. Treat **B** as a follow-up project if A is a hit and Infidelity is on board. Keep **C** as plan B if time runs out.
 
 ---
 
-## 3. Speldesign: hur TMNT gate:as
+## 3. Game design: how TMNT is gated
 
-TMNT är linjärt (Area 1 → 6, med Technodrome och Shredder sist). Vi gör det icke-linjärt genom att **behandla varje Area som en dungeon** som man går in i via en portal, och låter sköldpaddor och verktyg vara items.
+TMNT is linear (Area 1 → 6, with the Technodrome and Shredder last). We make it non-linear by **treating each Area as a dungeon** that you enter through a portal, and by making the turtles and tools items.
 
-### 3.1 Byggstenar
-| Mekanik | Hur den fungerar | Meme-värde |
+### 3.1 Building blocks
+| Mechanic | How it works | Meme value |
 |---|---|---|
-| **Sköldpaddor som items** | Du börjar med *en* slumpad sköldpadda (meme-flagga: alltid Raphael). De andra tre är "tillfångatagna" och ligger någonstans i Hyrule. Spelet har redan ett fångat-tillstånd, så en sköldpadda vi inte har hittat än sätts som tillfångatagen när TMNT laddas. | Mycket högt: "Donatello hittad i Kakarikos kyckling-hus!" |
-| **Donatellos bo som "förmåga"** | Logiken räknar Don som kravet för några svåra bossar eller rum (lång räckvidd). Ingen kod behövs, bara regler. | Medel |
-| **Area-pass** (`Sewer Pass: Area 1–5`) | Krävs för att gå in i Area N. Det finns fem pass, och du börjar med ett av dem. Areas låses upp i valfri ordning. Area 6 (Technodrome) har inget pass utan kräver villkoret i 3.4. | Ryggraden i progressionen |
-| **Missiles / Ropes** | Progression-items för Area 3 (Party Wagon). De ersätter tmnt_randos garanti. | Naturligt, går att förstå |
-| **Dam-dykutrustning** | Item som krävs för Area 2 (dammen). Utan den får man inte välja Area 2. | Publiken älskar att hata dammen |
-| **Vanliga TMNT-pickups** | Pizza, shuriken, bumerang och scroll går in i den delade poolen som filler i båda riktningarna. | En pizza i en ALttP-kista |
+| **Turtles as items** | You start with *one* random turtle (meme flag: always Raphael). The other three are "captured" and are somewhere in Hyrule. The game already has a captured state, so a turtle we have not found yet is set as captured when TMNT loads. | Very high: "Donatello found in Kakariko's chicken house!" |
+| **Donatello's bo as an "ability"** | The logic counts Don as the requirement for a few hard bosses or rooms (long reach). No code needed, only rules. | Medium |
+| **Area passes** (`Sewer Pass: Area 1–5`) | Required to enter Area N. There are five passes, and you start with one of them. Areas unlock in any order. Area 6 (Technodrome) has no pass but requires the condition in 3.4. | The backbone of progression |
+| **Missiles / Ropes** | Progression items for Area 3 (Party Wagon). They replace tmnt_rando's guarantee. | Natural, easy to understand |
+| **Dam diving gear** | Item required for Area 2 (the dam). Without it you cannot choose Area 2. | The audience loves to hate the dam |
+| **Regular TMNT pickups** | Pizza, shuriken, boomerang and scroll go into the shared pool as filler in both directions. | A pizza in an ALttP chest |
 
-### 3.2 Belöningar som kopplar ihop spelen åt andra hållet
-- Varje TMNT-bossvinst är en *location* som kan innehålla ALttP-progression, till exempel Hookshot bakom Area 3:s boss.
-- Kloakportaler i ALttP: **Hyrule Castle-kloaken** (temat är perfekt), Kakariko-brunnen och en i Dark World. Portalen *är* menyn för att välja Area.
+### 3.2 Rewards that tie the games together in the other direction
+- Every TMNT boss win is a *location* that can hold ALttP progression, for example the Hookshot behind Area 3's boss.
+- Sewer portals in ALttP: **the Hyrule Castle sewers** (the theme is perfect), the Kakariko well and one in the Dark World. The portal *is* the menu for choosing an Area.
 
-### 3.3 Items med dubbel betydelse (bara spår B, alternativt en senare utökning)
-"Flippers låser upp dammen" och "Hookshot = Rope" är roligast, men i Archipelago tillhör ett item *en* slot, och logik över två slots stöds inte. I spår A använder vi därför **tematiska namn** i stället, till exempel att dykutrustningen heter "Zora's Scuba Kit". Om den ska ligga hos Zora går det att tvinga fram med Archipelagos `plando_items`, men det är valfritt. Riktiga items med dubbel mening kräver att båda spelen modelleras som *en* värld, alltså på samma sätt som SMZ3.
+### 3.3 Items with a double meaning (track B only, or a later extension)
+"Flippers unlock the dam" and "Hookshot = Rope" are the most fun, but in Archipelago an item belongs to *one* slot, and logic across two slots is not supported. In track A we therefore use **themed names** instead, for example calling the diving gear "Zora's Scuba Kit". If it should be at Zora's, that can be forced with Archipelago's `plando_items`, but it is optional. Real items with a double meaning require modelling both games as *one* world, the same way SMZ3 does.
 
-### 3.4 Mål
-- **Mål:** besegra både Ganon *och* Shredder. I Archipelago har varje slot sitt eget mål, och seeden räknas som klar när båda slottarna är klara. Klockan stannar vid det sista av de två.
-- Technodrome (Area 6) kräver alla 4 sköldpaddor och 3 avklarade Areas.
-- **Så tvingas spelen att flätas ihop.** ALttP:s kristaller kan inte flyttas till TMNT, eftersom Archipelagos ALttP-värld inte kan slumpa dungeon-belöningar till andra världar (kontrollerat i `worlds/alttp/Options.py`). Sammanflätningen sker i stället med Archipelagos standardinställning `non_local_items`:
-  - TMNT-slotten sätter sköldpaddor, Area-pass, missiles och ropes som `non_local_items`, så att de bara kan hamna i Hyrule.
-  - ALttP-slotten sätter till exempel Hookshot, Flippers och Moon Pearl som `non_local_items`, så att de bara kan hamna i TMNT.
-  - Effekt: du kommer inte långt i något av spelen utan att växla.
-- Inställningar för meme-läget: `start_turtle: raphael`, `pizza_traps` (en "trap" som ger Link pizzahatt eller inverterade kontroller i 10 sekunder) och `dam_timer_halved` (bara för den som verkligen vill det).
+### 3.4 Goal
+- **Goal:** beat both Ganon *and* Shredder. In Archipelago each slot has its own goal, and the seed counts as finished when both slots are finished. The clock stops at the later of the two.
+- The Technodrome (Area 6) requires all 4 turtles and 3 cleared Areas.
+- **How the games are forced to interleave.** ALttP's crystals cannot be moved to TMNT, because Archipelago's ALttP world cannot shuffle dungeon rewards to other worlds (checked in `worlds/alttp/Options.py`). The interleaving is done instead with Archipelago's standard setting `non_local_items`:
+  - The TMNT slot sets turtles, Area passes, missiles and ropes as `non_local_items`, so they can only end up in Hyrule.
+  - The ALttP slot sets, for example, Hookshot, Flippers and Moon Pearl as `non_local_items`, so they can only end up in TMNT.
+  - Effect: you cannot get far in either game without switching.
+- Settings for the meme mode: `start_turtle: raphael`, `pizza_traps` (a "trap" that gives Link a pizza hat or inverted controls for 10 seconds) and `dam_timer_halved` (only for those who really want it).
 
-### 3.5 Speltid och svårighet
-TMNT NES är svårt, och dammen är ökänd. För att undvika att sändningen dör ger varje sköldpadda en buffert (fler "liv"). Missiles och ropes delas ut i rimliga mängder, och inställningen `easy_tmnt` ger halverad skada genom att klienten skriver till RAM.
+### 3.5 Play time and difficulty
+TMNT NES is hard, and the dam is notorious. To keep the broadcast from dying, each turtle gives a buffer (more "lives"). Missiles and ropes are handed out in reasonable amounts, and the `easy_tmnt` setting halves damage by having the client write to RAM.
 
 ---
 
-## 4. Teknisk arkitektur för spår A
+## 4. Technical architecture for track A
 
 ```
 ┌─────────────── PC / stream ───────────────┐
 │ SNES-emu (ALttP AP-ROM) ──SNI──┐           │
-│                                 ├─ AP-server (lokal)
-│ BizHawk (TMNT NES) ──Lua──► TMNT-klient ─┘ │
+│                                 ├─ AP server (local)
+│ BizHawk (TMNT NES) ──Lua──► TMNT client ─┘ │
 │            ▲                       │       │
-│            └── areaval / savestates│       │
-│ Portal-orkestrerare ◄──────────────┘──► OBS (scenbyte + pizza-wipe)
+│            └── area menu/savestates│       │
+│ Portal orchestrator ◄──────────────┘──► OBS (scene switch + pizza-wipe)
 └───────────────────────────────────────────┘
 ```
 
-**Enheter (var och en går att testa för sig)**
-1. **`tmnt.apworld`** (Python, Archipelagos API)
-   - *Locations:* item-pickups (adresserna från tmnt_randos `item_pointers.txt`, plus filtrering per Area) och en per bossvinst.
-   - *Items:* 4 sköldpaddor (minus startsköldpaddan), 5 Area-pass (minus startpasset), missiles, ropes, dykutrustningen och filler. Antalet missiles och ropes bestäms när Area 3 har testats.
-   - *Regler:* Area-pass, Area 3 kräver missiles och ropes, Area 2 kräver dykutrustning, Area 6 enligt 3.4.
-   - *ROM-patch:* ersätt pickup-typen på de platser som innehåller AP-items, enligt tmnt_randos metod. I MVP används ett befintligt item, till exempel en scroll, som markör, och spelaren får även scrollens effekt. Det är bara en kosmetisk bugg. En egen sprite eller palett ligger utanför MVP.
-2. **TMNT-klienten** (Archipelagos BizHawk-klientramverk)
-   - *Läsa:* plockade pickups, bossvinst, nuvarande area och HP per sköldpadda.
-   - *Skriva:* mottagna items (sköldpadda frigiven, missiles/ropes/sub-vapen) och "tillfångatagen" för saknade sköldpaddor.
-3. **Areaväljare / savestate-laddare.** En färdig savestate i början av varje Area. När spelaren väljer en upplåst Area laddas statet och inventariet injiceras sedan. Det kringgår den linjära progressionen utan ROM-hack.
-   - *Kontrollerat:* Archipelagos generiska BizHawk-connector (`data/lua/connector_bizhawk_generic.lua`) kan bara läsa och skriva minne, låsa emulatorn och visa meddelanden. Den kan **inte ladda savestates**.
-   - Areaväljaren blir därför ett **eget litet Lua-skript** som körs i BizHawk bredvid connectorn (BizHawk kan köra flera skript samtidigt, och `savestate.load` finns i Lua-API:t). Skriptet läser vilka pass som är upplåsta från en minnesadress som TMNT-klienten skriver till. Klienten och väljaren pratar alltså via emulatorns RAM och behöver inte prata direkt med varandra.
-   - Alternativ om det strular: skriv areanumret till RAM och låt spelets egen area-övergång göra jobbet. Det kräver mer RAM-forskning.
-4. **Portal-orkestreraren.** Den lyssnar på ALttP-rummet via SNI. När spelaren går in i ett kloakrum pausar den SNES-emulatorn, ber OBS byta scen och öppnar areaväljaren. Vid "Exit Sewer" i TMNT sker det omvända. **MVP:** en snabbtangent i stället för rum-detektering.
+**Units (each one can be tested on its own)**
+1. **`tmnt.apworld`** (Python, Archipelago's API)
+   - *Locations:* item pickups (the addresses from tmnt_rando's `item_pointers.txt`, plus filtering per Area) and one per boss win.
+   - *Items:* 4 turtles (minus the starting turtle), 5 Area passes (minus the starting pass), missiles, ropes, the diving gear and filler. The number of missiles and ropes is decided once Area 3 has been tested.
+   - *Rules:* Area passes, Area 3 requires missiles and ropes, Area 2 requires diving gear, Area 6 as in 3.4.
+   - *ROM patch:* replace the pickup type at the locations that hold AP items, following tmnt_rando's method. The MVP uses an existing item, for example a scroll, as a marker, and the player also gets the scroll's effect. It is only a cosmetic bug. A custom sprite or palette is outside the MVP.
+2. **The TMNT client** (Archipelago's BizHawk client framework)
+   - *Read:* collected pickups, boss wins, current area and HP per turtle.
+   - *Write:* received items (turtle freed, missiles/ropes/sub-weapons) and "captured" for missing turtles.
+3. **Area selector / savestate loader.** A ready-made savestate at the start of each Area. When the player picks an unlocked Area, the state is loaded and the inventory is then injected. This gets around the linear progression without a ROM hack.
+   - *Checked:* Archipelago's generic BizHawk connector (`data/lua/connector_bizhawk_generic.lua`) can only read and write memory, lock the emulator and show messages. It **cannot load savestates**.
+   - The area selector therefore becomes **a small Lua script of our own** that runs in BizHawk next to the connector (BizHawk can run several scripts at once, and `savestate.load` is in the Lua API). The script reads which passes are unlocked from a memory address that the TMNT client writes to. So the client and the selector talk through the emulator's RAM and do not need to talk to each other directly.
+   - Fallback if it misbehaves: write the area number to RAM and let the game's own area transition do the work. That needs more RAM research.
+4. **The portal orchestrator.** It listens to the ALttP room via SNI. When the player enters a sewer room, it pauses the SNES emulator, asks OBS to switch scene and opens the area selector. On "Exit Sewer" in TMNT the reverse happens. **MVP:** a hotkey instead of room detection.
 
-**Felhantering:** klienten måste överleva en emulator-reset och återställa inventariet från AP-serverns state, vilket Archipelago-klienter gör som standard. Areaväljaren laddar aldrig en låst Area.
+**Error handling:** the client must survive an emulator reset and restore the inventory from the AP server's state, which Archipelago clients do by default. The area selector never loads a locked Area.
 
-**Test:** generera cirka 200 seeds per inställningsprofil (Archipelagos `Generate.py` validerar att seeden går att slutföra). Gör manuella genomspelningar av varje Area-start-state, och kör minst en hel genrep-körning på stream-maskinen.
-
----
-
-## 5. MVP som hinner bli klar till maratonet
-
-**Med i MVP:**
-- `tmnt.apworld` med locations för bossvinster och, om risk R2 går att lösa, ett urval säkra pickups (cirka 20–30 av de 243).
-- Items: 4 sköldpaddor, Area-pass, missiles, ropes, dykutrustning och pizza-filler.
-- BizHawk-klient som läser bossvinster och pickups och skriver sköldpaddor och verktyg.
-- Areaväljare via savestates.
-- OBS-snabbtangent för "portalen" med en pizza-wipe som övergång.
-- Mål: Ganon + Shredder.
-- ALttP: Archipelagos standard-ALttP med enkla inställningar (open mode, inga dörrar, ingen ER).
-
-**Utanför MVP (nice-to-have i den här ordningen):** automatisk portal via rumdetektering, `pizza_traps`, egen AP-item-sprite i TMNT, MSU-1-musik, fiendeslump i TMNT.
-
-**Utanför projektet:** spår B (en ROM) och items med dubbel betydelse.
+**Testing:** generate about 200 seeds per settings profile (Archipelago's `Generate.py` validates that the seed can be completed). Do manual playthroughs of each Area start state, and do at least one full dress rehearsal on the stream machine.
 
 ---
 
-## 6. Ungefärlig arbetsinsats (kvällar/helger, en person, viss Python-vana)
+## 5. An MVP that can be ready for the marathon
 
-| Steg | Insats |
+**In the MVP:**
+- `tmnt.apworld` with locations for boss wins and, if risk R2 can be solved, a selection of safe pickups (about 20–30 of the 243).
+- Items: 4 turtles, Area passes, missiles, ropes, diving gear and pizza filler.
+- BizHawk client that reads boss wins and pickups and writes turtles and tools.
+- Area selector via savestates.
+- OBS hotkey for the "portal" with a pizza-wipe as the transition.
+- Goal: Ganon + Shredder.
+- ALttP: Archipelago's standard ALttP with simple settings (open mode, no doors, no ER).
+
+**Outside the MVP (nice-to-have, in this order):** automatic portal via room detection, `pizza_traps`, a custom AP item sprite in TMNT, MSU-1 music, enemy shuffle in TMNT.
+
+**Outside the project:** track B (one ROM) and items with a double meaning.
+
+---
+
+## 6. Rough effort (evenings/weekends, one person, some Python experience)
+
+| Step | Effort |
 |---|---|
-| Sätta upp Archipelago från källkod, ALttP via SNI, BizHawk | 1–2 dagar |
-| Kartlägga TMNT-RAM: sköldpaddornas HP/fångad, area, pickups, boss, inventarie | 3–5 dagar *(största osäkerheten)* |
-| `tmnt.apworld`: items, locations, regler och patch | 3–4 dagar |
-| BizHawk-klient och areaväljare (eget Lua-skript för savestates) | 4–5 dagar |
-| OBS-portal: snabbtangent, övergång, layout | 1 dag |
-| Seed-test, balansering, genrep | 3–5 dagar |
-| **Totalt MVP** | **≈ 3–5 veckor kvällstid** |
-| Spår B (en ROM, SMZ3-stil) | 3–6+ månader, beroende på portens källkod |
+| Set up Archipelago from source, ALttP via SNI, BizHawk | 1–2 days |
+| Map TMNT RAM: turtle HP/captured, area, pickups, boss, inventory | 3–5 days *(biggest uncertainty)* |
+| `tmnt.apworld`: items, locations, rules and patch | 3–4 days |
+| BizHawk client and area selector (own Lua script for savestates) | 4–5 days |
+| OBS portal: hotkey, transition, layout | 1 day |
+| Seed testing, balancing, dress rehearsal | 3–5 days |
+| **Total MVP** | **≈ 3–5 weeks of evenings** |
+| Track B (one ROM, SMZ3 style) | 3–6+ months, depending on the port's source code |
 
-## 7. Risker
+## 7. Risks
 
-| Risk | Sannolikhet | Hantering |
+| Risk | Likelihood | Mitigation |
 |---|---|---|
-| R1: TMNT:s RAM-karta är svårare att hitta än väntat, särskilt fångad-tillståndet | Medel | Börja med det (spike vecka 1). |
-| R2: TMNT har **ingen bestående flagga** för upplockade pickups (föremål kan dyka upp igen när man går tillbaka in i ett rum), så klienten vet inte *vilken* pickup som togs | Medel–hög | Spiken avgör. Fallback 1: klienten känner igen upplockningen på rum + objektplats + item-typ. Fallback 2: locations bara på bossvinster och Area-avslut (cirka 10–12 locations räcker för en MVP). |
-| Savestate-injektion ger konstiga lägen, till exempel fel sköldpadda aktiv | Medel | Skriv state först efter area-intro. Testa varje Area separat. |
-| TMNT blir för svårt för speltiden (dammen) | Hög | `easy_tmnt`, dykutrustning sent i logiken, och träna rutten innan. |
-| Archipelagos API ändras under arbetet | Låg | Lås versionen av Archipelago. |
-| Krångel med två emulatorer på stream-maskinen | Medel | Genrep på samma maskin. Spara OBS-profilen. |
-| Licensfrågan kring Infidelitys port (bara spår B) | – | Fråga Infidelity innan något görs. |
-| Spoilers eller softlock live | Låg–medel | Använd bara genererade och validerade seeds. Kör en testseed helt igenom. |
+| R1: TMNT's RAM map is harder to find than expected, especially the captured state | Medium | Start with it (spike in week 1). |
+| R2: TMNT has **no persistent flag** for collected pickups (items can reappear when you go back into a room), so the client does not know *which* pickup was taken | Medium–high | The spike decides. Fallback 1: the client recognises the pickup by room + object position + item type. Fallback 2: locations only on boss wins and Area completions (about 10–12 locations is enough for an MVP). |
+| Savestate injection causes odd states, for example the wrong turtle active | Medium | Write the state only after the area intro. Test each Area separately. |
+| TMNT gets too hard for the play time (the dam) | High | `easy_tmnt`, diving gear late in the logic, and practise the route beforehand. |
+| Archipelago's API changes during the work | Low | Pin the Archipelago version. |
+| Trouble with two emulators on the stream machine | Medium | Dress rehearsal on the same machine. Save the OBS profile. |
+| The licence question around Infidelity's port (track B only) | – | Ask Infidelity before doing anything. |
+| Spoilers or softlock live | Low–medium | Only use generated and validated seeds. Run a test seed all the way through. |
 
-## 8. Öppna frågor till Oscar
-1. **När är maratonet?** Det avgör om MVP räcker eller om det finns tid för automatiska portaler.
-2. **Emulator eller riktig hårdvara?** Allt ovan förutsätter emulator.
-3. **Vem spelar?** En TMNT-van löpare tål svårare inställningar.
-4. Finns det Archipelago- och Python-vana i teamet, eller blir det inlärning från noll?
+## 8. Open questions for the owner
+1. **When is the marathon?** That decides whether the MVP is enough or whether there is time for automatic portals.
+2. **Emulator or real hardware?** Everything above assumes an emulator.
+3. **Who is playing?** A runner who knows TMNT can handle harder settings.
+4. Is there Archipelago and Python experience in the team, or will it be learning from scratch?
 
-## 9. Föreslagen första vecka (spike)
-1. Installera Archipelago från källkod och kör en ALttP-seed via SNI.
-2. Öppna TMNT (NA, md5 enligt ovan) i BizHawk och hitta RAM-adresserna för sköldpaddornas HP/fångad och aktuell area. Ta också reda på om upplockade pickups sparas någonstans (risk R2).
-3. Testa att ett eget Lua-skript kan köra `savestate.load` samtidigt som Archipelagos connector är igång.
-4. Om (2) och (3) går bra är spår A grönt och det är dags att skriva implementationsplanen. Om R2 faller ut dåligt används fallback 2: bara bossvinster som locations.
-
----
-
-## 10. Granskningslogg (2026-10-31)
-Rättat efter granskning mot källorna:
-- **Savestates:** Archipelagos BizHawk-connector kan inte ladda savestates. Areaväljaren blir därför ett eget Lua-skript (4.3), och insatsen har höjts.
-- **Kristaller:** att TMNT-bossar skulle ge ALttP-kristaller går inte i Archipelago. Det har ersatts med `non_local_items` (3.4).
-- **Area-pass:** det stod sex pass, men Area 6 har inget pass. Antalet är rättat till fem.
-- **Pickups:** ny risk R2, att upplockade pickups inte sparas. Fallback är bossvinster som locations.
-- **Mål:** förtydligat hur "båda målen" fungerar i Archipelago.
-- **Verifierat:** att tmnt_rando gäller NES, att SMZ3 använder assumed fill och ExHiROM-layouten, och att tmnt_rando har 243 pickup-platser.
-- **Fortfarande inte verifierat:** hur Infidelitys SNES-port distribueras och om källkoden är öppen, och hela TMNT:s RAM-karta.
+## 9. Proposed first week (spike)
+1. Install Archipelago from source and run an ALttP seed via SNI.
+2. Open TMNT (NA, md5 as above) in BizHawk and find the RAM addresses for the turtles' HP/captured state and the current area. Also find out whether collected pickups are stored anywhere (risk R2).
+3. Test that a Lua script of our own can run `savestate.load` while Archipelago's connector is running.
+4. If (2) and (3) go well, track A is green and it is time to write the implementation plan. If R2 turns out badly, fallback 2 is used: only boss wins as locations.
 
 ---
-**Källor:** [aerinon/ALttPDoorRandomizer](https://github.com/aerinon/ALttPDoorRandomizer), [tewtal/SMZ3Randomizer](https://github.com/tewtal/SMZ3Randomizer), [tewtal/alttp_sm_combo_randomizer_rom](https://github.com/tewtal/alttp_sm_combo_randomizer_rom), [abyssonym/tmnt_rando](https://github.com/abyssonym/tmnt_rando), [Time Extension – TMNT native SNES-port](https://www.timeextension.com/news/2025/10/teenage-mutant-ninja-turtles-is-the-next-nes-classic-to-get-a-native-snes-port), [Time Extension – aviserad aug 2025](https://www.timeextension.com/news/2025/08/teenage-mutant-ninja-turtles-will-be-the-next-nes-classic-to-get-a-native-snes-port).
+
+## 10. Review log (2026-10-31)
+Corrected after review against the sources:
+- **Savestates:** Archipelago's BizHawk connector cannot load savestates. The area selector therefore becomes a Lua script of our own (4.3), and the effort has been raised.
+- **Crystals:** having TMNT bosses give ALttP crystals is not possible in Archipelago. It has been replaced with `non_local_items` (3.4).
+- **Area passes:** it said six passes, but Area 6 has no pass. The number has been corrected to five.
+- **Pickups:** new risk R2, that collected pickups are not stored. The fallback is boss wins as locations.
+- **Goal:** clarified how "both goals" works in Archipelago.
+- **Verified:** that tmnt_rando targets the NES, that SMZ3 uses assumed fill and the ExHiROM layout, and that tmnt_rando has 243 pickup locations.
+- **Still not verified:** how Infidelity's SNES port is distributed and whether the source code is open, and the full TMNT RAM map.
+
+---
+**Sources:** [aerinon/ALttPDoorRandomizer](https://github.com/aerinon/ALttPDoorRandomizer), [tewtal/SMZ3Randomizer](https://github.com/tewtal/SMZ3Randomizer), [tewtal/alttp_sm_combo_randomizer_rom](https://github.com/tewtal/alttp_sm_combo_randomizer_rom), [abyssonym/tmnt_rando](https://github.com/abyssonym/tmnt_rando), [Time Extension – TMNT native SNES port](https://www.timeextension.com/news/2025/10/teenage-mutant-ninja-turtles-is-the-next-nes-classic-to-get-a-native-snes-port), [Time Extension – announced Aug 2025](https://www.timeextension.com/news/2025/08/teenage-mutant-ninja-turtles-will-be-the-next-nes-classic-to-get-a-native-snes-port).
