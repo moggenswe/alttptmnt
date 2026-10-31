@@ -29,7 +29,7 @@ file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&
 - Den ansluter som en skrivskyddad Tracker-klient och påverkar inte spelet.
 - Med `&demo=1` visas påhittade värden utan server, och `&layout=column` lägger korten under varandra.
 - ALttP:s kristaller syns inte i panelen. De är logikhändelser utan ID och slumpas mellan dungeons. Runnern ser dem på kartan i spelet.
-- Testad 2026-10-31 mot en lokal MultiServer (TMNT-seed): `/send` och `/send_location` uppdaterade panelen live till GO MODE. Inte testad i OBS.
+- Testad 2026-10-31 mot en lokal MultiServer, både med ett TMNT-seed (`/send` och `/send_location` gav live-uppdatering till GO MODE) och med ett helt ALttP+TMNT-seed. Inte testad i OBS.
 
 ## Hints och spelarfiler
 
@@ -38,9 +38,40 @@ file:///C:/Project/tmntalttp/tools/obs/go-mode.html?server=ws://localhost:38281&
 - Värden kan under streamen köra `/hint Turtles <föremål>` från serverkonsolen, till exempel som donationsmål. `/send` fungerar som nödutgång.
 - Spoilerloggen (host.yaml `spoiler: 3`) innehåller playthrough och hör hemma hos produktionen, utanför bild.
 
+## Installation (gjord och provad 2026-10-31 på Oscars dator)
+
+| Vad | Version | Var | Källa |
+|---|---|---|---|
+| ALttP-ROM | JP 1.0, md5 `03a63945398191337e896e5771f77173` | `Archipelago\Zelda no Densetsu - Kamigami no Triforce (Japan).sfc`, utan header | `roms\Zelda no Densetsu.smc` med de 512 header-bytena borttagna |
+| SNI | v0.0.103 | `Archipelago\SNI\` (SNIClient startar den själv därifrån) | https://github.com/alttpo/sni/releases |
+| Universal Tracker | Tracker_v0.3.8 | `Archipelago\custom_worlds	racker.apworld` | https://github.com/FarisTheAncient/Archipelago/releases |
+| PopTracker | v0.36.0 | `Downloads\PopTracker-0.36.0\` | https://github.com/black-sliver/PopTracker/releases |
+| ALttP-pack | v0.5.1 (stabil; v0.5.2-beta10 finns) | `Downloads\PopTracker-0.36.0\packs\` | https://github.com/StripesOO7/alttp-ap-poptracker-pack/releases |
+| OBS Studio | 32.0.4 | redan installerat | |
+
+Nedladdade original ligger i `Downloadsp-tools\`.
+
+## Hela kedjan, provad 2026-10-31
+
+Ett seed med både ALttP och TMNT genererades och patchades från `players/` (seed 21). Allt nedan körde samtidigt mot samma lokala server:
+
+1. `MultiServer.py <seed>.zip --host 127.0.0.1`
+2. **ALttP:** `Archipelago\SNI\sni.exe`, BizHawk 2.11.1 med den patchade `.sfc` och Lua-skriptet `Archipelago\SNI\lua\Connector.lua`, och `SNIClient.py`. Klienten hittade SNI och BizHawk ("Attached to luabridge"), kände igen ROM:en och anslöt som Link.
+3. **TMNT:** BizHawk 2.11.1 med den patchade `.nes` och `lua/tmnt_stream.luases`, och `BizHawkClient.py`. Klienten anslöt som Turtles och skickade gåvorna från Turtle Lair, Magic Mirror och Flippers, till Link.
+4. **PopTracker** för ALttP anslöt som Tracker för Link:
+   ```
+   poptracker.exe --load-pack ap_alltp --pack-variant "Map Tracker - AP" --ap-host localhost:38281 --ap-slot Link
+   ```
+   Första gången frågar PopTracker om uppdateringskontroll och om EmoTracker-mappen. Båda är besvarade med nej i `%APPDATA%\PopTracker\PopTracker.json` (`check_for_updates` och `add_emo_packs` = false). PopTracker ritar med OpenGL, så min skärmbild via `PrintWindow` blev svart. Kontrollera att OBS fönsterfångst visar den.
+5. **Go mode-panelen** visade båda slottarna live: Hyrule 0/10, New York 1/4 sköldpaddor och 0/3 bossar.
+
 ## Trackers
 
-- **Universal Tracker** (TMNT): världen stöder att UT bygger om seeden från slot_data utan YAML. Det är inte provat mot den riktiga `tracker.apworld` än.
-- **ALttP:** PopTracker med StripesOO7/alttp-ap-poptracker-pack (AP-autotracking). Den är inte nedladdad eller provad här.
+- **Universal Tracker (TMNT)** fungerar utan YAML, provat med `tracker.apworld` v0.3.8:
+  - Vid start listar den gåvorna, Area 1-ingången och Area 1-bossen.
+  - Med Area 4-passet och Rope Pack tillkommer Area 4.
+  - Mappen `Archipelago\Players` måste finnas. Annars öppnar UT en dold mappväljare och hänger. Mappen får vara tom.
+  - Starta via Archipelago-launchern ("Universal Tracker") och anslut till `localhost:38281` som `Turtles`.
+- **ALttP:** PopTracker med ALttP-packen, se ovan.
 - **Föremålsflöde i OBS (valfritt):** Nic-del/Broadcast-Archipelago. Den är inte provad här.
 - **Egen TMNT-pack till PopTracker:** valfri, cirka 1–2 dagar. Se rapporten.
