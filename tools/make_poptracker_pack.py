@@ -1,6 +1,6 @@
 """Builds the TMNT PopTracker pack (item tracker with Archipelago autotracking) from the apworld's own tables.
 
-    .venv/Scripts/python.exe tools/make_poptracker_pack.py [--install]
+    .venv/Scripts/python.exe tools/make_poptracker_pack.py [--install] [--packs-dir <PopTracker packs folder>]
 
 Writes poptracker/tmnt-ap/ (the pack source, in git) and output/tmnt-ap-poptracker.zip; --install also copies
 the zip into PopTracker's packs folder. Item and location IDs come from apworld/tmnt, so the mapping cannot
@@ -25,7 +25,10 @@ import sprites  # noqa: E402
 
 PACK = REPO / "poptracker" / "tmnt-ap"
 ZIP = REPO / "output" / "tmnt-ap-poptracker.zip"
-POPTRACKER_PACKS = Path.home() / "Downloads" / "PopTracker-0.36.0" / "packs"
+# install.ps1 puts PopTracker in apps\; an older manual install lived in Downloads.
+POPTRACKER_PACKS = next((p for p in (REPO / "apps" / "PopTracker-0.36.0" / "packs",
+                                     Path.home() / "Downloads" / "PopTracker-0.36.0" / "packs") if p.exists()),
+                        REPO / "apps" / "PopTracker-0.36.0" / "packs")
 VERSION = "0.1.0"
 SCALE = 3  # 16x16 art at 3x = 48 px, PopTracker's item size here, so every pixel stays crisp
 
@@ -163,8 +166,10 @@ the project (tools/sprites.py), no game sprites.
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--install", action="store_true", help="copy the zip into PopTracker's packs folder")
+    parser.add_argument("--packs-dir", type=Path, default=POPTRACKER_PACKS, help="PopTracker's packs folder")
     args = parser.parse_args()
     build()
     if args.install:
-        shutil.copy(ZIP, POPTRACKER_PACKS / ZIP.name)
-        print(f"installed -> {POPTRACKER_PACKS / ZIP.name}")
+        args.packs_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(ZIP, args.packs_dir / ZIP.name)
+        print(f"installed -> {args.packs_dir / ZIP.name}")

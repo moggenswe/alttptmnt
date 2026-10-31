@@ -10,3 +10,5 @@ __pycache__/
 savestates/
 tas/
 *.smc
+apps/
+.cache/

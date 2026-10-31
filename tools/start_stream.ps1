@@ -19,14 +19,26 @@ param(
   [int]$Port = 38281,
   [string]$AlttpSlot = "Link",
   [string]$TmntSlot = "Turtles",
-  [string]$EmuHawk = "$env:USERPROFILE\Downloads\BizHawk-2.11.1-win-x64\EmuHawk.exe",
-  [string]$PopTracker = "$env:USERPROFILE\Downloads\PopTracker-0.36.0\poptracker.exe",
+  [string]$EmuHawk,     # default: apps\BizHawk-2.11.1 from install.ps1, else Downloads\BizHawk-2.11.1-win-x64
+  [string]$PopTracker,  # default: apps\PopTracker-0.36.0 from install.ps1, else Downloads\PopTracker-0.36.0
   [switch]$NoTracker
 )
 $ErrorActionPreference = "Stop"
 $Repo = Split-Path -Parent $PSScriptRoot
 $AP = Join-Path $Repo "Archipelago"
 $Python = Join-Path $Repo ".venv\Scripts\python.exe"
+function First-Existing([string[]]$Paths) {
+  $found = $Paths | Where-Object { Test-Path $_ } | Select-Object -First 1
+  if ($found) { $found } else { $Paths[0] }
+}
+if (-not $EmuHawk) {
+  $EmuHawk = First-Existing @((Join-Path $Repo "apps\BizHawk-2.11.1\EmuHawk.exe"),
+                              "$env:USERPROFILE\Downloads\BizHawk-2.11.1-win-x64\EmuHawk.exe")
+}
+if (-not $PopTracker) {
+  $PopTracker = First-Existing @((Join-Path $Repo "apps\PopTracker-0.36.0\poptracker.exe"),
+                                 "$env:USERPROFILE\Downloads\PopTracker-0.36.0\poptracker.exe")
+}
 $SeedPath = (Resolve-Path $Seed).Path
 $SeedDir = Split-Path -Parent $SeedPath
 $Server = "localhost:$Port"

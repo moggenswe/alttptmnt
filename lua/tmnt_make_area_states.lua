@@ -60,4 +60,6 @@ end
 os.remove(base)
 note("done")
 log:close()
+-- install.ps1 runs this unattended and waits for BizHawk to close.
+if os.getenv("TMNT_EXIT_WHEN_DONE") then client.exit() end
 client.pause()

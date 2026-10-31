@@ -18,39 +18,54 @@
 
 <div class="wrap"><main class="with-toc">
   <aside class="toc"><b>On this page</b>
-    <a href="#needs">What you need</a><a href="#roms">ROMs</a><a href="#code">Code and Archipelago</a>
+    <a href="#install">Install in one go</a><a href="#roms">ROMs</a><a href="#manual">Manual install</a>
+    <a href="#needs">What you need</a><a href="#code">Code and Archipelago</a>
     <a href="#emu">BizHawk and SNI</a><a href="#states">Area savestates</a><a href="#trackers">Trackers</a>
     <a href="#obs">OBS</a><a href="#check">Check the install</a>
   </aside>
   <div>
     <h1>Setup</h1>
-    <p class="lead">One-time installation on the streaming PC (Windows 10/11). Paths below are the ones the start
-    script expects; every one of them can be changed with a parameter.</p>
+    <p class="lead">One-time installation on the streaming PC (Windows 10/11). You need your two ROMs and OBS;
+    the installer takes care of everything else.</p>
 
-    <h2 id="needs">What you need</h2>
+    <h2 id="install">Install in one go</h2>
+    <ol class="steps">
+      <li>Get this repo: <b>Code → Download ZIP</b> on <a href="https://github.com/moggenswe/alttptmnt">GitHub</a> and
+        unzip it (for example to <code>C:	mntalttp</code>), or <code>git clone</code> it. A short path without spaces
+        is best.</li>
+      <li>Double-click <code>install.cmd</code>. It asks for your two ROMs in a file dialog (see <a href="#roms">ROMs</a>)
+        and checks them.</li>
+      <li>Wait. The first run downloads about 200 MB and installs Archipelago's Python packages, which takes a few minutes.
+        BizHawk opens by itself for about half a minute to make the TMNT area savestates.</li>
+      <li>Answer <b>Y</b> to add the scene collection to OBS (OBS must be closed for that), then generate a seed and start
+        playing as on <a href="play.html">Play</a>.</li>
+    </ol>
+    <p>What it installs, all inside the repo folder (nothing system-wide, no admin rights):</p>
     <table>
-      <tr><th>Tool</th><th>Version</th><th>Where it goes</th><th>Download</th></tr>
-      <tr><td>Python</td><td>3.12 (3.12.10 to 3.13)</td><td>installed; a venv in <code>.venv</code></td>
-        <td><a href="https://www.python.org/downloads/">python.org</a></td></tr>
-      <tr><td>Git</td><td>any</td><td>installed</td><td><a href="https://git-scm.com/">git-scm.com</a></td></tr>
-      <tr><td>Archipelago (source)</td><td>tag <code>0.6.8</code></td><td><code>Archipelago\</code> in the repo</td>
-        <td><a href="https://github.com/ArchipelagoMW/Archipelago">GitHub</a></td></tr>
-      <tr><td>BizHawk</td><td>2.11.1</td><td><code>%USERPROFILE%\Downloads\BizHawk-2.11.1-win-x64\</code></td>
-        <td><a href="https://github.com/TASEmulators/BizHawk/releases">GitHub</a></td></tr>
-      <tr><td>SNI</td><td>v0.0.103</td><td><code>Archipelago\SNI\</code></td>
-        <td><a href="https://github.com/alttpo/sni/releases">GitHub</a></td></tr>
-      <tr><td>PopTracker</td><td>0.36.0</td><td><code>%USERPROFILE%\Downloads\PopTracker-0.36.0\</code></td>
-        <td><a href="https://github.com/black-sliver/PopTracker/releases">GitHub</a></td></tr>
-      <tr><td>ALttP PopTracker pack</td><td>v0.5.1</td><td>PopTracker's <code>packs\</code></td>
-        <td><a href="https://github.com/StripesOO7/alttp-ap-poptracker-pack/releases">GitHub</a></td></tr>
-      <tr><td>Universal Tracker (optional)</td><td>v0.3.8</td><td><code>Archipelago\custom_worlds\tracker.apworld</code></td>
-        <td><a href="https://github.com/FarisTheAncient/Archipelago/releases">GitHub</a></td></tr>
-      <tr><td>OBS Studio</td><td>32</td><td>installed</td><td><a href="https://obsproject.com/">obsproject.com</a></td></tr>
+      <tr><th>What</th><th>Version</th><th>Where</th></tr>
+      <tr><td>Python (through <a href="https://github.com/astral-sh/uv">uv</a> 0.12.24)</td><td>3.12</td><td><code>.venv\</code></td></tr>
+      <tr><td>Archipelago (source) with its packages; the TMNT world linked in</td><td>0.6.8</td><td><code>Archipelago\</code></td></tr>
+      <tr><td>SNI</td><td>v0.0.103</td><td><code>Archipelago\SNI\</code></td></tr>
+      <tr><td>BizHawk</td><td>2.11.1</td><td><code>apps\BizHawk-2.11.1\</code></td></tr>
+      <tr><td>PopTracker with the ALttP pack (v0.5.1) and the TMNT pack</td><td>0.36.0</td><td><code>apps\PopTracker-0.36.0\</code></td></tr>
+      <tr><td>Universal Tracker</td><td>v0.3.8</td><td><code>Archipelago\custom_worlds\</code></td></tr>
+      <tr><td>TMNT area savestates</td><td></td><td><code>savestates\</code></td></tr>
+      <tr><td>OBS scene collection "TMNT x ALttP"</td><td></td><td>OBS's scene collections (if you say yes)</td></tr>
     </table>
+    <p>Every download is pinned to a version and checked against a SHA-256 sum. Downloads are kept in
+    <code>.cache\downloads</code>; running <code>install.cmd</code> again skips what is already installed, so it is also the
+    way to repair an install. It also sets PopTracker to software rendering (needed for OBS capture) and turns off its
+    first-start questions, and ends by running the TMNT tests and generating three test seeds.</p>
+    <p>Without dialogs, for example from a script:</p>
+<pre><code>powershell -ExecutionPolicy Bypass -File install.ps1 -AlttpRom D:
+oms\zelda.smc -TmntRom D:
+oms	mnt.nes -Yes</code></pre>
+    <div class="warn"><b>BizHawk needs its prerequisites</b>If BizHawk does not start, install .NET Framework 4.8 and the
+      Visual C++ 2015-2022 x64 runtime (most streaming PCs already have both).</div>
 
     <h2 id="roms">ROMs</h2>
-    <p>You bring your own dumps. They never go into git (the repo ignores <code>*.nes</code>, <code>*.sfc</code>,
-    <code>*.smc</code>).</p>
+    <p>You bring your own dumps. The installer checks the md5, removes a copier header from the ALttP dump and copies
+    them where they are needed. They never go into git.</p>
     <table>
       <tr><th>Game</th><th>Version</th><th>md5</th><th>File</th></tr>
       <tr><td>A Link to the Past</td><td>Japan 1.0 (<i>Zelda no Densetsu: Kamigami no Triforce</i>), no copier header,
@@ -60,12 +75,38 @@
         <td><code>5e24ccd733d15e42d847274e7add0a76</code></td>
         <td><code>roms\Teenage Mutant Ninja Turtles (USA).nes</code> and a copy in <code>Archipelago\</code></td></tr>
     </table>
-    <p>A <code>.smc</code> dump of ALttP usually has a 512-byte copier header (1 049 088 bytes). Strip it and check:</p>
+    <p>A <code>.smc</code> dump of ALttP usually has a 512-byte copier header (1 049 088 bytes). The installer strips it;
+    by hand:</p>
 <pre><code>python -c "d=open('roms/Zelda no Densetsu.smc','rb').read()[512:]; open('Archipelago/Zelda no Densetsu - Kamigami no Triforce (Japan).sfc','wb').write(d); import hashlib; print(hashlib.md5(d).hexdigest())"</code></pre>
     <div class="note"><b>Why both places for TMNT?</b>The tools in <code>lua\</code> read <code>roms\</code>; Archipelago looks
       for the base ROM next to itself when it patches a seed.</div>
 
-    <h2 id="code">Code and Archipelago</h2>
+    <h2 id="manual">Manual install</h2>
+    <p>Only if you cannot use the installer: the same steps by hand. The start script looks for BizHawk and PopTracker in
+    <code>apps\</code> first and then in <code>%USERPROFILE%\Downloads\</code>; both can also be passed as parameters.</p>
+
+    <h3 id="needs">What you need</h3>
+    <table>
+      <tr><th>Tool</th><th>Version</th><th>Where it goes</th><th>Download</th></tr>
+      <tr><td>Python</td><td>3.12 (3.12.10 to 3.13)</td><td>installed; a venv in <code>.venv</code></td>
+        <td><a href="https://www.python.org/downloads/">python.org</a></td></tr>
+      <tr><td>Git</td><td>any</td><td>installed</td><td><a href="https://git-scm.com/">git-scm.com</a></td></tr>
+      <tr><td>Archipelago (source)</td><td>tag <code>0.6.8</code></td><td><code>Archipelago\</code> in the repo</td>
+        <td><a href="https://github.com/ArchipelagoMW/Archipelago">GitHub</a></td></tr>
+      <tr><td>BizHawk</td><td>2.11.1</td><td><code>apps\BizHawk-2.11.1\</code></td>
+        <td><a href="https://github.com/TASEmulators/BizHawk/releases">GitHub</a></td></tr>
+      <tr><td>SNI</td><td>v0.0.103</td><td><code>Archipelago\SNI\</code></td>
+        <td><a href="https://github.com/alttpo/sni/releases">GitHub</a></td></tr>
+      <tr><td>PopTracker</td><td>0.36.0</td><td><code>apps\PopTracker-0.36.0\</code></td>
+        <td><a href="https://github.com/black-sliver/PopTracker/releases">GitHub</a></td></tr>
+      <tr><td>ALttP PopTracker pack</td><td>v0.5.1</td><td>PopTracker's <code>packs\</code></td>
+        <td><a href="https://github.com/StripesOO7/alttp-ap-poptracker-pack/releases">GitHub</a></td></tr>
+      <tr><td>Universal Tracker (optional)</td><td>v0.3.8</td><td><code>Archipelago\custom_worlds\tracker.apworld</code></td>
+        <td><a href="https://github.com/FarisTheAncient/Archipelago/releases">GitHub</a></td></tr>
+      <tr><td>OBS Studio</td><td>32</td><td>installed</td><td><a href="https://obsproject.com/">obsproject.com</a></td></tr>
+    </table>
+
+    <h3 id="code">Code and Archipelago</h3>
     <ol class="steps">
       <li>Clone this repo and Archipelago at the pinned tag:
 <pre><code>git clone https://github.com/moggenswe/alttptmnt.git C:\Project\tmntalttp
@@ -81,9 +122,9 @@ cd ..</code></pre></li>
 <pre><code>mklink /J Archipelago\worlds\tmnt apworld\tmnt</code></pre></li>
     </ol>
 
-    <h2 id="emu">BizHawk and SNI</h2>
+    <h3 id="emu">BizHawk and SNI</h3>
     <ol class="steps">
-      <li>Unzip BizHawk 2.11.1 to <code>%USERPROFILE%\Downloads\BizHawk-2.11.1-win-x64\</code>. BizHawk runs both games:
+      <li>Unzip BizHawk 2.11.1 to <code>apps\BizHawk-2.11.1\</code>. BizHawk runs both games:
         TMNT on its NES core, ALttP on its SNES core.</li>
       <li>Unzip SNI into <code>Archipelago\SNI\</code> so that <code>Archipelago\SNI\sni.exe</code> exists. SNI's
         <code>lua\Connector.lua</code> is what BizHawk runs for ALttP.</li>
@@ -91,15 +132,15 @@ cd ..</code></pre></li>
     <div class="warn"><b>Use one BizHawk version everywhere.</b>The area savestates only load in the BizHawk version that
       made them. If the stream PC uses another version, make the states again there (next step).</div>
 
-    <h2 id="states">Area savestates</h2>
+    <h3 id="states">Area savestates</h3>
     <p>The in-game area menu loads one savestate per TMNT Area. Make them once, in the BizHawk that will be used live:</p>
-<pre><code>%USERPROFILE%\Downloads\BizHawk-2.11.1-win-x64\EmuHawk.exe --lua=C:\Project\tmntalttp\lua\tmnt_make_area_states.lua "C:\Project\tmntalttp\roms\Teenage Mutant Ninja Turtles (USA).nes"</code></pre>
+<pre><code>apps\BizHawk-2.11.1\EmuHawk.exe --lua=%CD%\lua\tmnt_make_area_states.lua "%CD%\roms\Teenage Mutant Ninja Turtles (USA).nes"</code></pre>
     <p>It writes <code>savestates\area1.State</code> … <code>area6.State</code> with a screenshot next to each. A patched
     seed ROM can load states made from the clean ROM.</p>
 
-    <h2 id="trackers">Trackers</h2>
+    <h3 id="trackers">Trackers</h3>
     <ol class="steps">
-      <li>Unzip PopTracker to <code>%USERPROFILE%\Downloads\PopTracker-0.36.0\</code> and put the ALttP pack zip into its
+      <li>Unzip PopTracker to <code>apps\PopTracker-0.36.0\</code> and put the ALttP pack zip into its
         <code>packs\</code> folder.</li>
       <li>Build and install the TMNT pack (made from the TMNT world's own tables):
 <pre><code>.venv\Scripts\python.exe tools\make_poptracker_pack.py --install</code></pre></li>
@@ -113,13 +154,13 @@ cd ..</code></pre></li>
         <code>Archipelago\Players</code> (Universal Tracker hangs on a hidden dialog without it).</li>
     </ol>
 
-    <h2 id="obs">OBS</h2>
+    <h3 id="obs">OBS</h3>
     <p>Build the scene collection (absolute paths for this PC) and import it in OBS under
     <b>Scene Collection → Import</b>:</p>
 <pre><code>.venv\Scripts\python.exe tools\make_obs_collection.py</code></pre>
     <p>The file is <code>tools\obs\tmnt-alttp-scenes.json</code>. See <a href="stream.html">Stream</a> for the scenes.</p>
 
-    <h2 id="check">Check the install</h2>
+    <h3 id="check">Check the install</h3>
 <pre><code>cd Archipelago
 ..\.venv\Scripts\python.exe -m unittest discover -s worlds\tmnt\test -t .
 cd ..
