@@ -24,7 +24,7 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 | Pausad | `$0094` | 3 vid paus, 0 annars | Dok |
 | Antal continues | `$0046` | börjar på 3; räknas ner vid varje game over, men 0 blir 255 och CONTINUE erbjuds ändå, så continues tar aldrig slut | **Bekräftat** (se "Game over och continue") |
 | Bossvinst Area 1–5 | `$0048` räknas upp | Ingen egen flagga hittad. `$0048` går N−1 → N exakt en gång per bossvinst (5 gånger på hela TAS:en), när Aprils genomgång inför nästa area börjar | **Bekräftat med TAS** (se "TAS-analys") |
-| Shredder besegrad | `$001B` = 5 | eftertexterna börjar | Dok |
+| Shredder besegrad | `$001B` = 5 | sätts när texten "You defeated Shredder" visas, cirka 31 s efter sista slaget, och ligger kvar i cirka 40 s. Därefter blir `$001B` 0 och `$0048` 0 (titelskärmen) | **Bekräftat med TAS** (se "Shredder") |
 | 4 lediga bytes (brevlåda) | `$0388–$038B` | Hela `$0388–$03AF` (40 byte) ändras aldrig under TAS:en; markörvärden där skrevs aldrig över och TAS:en synkade ända till Area 6. ~~`$07F0–$07F3`~~ används av spelet (blev `44` i Area 1), och `$0778–$077F`/`$07F8–$07FF` läses av spelet (TAS:en desynkar i Area 3) | **Bekräftat med TAS** |
 | Ledigt ROM-utrymme för AP-taggen (PRG-offset) | `0x1BE00` | 582 byte `0xFF` på `$1BD92–$1BFD7` (bank 6); taggen tar 70 byte | Skannat ur ROM-filen |
 
@@ -83,7 +83,7 @@ Gjord med TAS 4543M i BizHawk 2.6.1 (`--movie`). Skript: `lua/tmnt_tas_ram_dump.
 
 - **Bossflagga:** ingen byte ändras exakt en gång per area, och ingen byte står still i 5–30 s före varje areabyte för att sedan slå om. Bästa signalen är därför areabyten själv: `$0048` går N−1 → N en gång per bossvinst och aldrig annars under TAS:en. Det sker när Aprils genomgång inför nästa area börjar, alltså en stund efter själva bossvinsten.
   - **Följd för Task 7:** efter en bossvinst fortsätter spelet av sig själv till nästa area, även om spelaren saknar dess pass. Areaväljaren eller klienten måste fånga `$0048`-ändringen (utan föregående savestate-laddning) och skicka spelaren tillbaka till menyn.
-  - **Shredder:** TAS:en slutar på sista träffen; `$001B` är 4 på sista framen, så `$001B` = 5 är fortfarande bara dokumenterat.
+  - **Shredder:** se avsnittet "Shredder" nedan; `$001B` = 5 är bekräftat.
 - **Brevlåda:** 23 sammanhängande områden (minst 4 byte, stacken `$0100–$01FF` utesluten) ändrades aldrig efter frame 200. Markörvärdet `A7` skrevs på frame 200 i elva av dem:
   - Skrivs över av spelet (frame 673, i början av Area 1): `$03F7–$03F9`, `$049F`, `$04CF`, `$0618–$0627`, `$064C–$064F`, `$06B1–$06B7`.
   - Läses av spelet: markörer i `$0778–$077F` och `$07F8–$07FF` får TAS:en att desynka i Area 3.
@@ -140,3 +140,15 @@ Gjort i BizHawk 2.11.1 med `lua/tmnt_gameover_test.lua`. Från `area1.State` skr
 Spelet har egna upplockningar: TAS:en plockar 10 missiles i Area 3 (frame 20188) och 3 rep i Area 4 (frame 30757). StrategyWiki nämner 3 rep i byggnad F i Area 3. Enligt TASVideos-forumet har Area 4 en rep-sträcka med tre luckor.
 
 **Öppen designfråga:** "Area 3 kräver Missile Pack och Rope Pack" stoppar bara väljaren. Inne i banan kan spelaren plocka spelets egna missiles och rep även utan pack, och klienten skriver bara 0 vid full sync. Antingen räcker det, eller så ska klienten hålla antalet på 0 utan pack. Det beslutet är Oscars. `ROPE_REFILL` = 5 räcker till minst en rep-sträcka med tre luckor.
+
+## Shredder, 2026-10-31
+
+Gjort med `lua/tmnt_tas_ending.lua` i BizHawk 2.6.1. Skriptet spelar TAS 4543M till 30 frames före slutet, stoppar filmen (BizHawk pausar annars vid filmslut, och då står skriptet still), matar in de sista 30 framesens knappar och låter sedan spelet gå utan input. Att stoppa bara en frame före slutet tappade sista slaget, och då tog Shredder Donatello.
+
+| Frame | Händelse |
+|---|---|
+| 56264 | filmen slut, sista slaget inmatat (`$001B` = 4, `$0048` = 5) |
+| 58123 | `$001B` 4 → 5, "You defeated Shredder" |
+| 60527 | `$001B` 5 → 0, `$0048` 5 → 0, titelskärmen |
+
+Klientens mål (`SHREDDER_DEFEATED` = (`$001B`, 5) och Area 6-biten) har alltså gott om tid: signalen ligger kvar i cirka 40 s.

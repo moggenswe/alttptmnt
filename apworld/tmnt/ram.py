@@ -24,7 +24,7 @@ FULL_HP_VALUE = 0x80             # doc: 128
 MISSILE_COUNT = 0x00BF           # doc: "# of missles"
 ROPE_COUNT = 0x00A7              # doc: "# ropes"
 # Boss wins have no flag of their own: see client_logic.boss_defeated (area byte N-1 -> N, TAS-confirmed).
-SHREDDER_DEFEATED: tuple[int, int] = (GAME_PHASE, 5)  # doc: phase 5 = ending credits
+SHREDDER_DEFEATED: tuple[int, int] = (GAME_PHASE, 5)  # TAS-confirmed: 5 for ~40 s from "You defeated Shredder"
 
 # Mailbox shared with lua/tmnt_area_select.lua (keep the Lua constants in sync).
 MAILBOX_BASE = 0x0388            # TAS-confirmed: $0388-$03AF never written; markers there kept the TAS in sync to Area 6
