@@ -22,6 +22,9 @@ Källor: adelikats och JXQ:s RAM-karta (`files.tasvideos.org/gameresources/nes/t
 | Kastvapen per sköldpadda | `$00A8–$00AB` | Leo, Raph, Mike, Don | Dok |
 | Desarmerade bomber (Area 2) | `$007D` | | Dok |
 | Pausad | `$0094` | 3 vid paus, 0 annars | Dok |
+| Poäng / high score | `$C2`–`$C4` / `$C8`–`$CA` | `$C2` räknas upp i tiotal; nollställs vid nytt spel (ROM 0x1C66B) | **Bekräftat med TAS** (se `tmnt-softlock-risker.md`) |
+| Kastvapentyp per sköldpadda | `$0073`–`$0076` (trolig) | sätts när ett kastvapen plockas upp | TAS (inte helt bekräftat) |
+| Startvärde | `$0055` | sätts en gång när spelet startar, beror på exakt frame för Start | TAS |
 | Antal continues | `$0046` | börjar på 3; räknas ner vid varje game over, men 0 blir 255 och CONTINUE erbjuds ändå, så continues tar aldrig slut | **Bekräftat** (se "Game over och continue") |
 | Bossvinst Area 1–5 | `$0048` räknas upp | Ingen egen flagga hittad. `$0048` går N−1 → N exakt en gång per bossvinst (5 gånger på hela TAS:en), när Aprils genomgång inför nästa area börjar | **Bekräftat med TAS** (se "TAS-analys") |
 | Shredder besegrad | `$001B` = 5 | sätts när texten "You defeated Shredder" visas, cirka 31 s efter sista slaget, och ligger kvar i cirka 40 s. Därefter blir `$001B` 0 och `$0048` 0 (titelskärmen) | **Bekräftat med TAS** (se "Shredder") |

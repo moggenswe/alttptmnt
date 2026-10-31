@@ -9,8 +9,9 @@ Ingen känd väg leder till att spelaren fastnar för gott i TMNT-delen.
 - **Inget går att missa:** varje TMNT-location går att ta igen.
 - **Inget tar slut:** continues och ammo med pack tar aldrig slut.
 - **Inga vägar runt passen:** areor utan pass nås inte.
+- **Inga framsteg saknas i våra area-states:** de skiljer sig från en riktig genomspelning bara i kastvapen, kartläge, poäng och ett värde som sätts när spelet startar.
 
-Den största kvarvarande osäkerheten är area-states för Area 5 och 6. De kommer från ett nytt spel och saknar ett par bytes som en riktig genomspelning har satt. Ingen har spelat igenom de areorna från våra states, och en människa bör göra det.
+Det som återstår är att en människa spelar igenom areorna från våra states, som en sista kontroll.
 
 ## 1. Kan ett föremål som krävs bli onåbart?
 
@@ -59,28 +60,29 @@ Våra states kommer från ett nytt spel där areabyten skrivits om. Det som en r
 
 En avsynk betyder bara att spelet läser byten någonstans. Det betyder inte att arean blir omöjlig.
 
-| Area | Resultat |
-|---|---|
-| 2 | Synk med alla burna bytes. Våra states saknar inget som spelet läser där. |
-| 3, 4 | Synk med alla utom `$0073`–`$0076` och `$0614`. `$0076` och `$0074` sattes på samma frame som Donatello respektive Raph plockade upp kastvapen, så de är troligen vapentypen per sköldpadda. `$0614` växlar redan i Area 1 och ser ut som lägesstatus på kartan. Inget av det är framsteg. |
-| 5 | Avsynk. `$00C4` och `$00CA` (0 → 1 samtidigt långt in i Area 4, mitt i en objekttabell `$00C0`–`$00CF`) räcker var för sig för att få TAS:en ur synk. Utan dem blir det ändå avsynk av en kombination av de övriga bytesen. Den kombinationen är inte hittad, men inget av dem gör det ensamt. |
-| 6 | Synk när `$00C4`/`$00CA` och vapen- och kartbytesen lämnas orörda. Med `$00C4`/`$00CA` nollade blir det avsynk. |
-| — | `$007B` (följer areanumret) och `$007C` (växande bitmask) ser ut som framsteg men påverkar ingen area. |
+Varje skillnad som spelet läser är spårad till en enskild byte, i ett 60-tal TAS-körningar:
 
-**Tolkning:** inget pekar på en flagga som spärrar en väg. `$00C4`/`$00CA` är det enda som ser ut som tillstånd från en tidigare area som spelet läser senare, i Area 5 och 6. Om det är något som "dörren är öppen" eller bara gammal objektstatus vet vi inte. Det avgörs av att någon spelar Area 5 och 6 från våra states.
+| Byte | Vad det är | Var spelet läser den | Framsteg? |
+|---|---|---|---|
+| `$0073`–`$0076` | troligen kastvapentyp per sköldpadda: `$0076` sattes på samma frame som Donatello plockade upp ett vapen, `$0074` när Raph gjorde det | Area 3–6 | Nej. Våra states har inga vapen, som ett nytt spel. |
+| `$0614` | växlar 0/1/2 redan i Area 1 och ser ut som lägesstatus på kartan | Area 3–4 | Nej |
+| `$C2`–`$C4`, `$C8`–`$CA` | **poäng och high score**. `$C2` räknas upp i tiotal när fiender dör, och init-rutinen för nytt spel (ROM 0x1C66B) nollställer `$C2`–`$C4` tillsammans med continues, HP, ammo och vapen. `$C4`/`$CA` blev 1 när poängen passerade 100 000 i Area 4. | Area 5–6 | Nej |
+| `$0055` | sätts en gång vid frame 145 när spelet startar (2 i TAS:en, 4 i våra states; vi tryckte Start en frame förskjutet) och ändras aldrig sedan, troligen ett slumpfrö | Area 5 | Nej |
+| `$007B`, `$007C` | ser ut som framsteg (följer areanumret, bitmask som växer) | ingenstans | Nej |
+
+Med de här bytesen orörda håller TAS:en exakt synk i Area 2, 3, 4, 5 och 6, trots att alla andra bytes som TAS:en burit med sig skrivits över med våra states värden. Våra states saknar alltså inget framsteg som spelet läser på TAS-vägen. Poäng och slumpfrö gör att fienderna kan bete sig lite annorlunda än i TAS:en, men det låser inget.
 
 ## 5. Kvar att göra
 
-1. **Spela varje area från sin state till och med bossen**, främst Area 5 och 6. Om något inte fungerar kan states göras om med TAS:ens värden för `$00C4`/`$00CA` och därefter testas igen.
+1. **Spela varje area från sin state till och med bossen**, som slutkontroll. TAS-testet täcker bara TAS-vägen genom varje area.
 2. **Gör states i den BizHawk-version som används på streamen.** States från andra versioner laddas inte, och menyn säger då till.
 3. **Hela seedet med ALttP** är inte testat här, eftersom ALttP-ROM:en saknas på den här datorn. ALttP-logiken är Archipelagos egen (open, inga glitches).
-4. **Spelets egen räddning** är inte sedd i BizHawk. Enhetstesterna visar att klienten fångar sköldpaddan igen, men inte hur det ser ut i spelet.
-5. **`$0055`** (2 i TAS:en, 4 i våra states, från spelets start) är oförklarad men påverkar inte synken.
+4. **Spelets egen räddning** är inte sedd i BizHawk. E2E-testet visar att klienten fångar en friad sköldpadda igen inom tio frames.
 
 ## Testläge 2026-10-31
 
 - 134 enhetstester
 - Areaväljartestet 40/40, i BizHawk 2.11.1
-- E2E-kedjan med server, BizHawk, väljare och klient godkänd
+- E2E-kedjan med server, BizHawk, väljare och klient godkänd. Den täcker också en bossvinst medan klienten är avstängd, en friad sköldpadda och meddelandet på skärmen.
 - 150 genererade seeds utan fel
-- 40-tal TAS-körningar för area-states, med resultat i `tas/4543M/flags/` (inte i git)
+- 60-tal TAS-körningar för area-states, med resultat i `tas/4543M/flags/` (inte i git)
